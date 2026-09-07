@@ -185,6 +185,16 @@
   background-color: #dcfce7;
 }
 
+.open-btn {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+}
+
+.open-btn:hover {
+  background-color: #dbeafe;
+}
+
 .attachment-empty-state, .attachment-error-state {
   display: flex;
   flex-direction: column;

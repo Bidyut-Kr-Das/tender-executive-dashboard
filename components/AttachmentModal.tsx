@@ -19,6 +19,12 @@ function parseTags(file: Record<string, string>): string[] {
   return [];
 }
 
+function getDriveFallbackName(url: string): string {
+  const m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/) || url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `drive_document_${m[1].slice(0, 8)}`;
+  return "online_document";
+}
+
 export const AttachmentModal: React.FC<AttachmentModalProps> = ({
   isOpen,
   onClose,
@@ -60,13 +66,13 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
             <ul className="file-list">
               {files.map((file, idx) => {
                 const extension = file.extension || "";
-                const filename = file.name
-                  ? file.name.endsWith(extension) ? file.name : file.name + extension
-                  : (file.filename || "Unknown");
+                const rawName = file.name || file.filename || "Unknown";
+                const baseName = rawName.toLowerCase() === "view" || rawName.toLowerCase() === "view.pdf" ? getDriveFallbackName(file.url || file.source || "") : rawName;
+                const filename = baseName.endsWith(extension) ? baseName : baseName + extension;
                 const tags = parseTags(file);
-                const isNetworkFile = tags.includes("networkFiles") || (!!file.source && file.source !== "SHEET_SYNC" && file.source !== "MANUAL_UPLOAD");
+                const isHttpUrl = file.url?.startsWith("http") || file.source?.startsWith("http");
+                const isNetworkFile = (tags.includes("networkFiles") || (!!file.source && file.source !== "SHEET_SYNC" && file.source !== "MANUAL_UPLOAD")) && !isHttpUrl;
                 const normalizedExt = extension.replace(/^\./, "").toLowerCase();
-                const isHttpUrl = file.url?.startsWith("http");
 
                 return (
                   <li key={file.id || idx} className="file-item">
@@ -131,7 +137,7 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
                       {!isNetworkFile && isHttpUrl && (
                         <button
                           className="file-action-btn open-btn"
-                          onClick={() => window.open(file.url, "_blank")}
+                          onClick={() => window.open(file.url || file.source, "_blank")}
                           title="Open in new tab"
                           style={{
                             display: "inline-flex",
