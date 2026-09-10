@@ -867,6 +867,7 @@ model TenderMerged {
 
   baseDate     DateTime?
   buyerDetails String?
+  divisionOrDepartment String?
 
   fileId Int
   file   File @relation(fields: [fileId], references: [id], onDelete: Cascade)

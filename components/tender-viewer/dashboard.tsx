@@ -189,6 +189,18 @@ function RemarksCell({
   );
 }
 
+function DivisionOrDepartmentCell({ value }: { value: unknown }) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return <span className="text-slate-300">-</span>;
+  const key = raw.toUpperCase();
+  const map: Record<string, string> = {
+    "LASER PROJECTS": "bg-blue-50 text-blue-700 border-blue-200",
+    "LASER MANUFACTURING": "bg-emerald-50 text-emerald-700 border-emerald-200",
+  };
+  const cls = map[key] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  return <Badge className={`text-[10px] font-medium border ${cls}`}>{raw}</Badge>;
+}
+
 function formatColumnName(name: string): string {
   if (name === "t247Id") return "Portal ID";
   return name
@@ -1689,6 +1701,25 @@ export default function Dashboard() {
               />
             );
           },
+        };
+      }
+
+      if (col === "divisionOrDepartment") {
+        return {
+          header: displayNameMap[col] ?? "Division or Department",
+          accessor: col as keyof Record<string, unknown>,
+          defaultWidth: colIndex?.width ?? 220,
+          hidden: colIndex ? !colIndex.visible : false,
+          searchable: true,
+          sortValue: (value: unknown) => String(value ?? ""),
+          filter: {
+            type: "select" as const,
+            options: [
+              ...(selectFilterOptions[col] ?? []),
+              { value: "__blank__", label: "Blank" },
+            ],
+          },
+          renderCell: (value: unknown) => <DivisionOrDepartmentCell value={value} />,
         };
       }
 
