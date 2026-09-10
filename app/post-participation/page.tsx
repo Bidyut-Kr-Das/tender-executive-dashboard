@@ -110,7 +110,7 @@ export default function PostParticipation() {
             </div>
           ) : (
             <>
-              <TenderTable records={activeDataset} clearTrigger={clearTrigger} readOnly={true} editableColumns={["participated", "nextAction", "tenderUpdateStatus", "currentStatus", "ourRank", "ourValue", "nameOfRank1", "valueOfRank1", "differenceBetweenRank1", "nameOfRank2", "valueOfRank2", "differenceBetweenRank2", "reverseAuctionApplicable", "reverseAuctionStartDate", "expectedRaDate"]} showPostParticipationColumns={true}
+              <TenderTable records={activeDataset} clearTrigger={clearTrigger} readOnly={true} editableColumns={["participated", "nextAction", "remarks", "tenderUpdateStatus", "currentStatus", "ourRank", "ourValue", "nameOfRank1", "valueOfRank1", "differenceBetweenRank1", "nameOfRank2", "valueOfRank2", "differenceBetweenRank2", "reverseAuctionApplicable", "reverseAuctionStartDate", "expectedRaDate"]} showPostParticipationColumns={true}
                 aluminiumMin={aluminiumMin} setAluminiumMin={setAluminiumMin} aluminiumMax={aluminiumMax} setAluminiumMax={setAluminiumMax}
                 copperMin={copperMin} setCopperMin={setCopperMin} copperMax={copperMax} setCopperMax={setCopperMax}
               />

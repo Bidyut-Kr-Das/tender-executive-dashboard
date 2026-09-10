@@ -1156,6 +1156,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
       type: "custom",
     },
     {
+      header: "Remarks",
+      accessor: "remarks",
+      defaultWidth: 250,
+      align: "left",
+      type: "string",
+    },
+    {
       header: "CVA",
       accessor: "cva",
       defaultWidth: 180,
