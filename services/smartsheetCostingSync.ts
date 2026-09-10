@@ -8,8 +8,8 @@
 import { prisma } from "@/lib/prisma";
 import { fetchSmartsheetById, type SmartsheetCell } from "@/lib/smartsheet";
 
-// const COSTING_SHEET_ID = "2033506099089284";
-const COSTING_SHEET_ID = "1388756490735492";
+const COSTING_SHEET_ID =
+  process.env.SALES_ENQUIRY_ITEM_LIST_ERP_ID?.trim() || "2033506099089284";
 const DOCKET_COL = "DOCKET NO.";
 const ITEM_COL = "PROPOSE ERP ITEM NAME @ CODE";
 const QTY_COL = "QTY";

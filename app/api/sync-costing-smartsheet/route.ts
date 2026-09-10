@@ -15,7 +15,7 @@ const syncCostingWithLog = withLog(
   (stats) => ({
     action: "CREATE" as const,
     tableName: "CostingSheetDetails",
-    details: `Costing Smartsheet 2033506099089284: created=${stats.created} matched=${stats.matched}/${stats.totalCandidates} skippedNoName=${stats.skippedNoName} scheduleMissing=${stats.scheduleMissing} qtyMissing=${stats.qtyMissing}`,
+    details: `Costing Smartsheet ${process.env.SALES_ENQUIRY_ITEM_LIST_ERP_ID?.trim() || "2033506099089284"}: created=${stats.created} matched=${stats.matched}/${stats.totalCandidates} skippedNoName=${stats.skippedNoName} scheduleMissing=${stats.scheduleMissing} qtyMissing=${stats.qtyMissing}`,
   }),
 );
 
@@ -24,8 +24,9 @@ export async function POST(req: NextRequest) {
   if (forbidden) return forbidden;
 
   try {
+    const sheetId = process.env.SALES_ENQUIRY_ITEM_LIST_ERP_ID?.trim() || "2033506099089284";
     const stats = await syncCostingWithLog();
-    return NextResponse.json({ success: true, sheetId: "2033506099089284", stats });
+    return NextResponse.json({ success: true, sheetId, stats });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
