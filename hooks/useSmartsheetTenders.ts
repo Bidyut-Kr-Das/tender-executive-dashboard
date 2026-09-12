@@ -14,8 +14,14 @@ export const useSmartsheetTenders = (): UseSmartsheetTendersResult => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const hasData = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchData = useCallback(async (forceRefresh = false) => {
+    // Drop whatever is still in flight - its response is no longer wanted.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     if (forceRefresh || !hasData.current) {
       setLoading(true);
     }
@@ -23,7 +29,7 @@ export const useSmartsheetTenders = (): UseSmartsheetTendersResult => {
 
     try {
       const query = forceRefresh ? "?fresh=true" : "";
-      const response = await fetch(`/api/smartsheet-tenders${query}`);
+      const response = await fetch(`/api/smartsheet-tenders${query}`, { signal: controller.signal });
       const json = await response.json();
 
       if (!response.ok || !json.success) {
@@ -35,16 +41,22 @@ export const useSmartsheetTenders = (): UseSmartsheetTendersResult => {
       hasData.current = true;
       setData(records);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err : new Error("Unexpected error fetching Smartsheet data"));
     } finally {
-      setLoading(false);
+      // A superseded or unmounted request must not flip the spinner off
+      // for the request that replaced it.
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(() => fetchData(), 30_000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      abortRef.current?.abort();
+    };
   }, [fetchData]);
 
   const refresh = useCallback(async () => {

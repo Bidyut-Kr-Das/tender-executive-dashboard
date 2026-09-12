@@ -43,14 +43,20 @@ export const useSupplyHistory = (): UseSupplyHistoryResult => {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err : new Error("Unexpected error fetching supply history data"));
     } finally {
-      setLoading(false);
+      // A superseded or unmounted request must not flip the spinner off
+      // for the request that replaced it.
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(() => fetchData(), 30_000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Navigating away drops the response we no longer need.
+      abortRef.current?.abort();
+    };
   }, [fetchData]);
 
   const refresh = useCallback(async () => {

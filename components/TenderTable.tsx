@@ -41,7 +41,6 @@ import {
   getISTMonthRange,
   getISTYearRange,
 } from "@/lib/format-ist";
-import * as XLSX from "xlsx";
 import type { DateRange } from "react-day-picker";
 import type { ReverseAuctionWebhookData } from "@/lib/integrations/n8n";
 import MergedOfficeEditDialog from "./MergedOfficeEditDialog";
@@ -2824,7 +2823,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const exportData = processedRecords.map((rec) => {
       const obj: Record<string, string | number> = {};
       for (const col of visibleColumns) {

@@ -4,7 +4,7 @@ import { FilterSidebar } from "@/components/FilterSidebar";
 import { TenderTable } from "@/components/TenderTable";
 import { useAppSelector } from "@/lib/hooks";
 import { TenderCalculations } from "@/services/tenderCalculations";
-import { mapTenderSliceToEpcRecords } from "@/lib/mapTenderSliceToEpcRecords";
+import { selectPostParticipationEpcRecords } from "@/lib/selectors/tenderSelectors";
 import { matchesRawMaterialRange } from "@/lib/rawMaterials";
 import { epcRecordToParticipationRow, matchesEpcParticipationFilter } from "@/lib/participationFilter";
 import { deadlineMatchesRange } from "@/components/tender-viewer/participation-cards";
@@ -24,16 +24,9 @@ export default function PostParticipation() {
   const participatedDateRange = useAppSelector(
     (s) => s.filters.participatedDateRange,
   );
-  const postFilteredData = useMemo(() => {
-    if (!tenderSliceData) return null;
-    return {
-      ...tenderSliceData,
-      rows: tenderSliceData.rows.filter(
-        (r) => (r.apm === "YES") && r.participated === "true",
-      ),
-    };
-  }, [tenderSliceData]);
-  const mappedRecords = useMemo(() => mapTenderSliceToEpcRecords(postFilteredData), [postFilteredData]);
+  // Filtering + mapping lives in a module-scope memoised selector so it is not
+  // recomputed over ~34k rows every time this route is re-mounted.
+  const mappedRecords = useAppSelector(selectPostParticipationEpcRecords);
   const [clearTrigger, setClearTrigger] = useState<number>(0);
   const [priceBasisFilter, setPriceBasisFilter] = useState<string>("All");
   const [aluminiumMin, setAluminiumMin] = useState<string>("");

@@ -4,7 +4,7 @@ import { FilterSidebar } from "@/components/FilterSidebar";
 import { TenderTable } from "@/components/TenderTable";
 import { useAppSelector } from "@/lib/hooks";
 import { TenderCalculations } from "@/services/tenderCalculations";
-import { mapTenderSliceToEpcRecords } from "@/lib/mapTenderSliceToEpcRecords";
+import { selectNotParticipatedEpcRecords } from "@/lib/selectors/tenderSelectors";
 import { matchesRawMaterialRange } from "@/lib/rawMaterials";
 import { matchesEpcParticipationFilter } from "@/lib/participationFilter";
 import { Eraser, ExternalLink } from "lucide-react";
@@ -20,24 +20,9 @@ export default function NotParticipated() {
   const participationFilters = useAppSelector(
     (s) => s.filters.participationFilters,
   );
-  const postFilteredData = useMemo(() => {
-    if (!tenderSliceData) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return {
-      ...tenderSliceData,
-      rows: tenderSliceData.rows.filter((r) => {
-        if (r.apm !== "YES") return false;
-        if (r.participated === "false") return true;
-        if (r.participated === "true") return false;
-        const d = new Date(r.deadline as string);
-        if (isNaN(d.getTime())) return false;
-        // deadline over includes only past days; today is NOT over
-        return d.getTime() < today.getTime();
-      }),
-    };
-  }, [tenderSliceData]);
-  const mappedRecords = useMemo(() => mapTenderSliceToEpcRecords(postFilteredData), [postFilteredData]);
+  // Filtering + mapping lives in a module-scope memoised selector so it is not
+  // recomputed over ~34k rows every time this route is re-mounted.
+  const mappedRecords = useAppSelector(selectNotParticipatedEpcRecords);
   const todayStr = useMemo(() => {
     const d = new Date();
     const y = d.getFullYear();

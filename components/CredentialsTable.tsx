@@ -13,7 +13,6 @@ import {
   deleteCredential,
 } from "@/lib/slices/credentialsSlice";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import {
   Search,
   ChevronUp,
@@ -398,7 +397,7 @@ export default function CredentialsTable({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [processedRecords]);
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     const cols = COLS.filter((c) => c.accessor !== "actions");
     const exportData = processedRecords.map((rec) => {
       const o: Record<string, string> = {};
@@ -407,6 +406,8 @@ export default function CredentialsTable({
       }
       return o;
     });
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Credentials");

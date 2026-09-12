@@ -30,7 +30,10 @@ export const useEmdMerged = (): UseEmdMergedResult => {
   const error = useAppSelector((s) => s.emd.error);
 
   useEffect(() => {
-    dispatch(fetchEmdMerged());
+    const promise = dispatch(fetchEmdMerged());
+    // Navigating away drops the response we no longer need. The slice treats an
+    // "aborted" rejection as a no-op, so loading/refreshing reset cleanly.
+    return () => promise.abort();
   }, [dispatch]);
 
   const refresh = useCallback(async () => {

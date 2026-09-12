@@ -2,7 +2,6 @@
 
 import { useRef, useCallback, useState, useEffect } from "react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -92,16 +91,17 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
       "Rejection Reason": r.reason,
       ...r.row,
     }));
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Rejected Tenders");
-    const date = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `rejected-tenders-${date}.xlsx`);
-    if (rejectedRows.length > 0) {
+    // Lazy: ~400KB parser stays out of the /tenders chunk until rows are rejected.
+    void import("xlsx").then((XLSX) => {
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rejected Tenders");
+      const date = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `rejected-tenders-${date}.xlsx`);
       toast.error(`${rejectedRows.length} tender(s) rejected`, {
         description: "Downloaded rejected-tenders excel",
       });
-    }
+    });
   }, [parsing, rejectedRows]);
 
   useEffect(() => {

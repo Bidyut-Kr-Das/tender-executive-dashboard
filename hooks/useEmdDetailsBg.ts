@@ -74,7 +74,9 @@ export const useEmdDetailsBg = (): UseEmdDetailsBgResult => {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err : new Error("Unexpected error fetching EMD BG data"));
     } finally {
-      setLoading(false);
+      // A superseded or unmounted request must not flip the spinner off
+      // for the request that replaced it.
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 

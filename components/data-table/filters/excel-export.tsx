@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import * as XLSX from "xlsx";
 import type { Table as TanStackTable } from "@tanstack/react-table";
 
 interface ExcelExportProps<TData> {
@@ -22,7 +21,7 @@ export function ExcelExport<TData>({
   formatHeader = (id) => id,
   formatRow,
 }: ExcelExportProps<TData>) {
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     const visibleColumns = table
       .getVisibleLeafColumns()
       .map((c) => c.id)
@@ -45,6 +44,8 @@ export function ExcelExport<TData>({
         return obj;
       });
 
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
