@@ -41,9 +41,13 @@ export function DataLoader({ children }: { children: React.ReactNode }) {
   // fetchFiles.fulfilled, so keying the effect on it re-downloaded the whole
   // dataset whenever the file list refreshed.
   const tendersRequestedRef = useRef(false);
+  // `enabled` flips false -> true on every return to a gated route, so without
+  // this guard the file list was re-downloaded on each page switch.
+  const filesRequestedRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || filesRequestedRef.current) return;
+    filesRequestedRef.current = true;
     dispatch(fetchFiles());
   }, [dispatch, enabled]);
 

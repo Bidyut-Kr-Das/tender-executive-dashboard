@@ -4,7 +4,6 @@ import React, { useMemo, useState, useRef, useCallback, useEffect } from "react"
 import { useEmdDetailsCash, EmdDetailsCashRecord } from "@/hooks/useEmdDetailsCash";
 import { EmdCashSidebar, EmdStatus, EmdStats } from "@/components/emd-cash/EmdCashSidebar";
 import { RefreshCw, Eraser, Search, Download, FileSpreadsheet, ChevronUp, ChevronDown, RotateCcw, X, Mail, Loader2, Check, Eye } from "lucide-react";
-import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { TENDER_REASON_OPTIONS } from "@/lib/emdReasonOptions";
 import { EmailDraftDialog } from "@/components/emd/EmailDraftDialog";
@@ -405,7 +404,7 @@ export default function EmdDetailsCashPage() {
     return processedRecords.slice(s, s + rowsPerPage);
   }, [processedRecords, activePage, rowsPerPage]);
 
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     const exportData = processedRecords.map((rec) => {
       const obj: Record<string, string> = {};
       for (const col of CASH_COLUMNS) {
@@ -415,6 +414,8 @@ export default function EmdDetailsCashPage() {
       }
       return obj;
     });
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "EMD Cash");

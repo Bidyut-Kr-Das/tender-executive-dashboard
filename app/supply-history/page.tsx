@@ -6,7 +6,6 @@ import { SupplyAttachmentModal } from "@/components/SupplyAttachmentModal";
 // import { Package, RefreshCw, Eraser, ExternalLink, FileSpreadsheet, AlertTriangle, Search, ChevronUp, ChevronDown, ArrowUpDown, X, Inbox, FolderOpen } from "lucide-react";
 import { Package, RefreshCw, Eraser, FileSpreadsheet, AlertTriangle, Search, ChevronUp, ChevronDown, ArrowUpDown, X, Inbox, FolderOpen, FileText, ExternalLink, Download, Pencil, Check, Mail, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import {
   Select,
   SelectContent,
@@ -994,6 +993,8 @@ const SupplyHistoryDashboard: React.FC = () => {
         }
         return obj;
       });
+      // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+      const XLSX = await import("xlsx");
       const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Supply History");
@@ -1042,7 +1043,7 @@ const SupplyHistoryDashboard: React.FC = () => {
     }
   }, [displayData, filtered, triggerDownload])
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const exportData = sorted.map((rec) => {
       const obj: Record<string, string | number | boolean> = {};
       for (const col of COLUMNS) {
@@ -1055,6 +1056,8 @@ const SupplyHistoryDashboard: React.FC = () => {
       }
       return obj;
     });
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Supply History");

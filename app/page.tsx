@@ -4,7 +4,7 @@ import { FilterSidebar } from "@/components/FilterSidebar";
 import { TenderTable } from "@/components/TenderTable";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { TenderCalculations } from "@/services/tenderCalculations";
-import { mapTenderSliceToEpcRecords } from "@/lib/mapTenderSliceToEpcRecords";
+import { selectHomeEpcRecords } from "@/lib/selectors/tenderSelectors";
 import { matchesRawMaterialRange } from "@/lib/rawMaterials";
 import { matchesEpcParticipationFilter } from "@/lib/participationFilter";
 import { syncSheetToMerged } from "@/lib/slices/tendersSlice";
@@ -27,23 +27,9 @@ export default function Home() {
   const participationFilters = useAppSelector(
     (s) => s.filters.participationFilters,
   );
-  const preFilteredData = useMemo(() => {
-    if (!tenderSliceData) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return {
-      ...tenderSliceData,
-      rows: tenderSliceData.rows.filter((r) => {
-        if (r.apm !== "YES") return false;
-        if (r.participated === "true" || r.participated === "false") return false;
-        const d = new Date(r.deadline as string);
-        if (isNaN(d.getTime())) return false;
-        // today is NOT over — deadline >= today is still actionable
-        return d.getTime() >= today.getTime();
-      }),
-    };
-  }, [tenderSliceData]);
-  const mappedRecords = useMemo(() => mapTenderSliceToEpcRecords(preFilteredData), [preFilteredData]);
+  // Filtering + mapping lives in a module-scope memoised selector so it is not
+  // recomputed over ~34k rows every time this route is re-mounted.
+  const mappedRecords = useAppSelector(selectHomeEpcRecords);
   const [clearTrigger, setClearTrigger] = useState<number>(0);
   const [cvaLoading, setCvaLoading] = useState(false);
   const [priceBasisFilter, setPriceBasisFilter] = useState<string>("All");

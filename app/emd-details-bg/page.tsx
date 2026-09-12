@@ -4,7 +4,6 @@ import React, { useMemo, useState, useRef, useCallback, useEffect } from "react"
 import { useEmdDetailsBg, EmdDetailsBgRecord } from "@/hooks/useEmdDetailsBg";
 import { EmdBgSidebar, EmdBgStatus, EmdBgStats } from "@/components/emd-bg/EmdBgSidebar";
 import { RefreshCw, Eraser, Search, Download, FileSpreadsheet, ChevronUp, ChevronDown, RotateCcw, X, Mail, Loader2, Check, Eye } from "lucide-react";
-import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { TENDER_REASON_OPTIONS } from "@/lib/emdReasonOptions";
 import { EMD_STATUS_OPTIONS } from "@/lib/emdStatusOptions";
@@ -522,7 +521,7 @@ export default function EmdDetailsBgPage() {
     return processedRecords.slice(s, s + rowsPerPage);
   }, [processedRecords, activePage, rowsPerPage]);
 
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     const exportData = processedRecords.map((rec) => {
       const obj: Record<string, string> = {};
       for (const col of BG_COLUMNS) {
@@ -532,6 +531,8 @@ export default function EmdDetailsBgPage() {
       }
       return obj;
     });
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "EMD BG");

@@ -37,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import * as XLSX from "xlsx";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   setColumnFilter,
@@ -776,7 +775,9 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
     onFilteredRowsChangeRef.current?.(processedRows);
   }, [processedRows]);
 
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const visibleColumns = columns.filter(
       (c) => !c.hidden && columnVisibility[String(c.accessor)] !== false,
     );

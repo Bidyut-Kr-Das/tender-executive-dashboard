@@ -15,12 +15,12 @@ function parseIntOrNull(val: string | undefined | null): number | null {
 
 function resolveAssociationNames(
   assignedTo: string | undefined,
-  associations: TenderData["associations"],
+  namesById: Map<number, string>,
 ): string {
   if (!assignedTo) return "";
   const ids = assignedTo.split(",").filter(Boolean);
   const names = ids
-    .map((id) => associations.find((a) => a.id === parseInt(id, 10))?.name)
+    .map((id) => namesById.get(parseInt(id, 10)))
     .filter(Boolean);
   return names.join(", ");
 }
@@ -44,6 +44,10 @@ function parseItemSchedules(val: string | undefined): string[] {
 
 export function mapTenderSliceToEpcRecords(tenderData: TenderData | null): EpcTenderRecord[] {
   if (!tenderData) return [];
+  // One Map instead of a linear `associations.find` per assigned id per row.
+  const associationNamesById = new Map(
+    tenderData.associations.map((a) => [a.id, a.name] as const),
+  );
   return tenderData.rows.map((row, index) => ({
     id: row.id,
     slNo: index + 1,
@@ -63,7 +67,7 @@ export function mapTenderSliceToEpcRecords(tenderData: TenderData | null): EpcTe
     managementDecision: (row.apm || "Pending") as ManagementDecision,
     catalogueDone: (row.catalogueDone as "YES" | "NO" | "NOT_DECIDED") || null,
     participated: row.participated === "true" ? true : row.participated === "false" ? false : null,
-    tenderPrepareBy: resolveAssociationNames(row.assignedTo, tenderData.associations),
+    tenderPrepareBy: resolveAssociationNames(row.assignedTo, associationNamesById),
     currentStatus: row.currentStatus || "",
     tenderSubmittedDate: row.scrapedDate ? new Date(row.scrapedDate) : null,
     reverseAuctionApplicable: row.raQualificationRule

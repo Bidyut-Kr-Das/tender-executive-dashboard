@@ -3,7 +3,6 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSmartsheetTenders } from "@/hooks/useSmartsheetTenders";
 import { SmartsheetTender } from "@/types/smartsheetTender";
 import { ClipboardList, RefreshCw, Eraser, FileSpreadsheet, AlertTriangle, Search, ChevronUp, ChevronDown, ArrowUpDown, X, Inbox, Paperclip } from "lucide-react";
-import * as XLSX from "xlsx";
 import {
   Select,
   SelectContent,
@@ -516,7 +515,7 @@ export const TenderDashboardPage: React.FC = () => {
 
   const handleRefresh = async () => { setPage(1); await refresh(); };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const exportData = sorted.map(rec => {
       const obj: Record<string, string | number> = {};
       for (const col of COLUMNS) {
@@ -539,6 +538,8 @@ export const TenderDashboardPage: React.FC = () => {
       return obj;
     });
 
+    // Lazy: ~400KB parser stays out of this route's chunk until a user exports.
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Enquiry to Quotation");

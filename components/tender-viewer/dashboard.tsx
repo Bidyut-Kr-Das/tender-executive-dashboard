@@ -28,7 +28,11 @@ import {
   OptimizedTenderTable,
   ColumnDef,
 } from "@/components/tender-viewer/optimized-tender-table/OptimizedTenderTable";
-import { matchesParticipationFilter } from "@/components/tender-viewer/participation-cards";
+import {
+  selectDashboardCardFilteredRows,
+  selectRowIndexMap,
+} from "@/lib/selectors/tenderSelectors";
+import { loadColumnConfig } from "@/lib/columnConfig";
 import { toast } from "sonner";
 import TenderSidebar from "@/components/tender-viewer/tender-sidebar";
 import ConfirmAnalysisDialog from "@/components/tender-viewer/confirm-analysis-dialog";
@@ -315,25 +319,6 @@ export default function Dashboard() {
     }
   }, []);
 
-  const dateFilteredRows = useMemo(() => {
-    if (!tenderData) return [];
-    if (selectedDateFrom == null || selectedDateTo == null) {
-      return tenderData.rows;
-    }
-    const selectedFileIds = new Set(
-      files
-        .filter((f) => {
-          const updatedAt = new Date(f.updatedAt);
-          const from = new Date(selectedDateFrom);
-          const to = new Date(selectedDateTo);
-          to.setHours(23, 59, 59, 999);
-          return updatedAt >= from && updatedAt <= to;
-        })
-        .map((f) => String(f.id)),
-    );
-    return tenderData.rows.filter((r) => r.fileId && selectedFileIds.has(r.fileId));
-  }, [tenderData, files, selectedDateFrom, selectedDateTo]);
-
   useEffect(() => {
     if (uploadResults && uploadResults.length > 0) {
       const fileIds = uploadResults.map((r) => r.fileId);
@@ -348,26 +333,22 @@ export default function Dashboard() {
   }, [resultUploadVersion, dispatch]);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/column-mappings").then((r) => r.json()),
-      fetch("/api/column-groups").then((r) => r.json()),
-      fetch("/api/column-indices").then((r) => r.json()),
-    ])
-      .then(([mappingData, groupsData, indicesData]) => {
-        if (mappingData.mappings) {
-          setDisplayNameMap(getDisplayNameMap(mappingData.mappings));
+    loadColumnConfig()
+      .then(({ mappings, groups, indices }) => {
+        if (mappings) {
+          setDisplayNameMap(getDisplayNameMap(mappings));
         }
-        if (groupsData.groups) {
+        if (groups) {
           setMergedGroups(
-            groupsData.groups.map((g: { label: string; separator: string; fields: string }) => ({
+            groups.map((g) => ({
               label: g.label,
               separator: g.separator,
               fields: JSON.parse(g.fields),
             })),
           );
         }
-        if (indicesData.indices) {
-          setColumnIndices(indicesData.indices);
+        if (indices) {
+          setColumnIndices(indices);
         }
       })
       .catch(() => {});
@@ -672,30 +653,9 @@ export default function Dashboard() {
     (s) => s.filters.analyticsFilter,
   );
 
-  const excludedRows = useMemo(() => {
-    if (!tenderData) return [];
-    if (!exclusionFilter) return dateFilteredRows;
-    return dateFilteredRows.filter((row) => {
-      const cat = row.excludedCategory;
-      if (!cat) return true;
-      if (exclusionFilter === "cable" && cat.includes("cable")) return false;
-      if (exclusionFilter === "conductors" && cat.includes("conductors"))
-        return false;
-      if (
-        exclusionFilter === "both" &&
-        (cat.includes("cable") || cat.includes("conductors"))
-      )
-        return false;
-      return true;
-    });
-  }, [tenderData, exclusionFilter, dateFilteredRows]);
-
-  const cardFilteredRows = useMemo(() => {
-    if (participationFilters.length === 0) return excludedRows;
-    return excludedRows.filter((row) =>
-      matchesParticipationFilter(row, participationFilters),
-    );
-  }, [excludedRows, participationFilters]);
+  // Date range -> exclusion -> participation-card filtering runs in module-scope
+  // memoised selectors, so re-mounting this route does not re-walk ~34k rows.
+  const cardFilteredRows = useAppSelector(selectDashboardCardFilteredRows);
 
   const associationFilteredRows = useMemo(() => {
     if (!associationFilter) return cardFilteredRows;
@@ -743,15 +703,9 @@ export default function Dashboard() {
       }
       return newRow;
     });
-  }, [associationFilteredRows, mergedGroups]);
+  }, [analyticsFilteredRows, mergedGroups]);
 
-  const rowIndexMap = useMemo(() => {
-    const map = new Map<string, number>();
-    tenderData?.rows.forEach((r, i) => {
-      map.set(`${String(r.type)}-${String(r.id)}`, i);
-    });
-    return map;
-  }, [tenderData?.rows]);
+  const rowIndexMap = useAppSelector(selectRowIndexMap);
 
   const columnDefs = useMemo(() => {
     if (!tenderDataRef.current) return [];
