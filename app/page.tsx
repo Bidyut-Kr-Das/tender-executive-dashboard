@@ -7,11 +7,14 @@ import { TenderCalculations } from "@/services/tenderCalculations";
 import { selectHomeEpcRecords } from "@/lib/selectors/tenderSelectors";
 import { matchesRawMaterialRange } from "@/lib/rawMaterials";
 import { matchesEpcParticipationFilter } from "@/lib/participationFilter";
-import { syncSheetToMerged } from "@/lib/slices/tendersSlice";
-import { Eraser, ExternalLink, Database, RefreshCw } from "lucide-react";
+import { syncSheetToMerged, searchTendersByPartyThunk } from "@/lib/slices/tendersSlice";
+import { Eraser, ExternalLink, Database, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { queueAllCvaParsing } from "@/actions/queueCvaParsing";
 import { useSession } from "next-auth/react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import "./Dashboard.css";
 
 export default function Home() {
@@ -38,6 +41,9 @@ export default function Home() {
   const [copperMin, setCopperMin] = useState<string>("");
   const [copperMax, setCopperMax] = useState<string>("");
   const [associationFilter, setAssociationFilter] = useState<string | null>(null);
+  const [partyQuery, setPartyQuery] = useState("");
+  const [partySearchField, setPartySearchField] = useState<"erpPartyName" | "itemCode">("erpPartyName");
+  const partySearch = useAppSelector((s) => s.tenders.partySearch);
 
   const calculations = useMemo(() => new TenderCalculations(mappedRecords, referenceDate), [mappedRecords, referenceDate]);
   const primaryDataset = useMemo(() => calculations.getPrimaryDataset(), [calculations]);
@@ -141,22 +147,108 @@ export default function Home() {
           </div>
         </header>
         <main className="dashboard-body">
-          {loadingTenders || !tenderSliceData ? (
-            <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "#0a2540", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
-              <div style={{ width: "40px", height: "40px", border: "4px solid #e1e6eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
-              <span style={{ fontSize: "16px", letterSpacing: "0.5px" }}>
-                Loading tender data{streamedCount > 0 ? ` (${streamedCount.toLocaleString()} rows)` : ""}...
-              </span>
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            </div>
-          ) : (
-            <>
-              <TenderTable records={activeDataset} clearTrigger={clearTrigger} showTypeTestColumn
-                aluminiumMin={aluminiumMin} setAluminiumMin={setAluminiumMin} aluminiumMax={aluminiumMax} setAluminiumMax={setAluminiumMax}
-                copperMin={copperMin} setCopperMin={setCopperMin} copperMax={copperMax} setCopperMax={setCopperMax}
-              />
-            </>
-          )}
+          <Tabs defaultValue="pre-participation" className="w-full flex flex-col">
+            <TabsList className="w-fit shrink-0">
+              <TabsTrigger value="pre-participation">Pre Participation</TabsTrigger>
+              <TabsTrigger value="tenders-by-party">Tenders by Party</TabsTrigger>
+            </TabsList>
+            <TabsContent value="pre-participation" className="mt-2 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col h-[calc(100vh-144px)]">
+              {loadingTenders || !tenderSliceData ? (
+                <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "#0a2540", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
+                  <div style={{ width: "40px", height: "40px", border: "4px solid #e1e6eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+                  <span style={{ fontSize: "16px", letterSpacing: "0.5px" }}>
+                    Loading tender data{streamedCount > 0 ? ` (${streamedCount.toLocaleString()} rows)` : ""}...
+                  </span>
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+              ) : (
+                <TenderTable records={activeDataset} clearTrigger={clearTrigger} showTypeTestColumn
+                  aluminiumMin={aluminiumMin} setAluminiumMin={setAluminiumMin} aluminiumMax={aluminiumMax} setAluminiumMax={setAluminiumMax}
+                  copperMin={copperMin} setCopperMin={setCopperMin} copperMax={copperMax} setCopperMax={setCopperMax}
+                />
+              )}
+            </TabsContent>
+            <TabsContent value="tenders-by-party" className="mt-2 flex flex-1 flex-col gap-3 overflow-auto h-[calc(100vh-144px)]">
+              <div className="flex flex-col gap-2 shrink-0">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="partySearchField"
+                      value="erpPartyName"
+                      checked={partySearchField === "erpPartyName"}
+                      onChange={() => setPartySearchField("erpPartyName")}
+                      className="size-4 accent-[#0a2540]"
+                    />
+                    Utility
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="partySearchField"
+                      value="itemCode"
+                      checked={partySearchField === "itemCode"}
+                      onChange={() => setPartySearchField("itemCode")}
+                      className="size-4 accent-[#0a2540]"
+                    />
+                    Item Code
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative max-w-sm flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      placeholder={partySearchField === "erpPartyName" ? "Search Utility..." : "Search Item Code..."}
+                      value={partyQuery}
+                      onChange={(e) => setPartyQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          if (!partyQuery.trim()) return toast.error("Enter search term");
+                          dispatch(searchTendersByPartyThunk({ query: partyQuery, field: partySearchField }));
+                        }
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (!partyQuery.trim()) return toast.error("Enter search term");
+                      dispatch(searchTendersByPartyThunk({ query: partyQuery, field: partySearchField }));
+                    }}
+                    disabled={partySearch.loading}
+                    className="shrink-0"
+                  >
+                    {partySearch.loading ? <RefreshCw size={14} className="animate-spin" /> : <Search size={14} />} Search
+                  </Button>
+                </div>
+              </div>
+              {partySearch.loading ? (
+                <div className="flex flex-1 items-center justify-center min-h-[300px] text-sm text-muted-foreground">Searching...</div>
+              ) : partySearch.error ? (
+                <div className="flex flex-1 items-center justify-center min-h-[300px] text-sm text-red-600">{partySearch.error}</div>
+              ) : partySearch.results.length > 0 ? (
+                <TenderTable
+                  records={partySearch.results as unknown as import("@/types/tender").EpcTenderRecord[]}
+                  variant="party"
+                  readOnly
+                />
+              ) : partySearch.lastQuery ? (
+                <div className="flex flex-1 items-center justify-center min-h-[300px] rounded-lg border border-dashed bg-white">
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-slate-700">No results</p>
+                    <p className="text-xs text-slate-500 mt-1">No tenders found for &quot;{partySearch.lastQuery}&quot;</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-1 items-center justify-center min-h-[300px] rounded-lg border border-dashed bg-white">
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-slate-700">Tenders by Party</p>
+                    <p className="text-xs text-slate-500 mt-1">Select field and search to view results.</p>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </main>
         <footer className="dashboard-status-bar">
           <div className="status-left">

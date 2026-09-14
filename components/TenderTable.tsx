@@ -68,6 +68,16 @@ import {
 } from "@/components/ui/select";
 import "./TenderTable.css";
 
+const formatMoney = (v: unknown): string => {
+  if (v == null || v === "") return "-";
+  const s = String(v).trim();
+  if (s === "-" || s.toLowerCase() === "null") return "-";
+  const cleaned = s.replace(/,/g, "");
+  const n = Number(cleaned);
+  if (isNaN(n)) return s;
+  return n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+};
+
 // Static filter metadata. Hoisted to module scope so it keeps a stable identity
 // across renders and can be used safely in useMemo dependency arrays.
 const BOOLEAN_COLUMNS = new Set(["participated", "reverseAuctionApplicable"]);
@@ -779,6 +789,7 @@ interface TenderTableProps {
   showDeadlineOverBadge?: boolean;
   showReasonColumn?: boolean;
   showTypeTestColumn?: boolean;
+  variant?: "epc" | "party";
 }
 
 interface ColumnDef {
@@ -819,6 +830,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   showDeadlineOverBadge = false,
   showReasonColumn = false,
   showTypeTestColumn = false,
+  variant = "epc",
 }) => {
   // 1. Column Definitions
   const columns: ColumnDef[] = [
@@ -1375,6 +1387,22 @@ export const TenderTable: React.FC<TenderTableProps> = ({
     },
   ];
 
+  const PARTY_COLUMNS: ColumnDef[] = [
+    { header: "Reference No", accessor: "referenceNo" as ColumnDef["accessor"], defaultWidth: 180, align: "left", type: "string" },
+    { header: "Docket No", accessor: "docketNo", defaultWidth: 180, align: "left", type: "string" },
+    { header: "Organization", accessor: "organization" as ColumnDef["accessor"], defaultWidth: 220, align: "left", type: "string" },
+    { header: "ERP Party Name", accessor: "erpPartyName" as unknown as ColumnDef["accessor"], defaultWidth: 220, align: "left", type: "string" },
+    { header: "Competitors", accessor: "competitors", defaultWidth: 250, align: "left", type: "string" },
+    { header: "Our Rank", accessor: "ourRank", defaultWidth: 120, align: "center", type: "string" },
+    { header: "Our Value", accessor: "ourValue", defaultWidth: 160, align: "right", type: "string" },
+    { header: "L1 Name", accessor: "nameOfRank1", defaultWidth: 200, align: "left", type: "string" },
+    { header: "L1 Price", accessor: "valueOfRank1", defaultWidth: 160, align: "right", type: "string" },
+    { header: "Diff L1", accessor: "differenceBetweenRank1", defaultWidth: 140, align: "right", type: "string" },
+    { header: "L2 Name", accessor: "nameOfRank2", defaultWidth: 200, align: "left", type: "string" },
+    { header: "L2 Price", accessor: "valueOfRank2", defaultWidth: 160, align: "right", type: "string" },
+    { header: "Diff L2", accessor: "differenceBetweenRank2", defaultWidth: 140, align: "right", type: "string" },
+  ];
+
   const postParticipationAccessors = new Set([
     "bgNoUtrNo", "remarks", "loiPoNoAndDate",
     "competitors",
@@ -1403,12 +1431,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
     "catalogueDone",
     "participated",
   ]);
-  const filteredForMode = showPostParticipationColumns
-    ? columns.filter((col) => !postParticipationExcludeAccessors.has(col.accessor) && !(postParticipationHiddenAccessors.has(col.accessor) && !(showReasonColumn && col.accessor === "reason")))
-    : columns.filter((col) => !postParticipationAccessors.has(col.accessor));
-  const baseVisibleColumns = showTypeTestColumn
+  const filteredForMode = variant === "party"
+    ? PARTY_COLUMNS
+    : showPostParticipationColumns
+      ? columns.filter((col) => !postParticipationExcludeAccessors.has(col.accessor) && !(postParticipationHiddenAccessors.has(col.accessor) && !(showReasonColumn && col.accessor === "reason")))
+      : columns.filter((col) => !postParticipationAccessors.has(col.accessor));
+  const baseVisibleColumns = variant === "party"
     ? filteredForMode
-    : filteredForMode.filter((col) => (col.accessor as string) !== "typeTests" && (col.accessor as string) !== "typetest");
+    : showTypeTestColumn
+      ? filteredForMode
+      : filteredForMode.filter((col) => (col.accessor as string) !== "typeTests" && (col.accessor as string) !== "typetest");
 
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [showColumnPicker, setShowColumnPicker] = useState(false);
@@ -3929,10 +3961,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               />
                             );
                           } else {
+                            const rawDisplay = editableCfg.display(record);
+                            const moneyCols = new Set(["ourValue", "valueOfRank1", "valueOfRank2"]);
+                            const displayVal = variant === "party" && moneyCols.has(col.accessor) ? formatMoney(rawDisplay) : rawDisplay;
                             cellContent = (
                               <div className="flex flex-col items-start gap-1">
                                 <span className="docket-display">
-                                  {editableCfg.display(record)}
+                                  {displayVal}
                                   {isSaving && (
                                     <Loader2
                                       size={12}
@@ -5195,10 +5230,15 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               );
                               cellClass = "col-center";
                             } else {
-                              cellContent =
-                                cellVal !== null && cellVal !== undefined
-                                  ? String(cellVal)
-                                  : "-";
+                              const moneySet = new Set(["ourValue", "valueOfRank1", "valueOfRank2"]);
+                              if (variant === "party" && moneySet.has(col.accessor as string)) {
+                                cellContent = formatMoney(cellVal);
+                              } else {
+                                cellContent =
+                                  cellVal !== null && cellVal !== undefined
+                                    ? String(cellVal)
+                                    : "-";
+                              }
                             }
                           }
                         }

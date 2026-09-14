@@ -24,6 +24,7 @@ import {
 } from "@/actions/tender";
 import { importEpcTendersAction } from "@/actions/importEpcTenders";
 import { analyzeTenderValidity, saveAiRelevance } from "@/actions/ai-analysis";
+import { searchTendersByParty } from "@/actions/searchTendersByParty";
 import type { ReverseAuctionWebhookData } from "@/lib/integrations/n8n";
 import { filtersSlice } from "./filtersSlice";
 import { uploadFiles } from "./uploadSlice";
@@ -69,6 +70,28 @@ interface TendersState {
   feedbackSaving: Record<string, boolean>;
   pdfDownloading: Record<string, boolean>;
   pdfParsing: Record<string, boolean>;
+  partySearch: {
+    results: Array<{
+      id: number;
+      referenceNo: string;
+      docketNo: string | null;
+      organization: string | null;
+      erpPartyName: string | null;
+      competitors: string | null;
+      ourRank: string | null;
+      ourValue: string | null;
+      nameOfRank1: string | null;
+      valueOfRank1: string | null;
+      differenceBetweenRank1: string | null;
+      nameOfRank2: string | null;
+      valueOfRank2: string | null;
+      differenceBetweenRank2: string | null;
+    }>;
+    loading: boolean;
+    error: string | null;
+    lastQuery: string;
+    lastField: "erpPartyName" | "itemCode" | null;
+  };
 }
 
 const initialState: TendersState = {
@@ -81,6 +104,7 @@ const initialState: TendersState = {
   feedbackSaving: {},
   pdfDownloading: {},
   pdfParsing: {},
+  partySearch: { results: [], loading: false, error: null, lastQuery: "", lastField: null },
 };
 
 export const updateTenderAssignments = createAsyncThunk(
@@ -737,6 +761,18 @@ export const appendTenders = createAsyncThunk(
   },
 );
 
+export const searchTendersByPartyThunk = createAsyncThunk(
+  "tenders/searchByParty",
+  async (params: { query: string; field: "erpPartyName" | "itemCode" }, { rejectWithValue }) => {
+    try {
+      const rows = await searchTendersByParty(params);
+      return { rows, query: params.query, field: params.field };
+    } catch (err: any) {
+      return rejectWithValue(err?.message || "Search failed");
+    }
+  },
+);
+
 export const tendersSlice = createSlice({
   name: "tenders",
   initialState,
@@ -1345,6 +1381,22 @@ export const tendersSlice = createSlice({
     });
     builder.addCase(syncSheetToMerged.rejected, (state) => {
       state.loading = false;
+    });
+
+    builder.addCase(searchTendersByPartyThunk.pending, (state, action) => {
+      state.partySearch.loading = true;
+      state.partySearch.error = null;
+      state.partySearch.lastQuery = action.meta.arg.query;
+      state.partySearch.lastField = action.meta.arg.field;
+    });
+    builder.addCase(searchTendersByPartyThunk.fulfilled, (state, action) => {
+      state.partySearch.loading = false;
+      state.partySearch.results = action.payload.rows as any;
+      state.partySearch.error = null;
+    });
+    builder.addCase(searchTendersByPartyThunk.rejected, (state, action) => {
+      state.partySearch.loading = false;
+      state.partySearch.error = (action.payload as string) || "Search failed";
     });
   },
 });
