@@ -15,6 +15,7 @@ import { fetchSmartsheet } from "@/lib/smartsheet";
 const EMAIL_SUBJECT_COLUMN = "Email Subject Line  (Debosmita Nath)";
 const ENQUIRY_TENDER_NO_COLUMN = "Enquiry / Tender No. (Marketing Team)";
 const DOCKET_NO_COLUMN = "Docket No  (Debosmita Nath)";
+const PARTY_NAME_COLUMN = "Party Name (Debosmita Nath)";
 
 export interface DocketSyncStats {
   totalBlank: number;
@@ -25,6 +26,7 @@ export interface DocketSyncStats {
   updates: Array<{
     referenceNo: string;
     docketNo: string;
+    erpPartyName?: string | null;
     source: "emailSubject" | "enquiryTender";
   }>;
 }
@@ -63,6 +65,8 @@ export async function syncDocketFromSmartsheet(): Promise<DocketSyncStats> {
   const emailSubjectColId = columnIndex.get(EMAIL_SUBJECT_COLUMN);
   const enquiryTenderColId = columnIndex.get(ENQUIRY_TENDER_NO_COLUMN);
   const docketNoColId = columnIndex.get(DOCKET_NO_COLUMN);
+  const partyNameColId =
+    columnIndex.get(PARTY_NAME_COLUMN) ?? columnIndex.get("Party Name  (Debosmita Nath)");
 
   if (!docketNoColId) {
     console.warn(
@@ -83,6 +87,7 @@ const blankDocketRecords = await prisma.tenderMerged.findMany({
   select: {
     id: true,
     referenceNo: true,
+    erpPartyName: true,
   },
 });
 
@@ -96,8 +101,8 @@ const blankDocketRecords = await prisma.tenderMerged.findMany({
   const rows = sheetData.rows || [];
 
   // Pre-process Smartsheet rows into lookup structures
-  const emailSubjectToDocket = new Map<string, string>();
-  const enquiryTenderToDocket = new Map<string, string>();
+  const emailSubjectToDocket = new Map<string, { docket: string; party: string | null }>();
+  const enquiryTenderToDocket = new Map<string, { docket: string; party: string | null }>();
 
   for (const row of rows) {
     const cells = row.cells || [];
@@ -117,18 +122,19 @@ const blankDocketRecords = await prisma.tenderMerged.findMany({
 
     const docketVal = getCellValue(docketNoColId);
     if (!docketVal) continue;
+    const partyVal = getCellValue(partyNameColId);
 
     if (emailSubjectColId !== undefined) {
       const emailVal = getCellValue(emailSubjectColId);
       if (emailVal) {
-        emailSubjectToDocket.set(emailVal.toLowerCase(), docketVal);
+        emailSubjectToDocket.set(emailVal.toLowerCase(), { docket: docketVal, party: partyVal });
       }
     }
 
     if (enquiryTenderColId !== undefined) {
       const enquiryVal = getCellValue(enquiryTenderColId);
       if (enquiryVal) {
-        enquiryTenderToDocket.set(enquiryVal.toLowerCase(), docketVal);
+        enquiryTenderToDocket.set(enquiryVal.toLowerCase(), { docket: docketVal, party: partyVal });
       }
     }
   }
@@ -142,12 +148,14 @@ const blankDocketRecords = await prisma.tenderMerged.findMany({
     }
 
     let foundDocket: string | null = null;
+    let foundParty: string | null = null;
     let source: "emailSubject" | "enquiryTender" | null = null;
 
     // Check "Email Subject Line (Debosmita Nath)" — refNo must appear within the email subject
-    for (const [emailVal, docketVal] of emailSubjectToDocket) {
+    for (const [emailVal, val] of emailSubjectToDocket) {
       if (emailVal.includes(refNoLower)) {
-        foundDocket = docketVal;
+        foundDocket = val.docket;
+        foundParty = val.party;
         source = "emailSubject";
         break;
       }
@@ -155,9 +163,10 @@ const blankDocketRecords = await prisma.tenderMerged.findMany({
 
     // Fallback: check "Enquiry Tender No (Marketing Team)" — refNo must appear within the enquiry value
     if (!foundDocket) {
-      for (const [enquiryVal, docketVal] of enquiryTenderToDocket) {
+      for (const [enquiryVal, val] of enquiryTenderToDocket) {
         if (enquiryVal.includes(refNoLower)) {
-          foundDocket = docketVal;
+          foundDocket = val.docket;
+          foundParty = val.party;
           source = "enquiryTender";
           break;
         }
@@ -169,16 +178,23 @@ const blankDocketRecords = await prisma.tenderMerged.findMany({
       continue;
     }
 
-    // 6. Update TenderMerged record
+    // 6. Update TenderMerged record — piggyback erpPartyName from same row, never overwrite not-null
     try {
+      const data: Record<string, string> = { docketNo: foundDocket };
+      const existingParty = (record as { erpPartyName?: string | null }).erpPartyName;
+      const partyTrim = foundParty?.trim() ?? "";
+      if (partyTrim !== "" && (!existingParty || existingParty.trim() === "")) {
+        data.erpPartyName = partyTrim;
+      }
       await prisma.tenderMerged.update({
         where: { id: record.id },
-        data: { docketNo: foundDocket },
+        data,
       });
 
       stats.updates.push({
         referenceNo: record.referenceNo,
         docketNo: foundDocket,
+        erpPartyName: data.erpPartyName ?? null,
         source: source ?? "emailSubject",
       });
 
