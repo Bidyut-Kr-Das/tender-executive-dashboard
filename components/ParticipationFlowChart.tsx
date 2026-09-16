@@ -49,9 +49,7 @@ export function computeFlowCounts(
       deadlineMatchesRange(r, from, to),
   );
   // Deduplicate by docketNo: same docket counts as a single tender.
-  const participated = dedupeByDocketNo(
-    participatedRaw as unknown as (Record<string, unknown> & { id?: unknown })[],
-  ) as unknown as typeof participatedRaw;
+  const participated = participatedRaw;
 
   const withRa = participated.filter(
     (r) => r.reverseAuctionApplicable === "true",
@@ -113,24 +111,31 @@ export function computeFlowCounts(
     (r) => r.contractNo == null || String(r.contractNo).trim() === "",
   );
 
+  // Deduplicate per node, not up front: a docket is counted once per funnel
+  // node if ANY of its rows matches that node - same semantics as the table.
+  const countUnique = (arr: typeof participated) =>
+    dedupeByDocketNo(
+      arr as unknown as (Record<string, unknown> & { id?: unknown })[],
+    ).length;
+
   return {
-    withRa: withRa.length,
-    withoutRa: withoutRa.length,
-    raDone: raDone.length,
-    raPending: raPending.length,
-    technicalOpen: technicalOpen.length,
-    technicalNotOpen: technicalNotOpen.length,
-    weL1: weL1.length,
-    weLost: weLost.length,
-    expRaDate: expRaDate.length,
-    contractReceived: contractReceived.length,
-    contractPending: contractPending.length,
-    financialOpen: financialOpen.length,
-    financialNotOpen: financialNotOpen.length,
-    financialWeL1: financialWeL1.length,
-    financialWeLost: financialWeLost.length,
-    financialContractReceived: financialContractReceived.length,
-    financialContractPending: financialContractPending.length,
+    withRa: countUnique(withRa),
+    withoutRa: countUnique(withoutRa),
+    raDone: countUnique(raDone),
+    raPending: countUnique(raPending),
+    technicalOpen: countUnique(technicalOpen),
+    technicalNotOpen: countUnique(technicalNotOpen),
+    weL1: countUnique(weL1),
+    weLost: countUnique(weLost),
+    expRaDate: countUnique(expRaDate),
+    contractReceived: countUnique(contractReceived),
+    contractPending: countUnique(contractPending),
+    financialOpen: countUnique(financialOpen),
+    financialNotOpen: countUnique(financialNotOpen),
+    financialWeL1: countUnique(financialWeL1),
+    financialWeLost: countUnique(financialWeLost),
+    financialContractReceived: countUnique(financialContractReceived),
+    financialContractPending: countUnique(financialContractPending),
   };
 }
 
