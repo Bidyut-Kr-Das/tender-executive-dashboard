@@ -1166,3 +1166,31 @@ model Credential {
   @@index([category])
   @@map("credentials")
 }
+
+// ---------- RAILWAYS ----------
+model Railways {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  financialYear          String?
+  railway                String?
+  tenderNo               String?
+  erpTenderNo            String?
+  qtnNo                  String?
+  dueDate                DateTime?
+  erpItemSchedule        String?
+  erpCode                String?
+  item                   String?
+  qtyInKms               Float?
+  participated           String?
+  reverseAuction         String?
+  bidOpened              String?
+  reverseAuctionDone     String?
+  comparativeAvailable   String?
+  raAnnounced            String?
+  raAnnouncedOnDate      DateTime?
+  expectedContractStatus String?
+
+  @@index([tenderNo])
+}

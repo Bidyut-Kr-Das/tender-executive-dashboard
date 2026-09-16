@@ -6,6 +6,7 @@ import filtersReducer from "@/lib/slices/filtersSlice";
 import utilityReducer from "@/lib/slices/utilitySlice";
 import credentialsReducer from "@/lib/slices/credentialsSlice";
 import emdReducer from "@/lib/slices/emdSlice";
+import railwaysReducer from "@/lib/slices/railwaysSlice";
 
 export const makeStore = () =>
   configureStore({
@@ -17,6 +18,7 @@ export const makeStore = () =>
       utility: utilityReducer,
       credentials: credentialsReducer,
       emd: emdReducer,
+      railways: railwaysReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
