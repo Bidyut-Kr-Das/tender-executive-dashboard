@@ -48,8 +48,11 @@ export function computeFlowCounts(
       r.participated === "true" &&
       deadlineMatchesRange(r, from, to),
   );
-  // Deduplicate by docketNo: same docket counts as a single tender.
-  const participated = participatedRaw;
+  // Deduplicate by docketNo before the RA split, so a docket whose rows
+  // disagree on reverseAuctionApplicable still counts on one side only.
+  const participated = dedupeByDocketNo(
+    participatedRaw as unknown as (Record<string, unknown> & { id?: unknown })[],
+  ) as unknown as typeof participatedRaw;
 
   const withRa = participated.filter(
     (r) => r.reverseAuctionApplicable === "true",
@@ -111,8 +114,9 @@ export function computeFlowCounts(
     (r) => r.contractNo == null || String(r.contractNo).trim() === "",
   );
 
-  // Deduplicate per node, not up front: a docket is counted once per funnel
-  // node if ANY of its rows matches that node - same semantics as the table.
+  // Per-node dedupe is kept for deeper nodes: a docket can legitimately match
+  // sibling nodes (e.g. one row rank 1 and another rank 2), so it is counted
+  // once per node. The root split already ran on deduped rows above.
   const countUnique = (arr: typeof participated) =>
     dedupeByDocketNo(
       arr as unknown as (Record<string, unknown> & { id?: unknown })[],
