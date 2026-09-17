@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { RailwaysModel } from "@/generated/prisma/models/Railways";
-import { getRailways } from "@/actions/railways";
+import {
+  getRailways,
+  updateRailwaysErpCode as updateRailwaysErpCodeAction,
+} from "@/actions/railways";
 
 export type RailwayRow = RailwaysModel & Record<string, unknown>;
 
@@ -21,6 +24,14 @@ export const fetchRailways = createAsyncThunk(
   async () => await getRailways(),
 );
 
+export const updateRailwaysErpCode = createAsyncThunk(
+  "railways/updateErpCode",
+  async (params: { id: number; erpCode: string | null }) => {
+    await updateRailwaysErpCodeAction(params.id, params.erpCode);
+    return params;
+  },
+);
+
 export const railwaysSlice = createSlice({
   name: "railways",
   initialState,
@@ -38,6 +49,12 @@ export const railwaysSlice = createSlice({
       .addCase(fetchRailways.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message ?? "Failed to load railways";
+      })
+      .addCase(updateRailwaysErpCode.fulfilled, (state, action) => {
+        const { id, erpCode } = action.payload;
+        state.rows = state.rows.map((r) =>
+          r.id === id ? { ...r, erpCode } : r,
+        );
       });
   },
 });

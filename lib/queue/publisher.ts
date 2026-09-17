@@ -74,3 +74,15 @@ export async function publishGemPdfParsingTask(
 ): Promise<boolean> {
   return publishToQueue(QUEUES.TENDER_PARSING, payload);
 }
+
+export type KnowledgebasePayload = {
+  mode: "direct";
+  collection: string;
+  content: string;
+};
+
+export async function publishKnowledgebaseTask(
+  payload: KnowledgebasePayload,
+): Promise<boolean> {
+  return publishToQueue(QUEUES.KNOWLEDGEBASE, payload);
+}

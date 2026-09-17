@@ -25,6 +25,7 @@ const links: Array<{ href: string; label: string; isExternal?: boolean }> = [
   },
   { href: "/supply-history", label: "Supply History Dashboard" },
   { href: "/railways", label: "Railways" },
+  { href: "/items", label: "Master Item List" },
   { href: "/emd", label: "EMD Merged" },
   // { href: "/emd-details-cash", label: "EMD Cash" },
   // { href: "/emd-details-bg", label: "EMD BG" },
