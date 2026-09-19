@@ -84,6 +84,7 @@ async function main() {
     const sent = await publishKnowledgebaseTask({
       mode: "direct",
       collection: "item-knowledge",
+      contentKey: "item_name",
       content,
     });
     if (sent) published++;

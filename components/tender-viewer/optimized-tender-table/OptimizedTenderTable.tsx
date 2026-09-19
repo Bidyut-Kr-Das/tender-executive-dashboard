@@ -57,9 +57,8 @@ import {
   Check,
   Circle,
   Loader2,
-  X,
-  CheckCheck,
 } from "lucide-react";
+import { MultiSelect } from "@/components/ui/multi-select";
 import type {
   ColumnFilterType,
   FilterOption,
@@ -255,8 +254,6 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
   }, [columns]);
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const [pickerSearch, setPickerSearch] = useState("");
   const [isDownloadingPdfs, setIsDownloadingPdfs] = useState(false);
   const [isParsingPdfs, setIsParsingPdfs] = useState(false);
   const [isParsingCva, setIsParsingCva] = useState(false);
@@ -349,121 +346,134 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
     [rowKey],
   );
 
-  const processedRows = useMemo(() => {
-    let result = rows as unknown as T[];
-
-    if (debouncedGlobalSearch.trim() !== "") {
-      const searchLower = debouncedGlobalSearch.toLowerCase().trim();
-      result = result.filter((row) => {
-        return columns.some((col) => {
-          if (col.filter?.type === "boolean") return false;
-          const val = row[col.accessor as keyof T];
-          if (val === null || val === undefined) return false;
-          return String(val).toLowerCase().includes(searchLower);
-        });
+  const searchFilteredRows = useMemo(() => {
+    if (debouncedGlobalSearch.trim() === "") return rows;
+    const searchLower = debouncedGlobalSearch.toLowerCase().trim();
+    return rows.filter((row) => {
+      return columns.some((col) => {
+        if (col.filter?.type === "boolean") return false;
+        const val = row[col.accessor as keyof T];
+        if (val === null || val === undefined) return false;
+        return String(val).toLowerCase().includes(searchLower);
       });
-    }
+    });
+  }, [rows, columns, debouncedGlobalSearch]);
 
-    columns.forEach((col) => {
-      const accessorStr = String(col.accessor);
-      const filterState = columnFilters[accessorStr];
-      if (!filterState) return;
+  const applyColumnFilters = useCallback(
+    (baseRows: T[], skipAccessor: string | null): T[] => {
+      let result = baseRows;
 
-      if (accessorStr === "deadline" && filterState.select?.length) {
-        const now = new Date();
-        const preset = filterState.select[0];
-        let fromKey: string | null = null;
-        let toKey: string | null = null;
-        if (preset === "thisWeek") {
-          const r = getISTWeekRange(now);
-          fromKey = r.fromKey;
-          toKey = r.toKey;
-        } else if (preset === "thisMonth") {
-          const r = getISTMonthRange(now);
-          fromKey = r.fromKey;
-          toKey = r.toKey;
-        } else if (preset === "thisYear") {
-          const r = getISTYearRange(now);
-          fromKey = r.fromKey;
-          toKey = r.toKey;
-        }
-        if (fromKey) {
-          result = result.filter((row) => {
-            const val = row[col.accessor as keyof T];
-            if (
-              !(val instanceof Date) &&
-              typeof val !== "string" &&
-              typeof val !== "number"
-            )
+      columns.forEach((col) => {
+        const accessorStr = String(col.accessor);
+        if (skipAccessor === accessorStr) return;
+        const filterState = columnFilters[accessorStr];
+        if (!filterState) return;
+
+        if (accessorStr === "deadline" && filterState.select?.length) {
+          const now = new Date();
+          const preset = filterState.select[0];
+          let fromKey: string | null = null;
+          let toKey: string | null = null;
+          if (preset === "thisWeek") {
+            const r = getISTWeekRange(now);
+            fromKey = r.fromKey;
+            toKey = r.toKey;
+          } else if (preset === "thisMonth") {
+            const r = getISTMonthRange(now);
+            fromKey = r.fromKey;
+            toKey = r.toKey;
+          } else if (preset === "thisYear") {
+            const r = getISTYearRange(now);
+            fromKey = r.fromKey;
+            toKey = r.toKey;
+          }
+          if (fromKey) {
+            result = result.filter((row) => {
+              const val = row[col.accessor as keyof T];
+              if (
+                !(val instanceof Date) &&
+                typeof val !== "string" &&
+                typeof val !== "number"
+              )
+                return true;
+              const key = toISTDateKey(val as any);
+              if (!key) return true;
+              if (key < fromKey!) return false;
+              if (toKey && key > toKey) return false;
               return true;
-            const key = toISTDateKey(val as any);
-            if (!key) return true;
-            if (key < fromKey!) return false;
-            if (toKey && key > toKey) return false;
-            return true;
-          });
+            });
+          }
+          return;
         }
-        return;
-      }
 
-      if (col.filter?.type === "dateRange" && filterState.dateRange) {
-        const { startDate, endDate } = filterState.dateRange;
-        if (startDate || endDate) {
-          result = result.filter((row) => {
-            const val = row[col.accessor as keyof T];
-            if (
-              !(val instanceof Date) &&
-              typeof val !== "string" &&
-              typeof val !== "number"
-            )
+        if (col.filter?.type === "dateRange" && filterState.dateRange) {
+          const { startDate, endDate } = filterState.dateRange;
+          if (startDate || endDate) {
+            result = result.filter((row) => {
+              const val = row[col.accessor as keyof T];
+              if (
+                !(val instanceof Date) &&
+                typeof val !== "string" &&
+                typeof val !== "number"
+              )
+                return true;
+
+              const key = toISTDateKey(val as any);
+              if (!key) return true;
+
+              const fromKey = startDate ? toISTDateKey(startDate) : null;
+              const toKey = endDate ? toISTDateKey(endDate) : null;
+              // If filter keys are YYYY-MM-DD strings, toISTDateKey handles them; fallback to raw string
+              const effectiveFrom = fromKey ?? (startDate ? String(startDate) : null);
+              const effectiveTo = toKey ?? (endDate ? String(endDate) : null);
+              if (effectiveFrom && key < effectiveFrom) return false;
+              if (effectiveTo && key > effectiveTo) return false;
+
               return true;
-
-            const key = toISTDateKey(val as any);
-            if (!key) return true;
-
-            const fromKey = startDate ? toISTDateKey(startDate) : null;
-            const toKey = endDate ? toISTDateKey(endDate) : null;
-            // If filter keys are YYYY-MM-DD strings, toISTDateKey handles them; fallback to raw string
-            const effectiveFrom = fromKey ?? (startDate ? String(startDate) : null);
-            const effectiveTo = toKey ?? (endDate ? String(endDate) : null);
-            if (effectiveFrom && key < effectiveFrom) return false;
-            if (effectiveTo && key > effectiveTo) return false;
-
-            return true;
-          });
+            });
+          }
         }
-      }
 
-      if (col.filter?.type === "select") {
-        const selected = filterState.select ?? [];
-        if (selected.length > 0) {
-          result = result.filter((row) => {
-            const rawVal = row[col.accessor as keyof T];
-            const val = String(rawVal ?? "");
-            if (
-              selected.includes("__blank__") &&
-              (rawVal === null ||
-                rawVal === undefined ||
-                rawVal === "" ||
-                val === "NOT_DECIDED")
-            ) {
-              return true;
-            }
-            if (selected.includes("not_analysed") && val === "") {
-              return true;
-            }
-            if (accessorStr === "assignedTo") {
-              const parts = val.split(",").map((s) => s.trim());
-              return selected.some((s) => parts.includes(s));
-            }
-            if (accessorStr === "tenderFileUrl" || accessorStr === "website") {
-              if (selected.includes("Available") && val !== "") return true;
-              if (selected.includes("Not Available") && val === "") return true;
-            }
-            return selected.includes(val);
-          });
+        if (col.filter?.type === "select") {
+          const selected = filterState.select ?? [];
+          if (selected.length > 0) {
+            result = result.filter((row) => {
+              const rawVal = row[col.accessor as keyof T];
+              const val = String(rawVal ?? "");
+              if (
+                selected.includes("__blank__") &&
+                (rawVal === null ||
+                  rawVal === undefined ||
+                  rawVal === "" ||
+                  val === "NOT_DECIDED")
+              ) {
+                return true;
+              }
+              if (selected.includes("not_analysed") && val === "") {
+                return true;
+              }
+              if (accessorStr === "assignedTo") {
+                const parts = val.split(",").map((s) => s.trim());
+                return selected.some((s) => parts.includes(s));
+              }
+              if (accessorStr === "tenderFileUrl" || accessorStr === "website") {
+                if (selected.includes("Available") && val !== "") return true;
+                if (selected.includes("Not Available") && val === "") return true;
+              }
+              return selected.includes(val);
+            });
+          }
+          if (col.filter.searchable && filterState.text) {
+            const textLower = filterState.text.toLowerCase();
+            result = result.filter((row) => {
+              const val = row[col.accessor as keyof T];
+              if (val === null || val === undefined) return false;
+              return String(val).toLowerCase().includes(textLower);
+            });
+          }
         }
-        if (col.filter.searchable && filterState.text) {
+
+        if (filterState.text) {
           const textLower = filterState.text.toLowerCase();
           result = result.filter((row) => {
             const val = row[col.accessor as keyof T];
@@ -471,77 +481,75 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
             return String(val).toLowerCase().includes(textLower);
           });
         }
-      }
 
-      if (filterState.text) {
-        const textLower = filterState.text.toLowerCase();
-        result = result.filter((row) => {
-          const val = row[col.accessor as keyof T];
-          if (val === null || val === undefined) return false;
-          return String(val).toLowerCase().includes(textLower);
-        });
-      }
-
-      if (
-        col.filter?.type === "boolean" &&
-        filterState.boolean !== null &&
-        filterState.boolean !== undefined
-      ) {
-        result = result.filter((row) => {
-          const val = row[col.accessor as keyof T];
-          if (typeof val === "string") {
-            return (val === "true") === filterState.boolean;
-          }
-          return Boolean(val) === filterState.boolean;
-        });
-      }
-
-      if (col.filter?.type === "rawMaterials" && filterState.rawMaterials) {
-        const { aluMin, aluMax, cuMin, cuMax } = filterState.rawMaterials;
-        const hasAlu = aluMin.trim() !== "" || aluMax.trim() !== "";
-        const hasCu = cuMin.trim() !== "" || cuMax.trim() !== "";
-        if (hasAlu || hasCu) {
-          const aluRange =
-            hasAlu
-              ? {
-                  min:
-                    aluMin.trim() !== ""
-                      ? parseFloat(aluMin)
-                      : Number.NEGATIVE_INFINITY,
-                  max:
-                    aluMax.trim() !== ""
-                      ? parseFloat(aluMax)
-                      : Number.POSITIVE_INFINITY,
-                }
-              : null;
-          const cuRange =
-            hasCu
-              ? {
-                  min:
-                    cuMin.trim() !== ""
-                      ? parseFloat(cuMin)
-                      : Number.NEGATIVE_INFINITY,
-                  max:
-                    cuMax.trim() !== ""
-                      ? parseFloat(cuMax)
-                      : Number.POSITIVE_INFINITY,
-                }
-              : null;
+        if (
+          col.filter?.type === "boolean" &&
+          filterState.boolean !== null &&
+          filterState.boolean !== undefined
+        ) {
           result = result.filter((row) => {
-            const raw = row[col.accessor as keyof T];
-            if (aluRange) {
-              if (!anyRawMaterialInRange(raw, isAlu, aluRange.min, aluRange.max))
-                return false;
+            const val = row[col.accessor as keyof T];
+            if (typeof val === "string") {
+              return (val === "true") === filterState.boolean;
             }
-            if (cuRange) {
-              if (!anyRawMaterialInRange(raw, isCu, cuRange.min, cuRange.max))
-                return false;
-            }
-            return true;
+            return Boolean(val) === filterState.boolean;
           });
         }
-      }
-    });
+
+        if (col.filter?.type === "rawMaterials" && filterState.rawMaterials) {
+          const { aluMin, aluMax, cuMin, cuMax } = filterState.rawMaterials;
+          const hasAlu = aluMin.trim() !== "" || aluMax.trim() !== "";
+          const hasCu = cuMin.trim() !== "" || cuMax.trim() !== "";
+          if (hasAlu || hasCu) {
+            const aluRange =
+              hasAlu
+                ? {
+                    min:
+                      aluMin.trim() !== ""
+                        ? parseFloat(aluMin)
+                        : Number.NEGATIVE_INFINITY,
+                    max:
+                      aluMax.trim() !== ""
+                        ? parseFloat(aluMax)
+                        : Number.POSITIVE_INFINITY,
+                  }
+                : null;
+            const cuRange =
+              hasCu
+                ? {
+                    min:
+                      cuMin.trim() !== ""
+                        ? parseFloat(cuMin)
+                        : Number.NEGATIVE_INFINITY,
+                    max:
+                      cuMax.trim() !== ""
+                        ? parseFloat(cuMax)
+                        : Number.POSITIVE_INFINITY,
+                  }
+                : null;
+            result = result.filter((row) => {
+              const raw = row[col.accessor as keyof T];
+              if (aluRange) {
+                if (!anyRawMaterialInRange(raw, isAlu, aluRange.min, aluRange.max))
+                  return false;
+              }
+              if (cuRange) {
+                if (!anyRawMaterialInRange(raw, isCu, cuRange.min, cuRange.max))
+                  return false;
+              }
+              return true;
+            });
+          }
+        }
+      });
+
+      return result;
+    },
+    [columns, columnFilters],
+  );
+
+  const processedRows = useMemo(() => {
+    let result = applyColumnFilters(searchFilteredRows, null);
 
     if (sortColumn) {
       const sortColDef = columns.find((c) => String(c.accessor) === sortColumn);
@@ -613,7 +621,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
     }
 
     return result;
-  }, [rows, debouncedGlobalSearch, sortColumn, sortDirection, columns, columnFilters, disableDefaultDeadlineFilter]);
+  }, [searchFilteredRows, applyColumnFilters, sortColumn, sortDirection, columns, columnFilters, disableDefaultDeadlineFilter]);
 
   const gemTendersToDownload = useMemo(() => {
     return processedRows
@@ -690,6 +698,46 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
     return [...frozen, ...nonFrozen];
   }, [columns, columnVisibility]);
 
+  const columnPickerOptions = useMemo(
+    () =>
+      columns
+        .filter((c) => !c.hidden)
+        .map((c) => ({ value: String(c.accessor), label: c.header })),
+    [columns],
+  );
+
+  const visibleColumnAccessors = useMemo(
+    () =>
+      columns
+        .filter(
+          (c) =>
+            !c.hidden && columnVisibility[String(c.accessor)] !== false,
+        )
+        .map((c) => String(c.accessor)),
+    [columns, columnVisibility],
+  );
+
+  const handleColumnVisibilityChange = useCallback(
+    (next: string[]) => {
+      const togglable = columns.filter((c) => !c.hidden);
+      const vis: Record<string, boolean> = {};
+      togglable.forEach((c) => {
+        if (!next.includes(String(c.accessor))) {
+          vis[String(c.accessor)] = false;
+        }
+      });
+      // guard: keep at least one visible
+      if (
+        togglable[0] &&
+        vis[String(togglable[0].accessor)] === false
+      ) {
+        delete vis[String(togglable[0].accessor)];
+      }
+      dispatch(setColumnVisibility(vis));
+    },
+    [columns, dispatch],
+  );
+
   const frozenColumnOffsets = useMemo(() => {
     const offsets: Record<string, number> = {};
     let currentLeft = 0;
@@ -705,8 +753,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
   const uniqueSelectOptions = useMemo(() => {
     const map: Record<string, FilterOption[]> = {};
 
-    // Collect the eligible select columns up front so the dataset is walked once
-    // instead of once per column.
+    // Collect the eligible select columns up front.
     const selectCols: { accessorStr: string; accessor: keyof T }[] = [];
     for (const col of columns) {
       if (col.filter?.type !== "select") continue;
@@ -721,24 +768,23 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
     const assocById = new Map<number, (typeof associations)[number]>();
     for (const a of associations) assocById.set(a.id, a);
 
-    const seenByCol = new Map<string, Set<string>>();
-    const optsByCol = new Map<string, FilterOption[]>();
+    // Cascade except self: a column's options come from rows filtered by every
+    // other active filter, never by its own. Columns with no own filter reuse
+    // processedRows (already filtered by all other filters) — no extra pass.
     for (const c of selectCols) {
-      seenByCol.set(c.accessorStr, new Set());
-      optsByCol.set(c.accessorStr, []);
-    }
-
-    for (const row of processedRows) {
-      for (const c of selectCols) {
+      const rowsForOptions = columnFilters[c.accessorStr]
+        ? applyColumnFilters(searchFilteredRows, c.accessorStr)
+        : processedRows;
+      const seen = new Set<string>();
+      const opts: FilterOption[] = [];
+      const addOption = (value: string, label?: string) => {
+        if (!value || seen.has(value)) return;
+        seen.add(value);
+        opts.push({ value, label: label ?? value });
+      };
+      for (const row of rowsForOptions) {
         const raw = row[c.accessor];
         if (raw === null || raw === undefined || raw === "") continue;
-        const seen = seenByCol.get(c.accessorStr)!;
-        const opts = optsByCol.get(c.accessorStr)!;
-        const addOption = (value: string, label?: string) => {
-          if (!value || seen.has(value)) return;
-          seen.add(value);
-          opts.push({ value, label: label ?? value });
-        };
         if (c.accessorStr === "assignedTo") {
           for (const id of String(raw)
             .split(",")
@@ -750,17 +796,14 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
           addOption(String(raw));
         }
       }
-    }
-
-    for (const c of selectCols) {
-      const opts = optsByCol.get(c.accessorStr)!;
       if (opts.length > 0) {
         opts.sort((a, b) => a.label.localeCompare(b.label));
         map[c.accessorStr] = opts;
       }
     }
     return map;
-  }, [columns, processedRows, associations]);
+    // ponytail: per-active-column chain re-run; cache skip-variants if filters grow past ~3
+  }, [columns, searchFilteredRows, processedRows, applyColumnFilters, associations, columnFilters]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -1103,6 +1146,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
               options={mergedOptions}
               placeholder={col.filter.placeholder}
               searchable={col.filter.searchable}
+              triggerClassName="!w-full !justify-between !bg-white !text-foreground !border-input"
               onSearchChange={
                 col.filter?.searchable
                   ? (text) => {
@@ -1395,159 +1439,20 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
               : <><FileText size={14} /> Parse PDFs ({tendersToParse.length})</>}
           </button> */}
           <div className="column-picker-container">
-            <button
-              className="column-picker-btn"
-              onClick={() => {
-                setShowColumnPicker((v) => {
-                  if (v) setPickerSearch("");
-                  return !v;
-                });
-              }}
-            >
-              <Columns3 size={14} /> Columns
-            </button>
-            {showColumnPicker && (
-              <>
-                <div
-                  className="column-picker-overlay"
-                  onClick={() => {
-                    setShowColumnPicker(false);
-                    setPickerSearch("");
-                  }}
-                />
-                <div className="column-picker-dropdown column-picker-dropdown--enhanced">
-                  <p className="column-picker-header">
-                    <span>Toggle Columns</span>
-                    {(() => {
-                      const togglable = columns.filter((c) => !c.hidden);
-                      const visibleCount = togglable.filter(
-                        (c) => columnVisibility[String(c.accessor)] !== false,
-                      ).length;
-                      return (
-                        <span className="column-picker-count">
-                          {visibleCount}/{togglable.length}
-                        </span>
-                      );
-                    })()}
-                  </p>
-                  {/* Search */}
-                  <div className="column-picker-search">
-                    <Search size={14} className="column-picker-search-icon" />
-                    <input
-                      type="text"
-                      className="column-picker-search-input"
-                      placeholder="Search columns..."
-                      value={pickerSearch}
-                      onChange={(e) => setPickerSearch(e.target.value)}
-                      autoFocus
-                    />
-                    {pickerSearch && (
-                      <button
-                        type="button"
-                        className="column-picker-search-clear"
-                        onClick={() => setPickerSearch("")}
-                        aria-label="Clear search"
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
-                  </div>
-                  {/* Select All / Clear */}
-                  <div className="column-picker-actions">
-                    <button
-                      type="button"
-                      className="column-picker-action-btn"
-                      onClick={() => {
-                        const togglable = columns.filter((c) => !c.hidden);
-                        const q = pickerSearch.trim().toLowerCase();
-                        const filtered = q
-                          ? togglable.filter(
-                              (c) =>
-                                String(c.header).toLowerCase().includes(q) ||
-                                String(c.accessor).toLowerCase().includes(q),
-                            )
-                          : togglable;
-                        const next = { ...columnVisibility };
-                        filtered.forEach((c) => {
-                          delete next[String(c.accessor)];
-                        });
-                        dispatch(setColumnVisibility(next));
-                      }}
-                    >
-                      <CheckCheck size={12} /> Select All
-                    </button>
-                    <button
-                      type="button"
-                      className="column-picker-action-btn"
-                      onClick={() => {
-                        const togglable = columns.filter((c) => !c.hidden);
-                        const q = pickerSearch.trim().toLowerCase();
-                        const filtered = q
-                          ? togglable.filter(
-                              (c) =>
-                                String(c.header).toLowerCase().includes(q) ||
-                                String(c.accessor).toLowerCase().includes(q),
-                            )
-                          : togglable;
-                        const next: Record<string, boolean> = { ...columnVisibility };
-                        filtered.forEach((c) => {
-                          next[String(c.accessor)] = false;
-                        });
-                        // guard: keep at least one visible
-                        const remaining = togglable.filter((c) => next[String(c.accessor)] !== false).length;
-                        if (remaining === 0 && filtered.length > 0) {
-                          delete next[String(filtered[0].accessor)];
-                        }
-                        dispatch(setColumnVisibility(next));
-                      }}
-                    >
-                      <X size={12} /> Clear
-                    </button>
-                  </div>
-                  <div className="column-picker-list">
-                    {(() => {
-                      const togglable = columns.filter((c) => !c.hidden);
-                      const q = pickerSearch.trim().toLowerCase();
-                      const filtered = q
-                        ? togglable.filter(
-                            (c) =>
-                              String(c.header).toLowerCase().includes(q) ||
-                              String(c.accessor).toLowerCase().includes(q),
-                          )
-                        : togglable;
-                      if (filtered.length === 0) {
-                        return <p className="column-picker-empty">No columns found</p>;
-                      }
-                      return filtered.map((col) => (
-                        <label
-                          key={String(col.accessor)}
-                          className="column-picker-item"
-                        >
-                          <input
-                            type="checkbox"
-                            className="column-picker-checkbox"
-                            checked={
-                              columnVisibility[String(col.accessor)] !== false
-                            }
-                            onChange={() =>
-                              dispatch(
-                                setColumnVisibility({
-                                  ...columnVisibility,
-                                  [String(col.accessor)]: !(
-                                    columnVisibility[String(col.accessor)] ?? true
-                                  ),
-                                }),
-                              )
-                            }
-                          />
-                          {col.header}
-                        </label>
-                      ));
-                    })()}
-                  </div>
-                </div>
-              </>
-            )}
+            <MultiSelect
+              title="Toggle Columns"
+              placeholder="Columns"
+              showCount={false}
+              includeBlank={false}
+              searchable
+              searchPlaceholder="Search columns..."
+              emptyText="No columns found"
+              align="end"
+              triggerIcon={<Columns3 size={14} />}
+              options={columnPickerOptions}
+              value={visibleColumnAccessors}
+              onChange={handleColumnVisibilityChange}
+            />
           </div>
           <button
             className="reset-filters-btn"

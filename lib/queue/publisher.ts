@@ -78,6 +78,7 @@ export async function publishGemPdfParsingTask(
 export type KnowledgebasePayload = {
   mode: "direct";
   collection: string;
+  contentKey: string;
   content: string;
 };
 
