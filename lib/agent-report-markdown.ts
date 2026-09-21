@@ -37,7 +37,12 @@ export function agentReportToMarkdown(data: Record<string, unknown>): string {
         seen.add(k);
         return true;
       });
-      lines.push(`- Document Required: ${deduped.length ? deduped.join(", ") : "none"}`);
+      if (deduped.length) {
+        lines.push("- Document Required:");
+        for (const d of deduped) lines.push(`  - ${d}`);
+      } else {
+        lines.push("- Document Required: none");
+      }
       continue;
     }
     for (const [key, value] of Object.entries(section)) {

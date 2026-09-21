@@ -2083,7 +2083,7 @@ export default function Dashboard() {
             if (!o) setAgentReportContent(null);
           }}
         >
-          <SheetContent side="right" className="sm:max-w-2xl w-full">
+          <SheetContent side="right" className="w-full" style={{ width: "40vw" }}>
             <SheetHeader>
               <SheetTitle>Agent Report</SheetTitle>
             </SheetHeader>
