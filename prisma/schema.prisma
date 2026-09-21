@@ -862,6 +862,7 @@ model TenderMerged {
   typetest String?
 
   competitors     String?
+  agentReport     String?
   
   applicableIndex String?
   publishedDate   DateTime?
