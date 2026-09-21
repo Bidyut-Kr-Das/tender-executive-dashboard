@@ -16,7 +16,8 @@ import { fetchAllBomOptions } from "@/lib/slices/utilitySlice";
  */
 const TENDER_DATA_ROUTES = [
   "/",
-  "/tenders",
+  // "/tenders" is deliberately absent: it pages through the data server-side
+  // now, so streaming all ~34k rows there would be pure waste.
   "/post-participation",
   "/not-participated",
   "/merge-conflict",
