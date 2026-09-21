@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
   useRef,
+  memo,
 } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
@@ -59,6 +60,12 @@ import {
   FileText,
   Lock,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { getDisplayNameMap } from "@/lib/tender-columns";
 import { getProvenance, getProvenanceForFields } from "@/lib/columnProvenance";
 
@@ -205,6 +212,30 @@ function DivisionOrDepartmentCell({ value }: { value: unknown }) {
   return <Badge className={`text-[10px] font-medium border ${cls}`}>{raw}</Badge>;
 }
 
+const AgentReportCell = memo(function AgentReportCell({
+  value,
+  onOpen,
+}: {
+  value: unknown;
+  onOpen: (report: string) => void;
+}) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return <span className="text-slate-300">-</span>;
+  return (
+    <button
+      type="button"
+      title="Show Agent Report"
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen(raw);
+      }}
+      className="rounded-md bg-blue-50 border-2 border-blue-500 text-blue-600 px-3 py-1.5 text-xs font-medium hover:bg-blue-500 hover:text-white transition-colors cursor-pointer"
+    >
+      Show Agent Report
+    </button>
+  );
+});
+
 function formatColumnName(name: string): string {
   if (name === "t247Id") return "Portal ID";
   return name
@@ -258,6 +289,13 @@ export default function Dashboard() {
     string,
     unknown
   > | null>(null);
+  const [agentReportContent, setAgentReportContent] = useState<string | null>(
+    null,
+  );
+  const handleOpenAgentReport = useCallback(
+    (report: string) => setAgentReportContent(report),
+    [],
+  );
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Record<string, string>[]>([]);
   const [syncingDockets, setSyncingDockets] = useState(false);
@@ -526,6 +564,7 @@ export default function Dashboard() {
       "proposedErpQuantity",
       "cva",
       "competitors",
+      "agentReport",
       "evaluationTableData",
       "checklist",
       "downloadLink",
@@ -1658,6 +1697,22 @@ export default function Dashboard() {
         };
       }
 
+      if (col === "agentReport") {
+        return {
+          header: "Agent Report",
+          accessor: col as keyof Record<string, unknown>,
+          defaultWidth: 160,
+          hidden: false,
+          searchable: false,
+          renderCell: (_value: unknown, row: Record<string, unknown>) => (
+            <AgentReportCell
+              value={row.agentReport}
+              onOpen={handleOpenAgentReport}
+            />
+          ),
+        };
+      }
+
       if (col === "divisionOrDepartment") {
         return {
           header: displayNameMap[col] ?? "Division or Department",
@@ -1897,6 +1952,7 @@ export default function Dashboard() {
     mergedGroups,
     columnIndices,
     canEditRemarks,
+    handleOpenAgentReport,
   ]);
 
   const extraToolbarActions = useMemo(
@@ -2021,6 +2077,23 @@ export default function Dashboard() {
           onClose={() => setIsAttachmentModalOpen(false)}
           files={selectedFiles}
         />
+        <Sheet
+          open={!!agentReportContent}
+          onOpenChange={(o) => {
+            if (!o) setAgentReportContent(null);
+          }}
+        >
+          <SheetContent side="right" className="sm:max-w-2xl w-full">
+            <SheetHeader>
+              <SheetTitle>Agent Report</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 pb-4 [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_p]:mb-2 [&_p]:leading-relaxed">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {agentReportContent ?? ""}
+              </ReactMarkdown>
+            </div>
+          </SheetContent>
+        </Sheet>
       </>
     ),
     [
@@ -2032,6 +2105,7 @@ export default function Dashboard() {
       feedbackSaving,
       websiteEditRow,
       documentUploadRow,
+      agentReportContent,
       isAttachmentModalOpen,
       selectedFiles,
       updatingCells,
