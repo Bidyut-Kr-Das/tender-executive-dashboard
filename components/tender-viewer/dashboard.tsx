@@ -29,6 +29,7 @@ import {
 } from "@/components/tender-viewer/optimized-tender-table/OptimizedTenderTable";
 import {
   clearStale,
+  setMergedGroups,
   loadTenderFacet,
   loadTenderPage,
   loadTenderSummary,
@@ -41,6 +42,7 @@ import {
 } from "@/lib/slices/tenderPageSlice";
 import type { FilterOption } from "@/lib/types";
 import type { TenderQuery } from "@/lib/tender-query";
+import { needsFacetQuery } from "@/lib/tender-filter-meta";
 import { fetchAllFilteredTenderRows } from "@/actions/tender-query";
 import { loadColumnConfig } from "@/lib/columnConfig";
 import { toast } from "sonner";
@@ -316,13 +318,9 @@ export default function Dashboard() {
       createdAt: string;
     }[]
   >([]);
-  const [mergedGroups, setMergedGroups] = useState<
-    {
-      label: string;
-      separator: string;
-      fields: string[];
-    }[]
-  >([]);
+  // Merged column definitions live in the store so selectTenderQuery can send
+  // them to the server, which needs them to filter and sort those columns.
+  const mergedGroups = useAppSelector((s) => s.tenderPage.mergedGroups);
   const [feedbackRow, setFeedbackRow] = useState<Record<
     string,
     unknown
@@ -431,12 +429,14 @@ export default function Dashboard() {
           setDisplayNameMap(getDisplayNameMap(mappings));
         }
         if (groups) {
-          setMergedGroups(
-            groups.map((g) => ({
-              label: g.label,
-              separator: g.separator,
-              fields: JSON.parse(g.fields),
-            })),
+          dispatch(
+            setMergedGroups(
+              groups.map((g) => ({
+                label: g.label,
+                separator: g.separator,
+                fields: JSON.parse(g.fields) as string[],
+              })),
+            ),
           );
         }
         if (indices) {
@@ -756,24 +756,30 @@ export default function Dashboard() {
     reloadRef.current();
   }, [pageStale, dispatch]);
 
-  const requestFacet = useCallback(
-    (accessor: string) => {
-      dispatch(loadTenderFacet({ query, column: accessor }));
-    },
-    [dispatch, query],
+  const mergedLabels = useMemo(
+    () => mergedGroups.map((g) => g.label),
+    [mergedGroups],
   );
 
+  const requestFacet = useCallback(
+    (accessor: string) => {
+      // Hardcoded-option columns (Available / Not Available, Yes / No, the
+      // association list) never need a round trip.
+      if (!needsFacetQuery(accessor, mergedLabels)) return;
+      dispatch(loadTenderFacet({ query, column: accessor }));
+    },
+    [dispatch, query, mergedLabels],
+  );
+
+  // null means "no options fetched for this column", which is different from
+  // "fetched and empty" - the table must not prune hardcoded options on null.
   const getFacetOptions = useCallback(
-    (accessor: string): FilterOption[] => {
+    (accessor: string): FilterOption[] | null => {
       const entry = pageFacets[accessor];
-      if (!entry) return [];
-      if (accessor === "assignedTo") {
-        const byId = new Map(pageAssociations.map((a) => [String(a.id), a.name]));
-        return entry.options.map((v) => ({ value: v, label: byId.get(v) ?? v }));
-      }
+      if (!entry || entry.status !== "ready") return null;
       return entry.options.map((v) => ({ value: v, label: v }));
     },
-    [pageFacets, pageAssociations],
+    [pageFacets],
   );
 
   const loadAllFilteredRows = useCallback(

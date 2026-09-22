@@ -30,6 +30,10 @@ interface FilterSidebarProps {
   showFlowChart?: boolean;
 }
 
+// A fresh [] inside a selector is a new reference on every store update,
+// which makes useSelector re-render this sidebar on unrelated dispatches.
+const EMPTY_ASSOCIATIONS: { id: number; name: string; email: string }[] = [];
+
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   priceBasisFilter, setPriceBasisFilter,
   aluminiumMin, setAluminiumMin, aluminiumMax, setAluminiumMax,
@@ -43,7 +47,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
-  const associations = useAppSelector((s) => s.tenders.data?.associations ?? []);
+  const associations = useAppSelector((s) => s.tenders.data?.associations) ?? EMPTY_ASSOCIATIONS;
 
   // Single pass over the rows. This used to scan the whole array once per
   // association, allocating a split/map/filter chain per row per association.

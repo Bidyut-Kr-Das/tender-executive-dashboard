@@ -86,10 +86,24 @@ function presetRange(preset: string): { fromKey: string; toKey: string } | null 
   return null;
 }
 
+/** Same rule as dashboard.tsx rowsWithMergedValues. */
+function mergedValue(row: FlatRow, q: TenderQuery, label: string): string | undefined {
+  const g = q.mergedGroups.find((x) => x.label === label);
+  if (!g) return undefined;
+  if (g.separator.trim().length === 0) {
+    const v = row[g.fields[0]];
+    return v != null && v !== "" ? String(v) : "";
+  }
+  return g.fields
+    .map((f) => String(row[f] ?? ""))
+    .filter(Boolean)
+    .join(g.separator);
+}
+
 function matchesColumnFilters(row: FlatRow, q: TenderQuery): boolean {
   for (const [accessor, state] of Object.entries(q.columnFilters)) {
     if (!state) continue;
-    const raw = row[accessor];
+    const raw = mergedValue(row, q, accessor) ?? row[accessor];
     const val = String(raw ?? "");
 
     if (accessor === "deadline" && state.select?.length) {
@@ -258,6 +272,39 @@ const CASES: { name: string; query: TenderQuery }[] = [
     query: q({ participationFilters: ["financialNotOpen"] }),
   },
   { name: "exclusion both", query: q({ exclusionFilter: "both" }) },
+  {
+    name: "tender document Available",
+    query: q({ columnFilters: { tenderFileUrl: { select: ["Available"] } } }),
+  },
+  {
+    name: "tender document Not Available",
+    query: q({ columnFilters: { tenderFileUrl: { select: ["Not Available"] } } }),
+  },
+  { name: "type Gem", query: q({ columnFilters: { type: { select: ["Gem"] } } }) },
+  { name: "cva blank", query: q({ columnFilters: { cva: { select: ["__blank__"] } } }) },
+  {
+    name: "item schedules blank",
+    query: q({ columnFilters: { itemSchedules: { select: ["__blank__"] } } }),
+  },
+  {
+    name: "reportings blank",
+    query: q({ columnFilters: { reportings: { select: ["__blank__"] } } }),
+  },
+  {
+    name: "assignedDate range",
+    query: q({
+      columnFilters: { assignedDate: { dateRange: { startDate: "2026-01-01", endDate: "" } } },
+    }),
+  },
+  {
+    name: "merged org+dept contains",
+    query: q({
+      mergedGroups: [
+        { label: "Org @ Dept", separator: " @ ", fields: ["organization", "departmentName"] },
+      ],
+      columnFilters: { "Org @ Dept": { text: "a" } },
+    }),
+  },
   { name: "analytics apmYesUnallocated", query: q({ analyticsFilter: "apmYesUnallocated" }) },
   { name: "analytics aiYesUnallocated", query: q({ analyticsFilter: "aiYesUnallocated" }) },
 ];

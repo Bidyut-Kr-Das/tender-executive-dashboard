@@ -6,7 +6,7 @@ import {
   fetchTendersPage,
   type TenderSummary,
 } from "@/actions/tender-query";
-import type { TenderQuery } from "@/lib/tender-query";
+import type { MergedGroup, TenderQuery } from "@/lib/tender-query";
 import type { FlatRow } from "@/lib/tender-flatten";
 import type { RootState } from "@/lib/store";
 
@@ -31,6 +31,9 @@ interface TenderPageState {
   pageSize: number;
   sort: { column: string; direction: "asc" | "desc" } | null;
   associationFilter: string | null;
+  /** column_groups, loaded once per mount; the server needs them to filter
+   *  and sort merged columns. */
+  mergedGroups: MergedGroup[];
   columns: string[];
   associations: TenderPageAssociation[];
   status: "idle" | "loading" | "ready" | "error";
@@ -50,6 +53,7 @@ const initialState: TenderPageState = {
   pageSize: 50,
   sort: null,
   associationFilter: null,
+  mergedGroups: [],
   columns: [],
   associations: [],
   status: "idle",
@@ -76,6 +80,7 @@ export function tenderQueryKey(query: TenderQuery): string {
     fileDateFromIso: query.fileDateFromIso,
     fileDateToIso: query.fileDateToIso,
     applyDefaultDeadlineFilter: query.applyDefaultDeadlineFilter,
+    mergedGroups: query.mergedGroups,
     sort: query.sort,
     page: query.page,
     pageSize: query.pageSize,
@@ -116,6 +121,7 @@ export function selectTenderQuery(
     fileDateFromIso,
     fileDateToIso,
     applyDefaultDeadlineFilter,
+    mergedGroups: tenderPage.mergedGroups,
     sort: tenderPage.sort,
     page: tenderPage.page,
     pageSize: tenderPage.pageSize,
@@ -173,6 +179,9 @@ export const tenderPageSlice = createSlice({
     ) {
       state.sort = action.payload;
       state.page = 1;
+    },
+    setMergedGroups(state, action: PayloadAction<MergedGroup[]>) {
+      state.mergedGroups = action.payload;
     },
     setAssociationFilter(state, action: PayloadAction<string | null>) {
       state.associationFilter = action.payload;
@@ -266,6 +275,7 @@ export const {
   setPage,
   setPageSize,
   setSort,
+  setMergedGroups,
   setAssociationFilter,
   resetPagination,
   clearStale,

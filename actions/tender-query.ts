@@ -1,8 +1,6 @@
 "use server";
 
-import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { withLog } from "@/lib/activity-logger";
 import type { FlatRow } from "@/lib/tender-flatten";
 import {
   buildColumns,
@@ -15,8 +13,9 @@ import {
   APM_YES,
   buildOrderBySql,
   buildWhereSql,
+  columnValueSql,
   HAS_ANY_ASSOCIATION,
-  TENDER_COLUMNS,
+  needsFacetQuery,
   type TenderQuery,
 } from "@/lib/tender-query";
 
@@ -126,15 +125,12 @@ async function loadPage(
  * Pass includeMeta on the first call of a session to also get the column order
  * and the association list; both are stable, so later pages skip them.
  */
-export const fetchTendersPage = withLog(
-  async (query: TenderQuery, includeMeta: boolean): Promise<TenderPageResult> =>
-    loadPage(query, includeMeta),
-  (result) => ({
-    action: "READ" as const,
-    tableName: "TenderMerged",
-    details: `Fetched tenders page ${result.page} (${result.rows.length} of ${result.total} rows)`,
-  }),
-);
+export async function fetchTendersPage(
+  query: TenderQuery,
+  includeMeta: boolean,
+): Promise<TenderPageResult> {
+  return loadPage(query, includeMeta);
+}
 
 export interface TenderFacetResult {
   column: string;
@@ -149,15 +145,21 @@ const FACET_LIMIT = 500;
  * Distinct values for one column under every *other* active filter - what
  * makes the dropdowns cascade the way the in-memory version did.
  */
-export const fetchTenderFacet = withLog(
-  async (query: TenderQuery, column: string): Promise<TenderFacetResult> => {
-    if (!TENDER_COLUMNS.has(column)) {
+export async function fetchTenderFacet(
+  query: TenderQuery,
+  column: string,
+): Promise<TenderFacetResult> {
+    // Columns whose options are hardcoded (Available / Not Available, Yes /
+    // No, the association list) never reach the database.
+    if (!needsFacetQuery(column, query)) {
       return { column, options: [], overLimit: false };
     }
+    const expr = columnValueSql(column, query);
+    if (!expr) return { column, options: [], overLimit: false };
+
     const where = buildWhereSql(query, { skipColumn: column });
-    const ref = Prisma.raw(`t."${column}"`);
     const rows = await prisma.$queryRaw<{ value: string | null }[]>`
-      SELECT DISTINCT ${ref}::text AS value
+      SELECT DISTINCT ${expr} AS value
       FROM "tender_merged" t
       WHERE ${where}
       ORDER BY 1
@@ -171,13 +173,7 @@ export const fetchTenderFacet = withLog(
       options: options.slice(0, FACET_LIMIT),
       overLimit: rows.length > FACET_LIMIT,
     };
-  },
-  (result) => ({
-    action: "READ" as const,
-    tableName: "TenderMerged",
-    details: `Fetched filter options for ${result.column} (${result.options.length})`,
-  }),
-);
+}
 
 export interface TenderSummary {
   aiYes: number;
@@ -192,8 +188,7 @@ export interface TenderSummary {
  * Uses the same where clause as the page query, so the numbers always agree
  * with what paging through the table would show.
  */
-export const fetchTenderSummary = withLog(
-  async (query: TenderQuery): Promise<TenderSummary> => {
+export async function fetchTenderSummary(query: TenderQuery): Promise<TenderSummary> {
     const where = buildWhereSql(query);
 
     const [totals, perPerson] = await Promise.all([
@@ -230,13 +225,7 @@ export const fetchTenderSummary = withLog(
       apmYesUnallocated: Number(row?.apm_yes_unallocated ?? 0),
       personCounts: perPerson.map((p) => ({ id: p.id, count: Number(p.count) })),
     };
-  },
-  (result) => ({
-    action: "READ" as const,
-    tableName: "TenderMerged",
-    details: `Fetched tender summary (${result.aiYes} AI-relevant)`,
-  }),
-);
+}
 
 const FULL_SCAN_BATCH = 1000;
 
@@ -252,8 +241,10 @@ const FULL_SCAN_BATCH = 1000;
  * an unfiltered table becomes slow, move the xlsx generation to a route
  * handler that streams the file instead.
  */
-export const fetchAllFilteredTenderRows = withLog(
-  async (query: TenderQuery, columns: string[] | null): Promise<FlatRow[]> => {
+export async function fetchAllFilteredTenderRows(
+  query: TenderQuery,
+  columns: string[] | null,
+): Promise<FlatRow[]> {
     const where = buildWhereSql(query);
     const orderBy = buildOrderBySql(query);
 
@@ -287,10 +278,4 @@ export const fetchAllFilteredTenderRows = withLog(
       }
     }
     return out;
-  },
-  (result) => ({
-    action: "READ" as const,
-    tableName: "TenderMerged",
-    details: `Fetched ${result.length} tenders for a bulk operation`,
-  }),
-);
+}

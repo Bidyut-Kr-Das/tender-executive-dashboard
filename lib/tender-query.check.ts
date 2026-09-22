@@ -13,6 +13,7 @@ import {
   buildWhereSql,
   emptyTenderQuery,
   istDateKeyToUtcRange,
+  needsFacetQuery,
   participationSql,
   TENDER_COLUMNS,
   type TenderQuery,
@@ -94,13 +95,13 @@ check("plain select compares as text", () => {
 
 check("__blank__ also matches NOT_DECIDED", () => {
   const t = text(where({ columnFilters: { apm: { select: ["__blank__"] } } }));
-  assert.match(t, /t\."apm" IS NULL/);
+  assert.match(t, /t\."apm"::text IS NULL/);
   assert.match(t, /t\."apm"::text = 'NOT_DECIDED'/);
 });
 
 check("not_analysed matches null or empty only", () => {
   const t = text(where({ columnFilters: { parseStatus: { select: ["not_analysed"] } } }));
-  assert.match(t, /t\."parseStatus" IS NULL OR t\."parseStatus"::text = ''/);
+  assert.match(t, /t\."parseStatus"::text IS NULL OR t\."parseStatus"::text = ''/);
   assert.equal(t.includes("NOT_DECIDED"), false);
 });
 
@@ -117,11 +118,17 @@ check("assignedTo blank means no association at all", () => {
   assert.match(t, /NOT EXISTS \(SELECT 1 FROM "tender_associations"/);
 });
 
-check("tenderFileUrl renders as Available / Not Available", () => {
-  const avail = text(where({ columnFilters: { tenderFileUrl: { select: ["Available"] } } }));
-  assert.match(avail, /t\."tenderFileUrl" IS NOT NULL AND t\."tenderFileUrl"::text <> ''/);
+check("tenderFileUrl reads the tagged tender_files row, not the scalar", () => {
+  const sql = where({ columnFilters: { tenderFileUrl: { select: ["Available"] } } });
+  const t = text(sql);
+  assert.match(t, /FROM "tender_files" tf/);
+  assert.match(t, /\$\d+ = ANY\(tf\."tags"\)/);
+  assert.ok(sql.values.includes("tenderDocument"));
+  // The stale scalar must not appear anywhere in the predicate.
+  assert.equal(t.includes('t."tenderFileUrl"'), false);
+
   const not = text(where({ columnFilters: { tenderFileUrl: { select: ["Not Available"] } } }));
-  assert.match(not, /t\."tenderFileUrl" IS NULL OR t\."tenderFileUrl"::text = ''/);
+  assert.match(not, /IS NULL OR .* = ''/);
 });
 
 check("Available on any other column is just a value", () => {
@@ -304,5 +311,118 @@ check("the column allow-list came from the generated client", () => {
   assert.equal(TENDER_COLUMNS.has("assignedTo"), true); // a real column too
   assert.equal(TENDER_COLUMNS.has("itemSchedules"), false); // derived only
 });
+
+
+// ----------------------------------------------- derived / merged columns ---
+
+const GROUP_ORG = {
+  label: "Org @ Dept",
+  separator: " @ ",
+  fields: ["organization", "departmentName"],
+};
+
+check("type maps to the tenderType enum, not a column", () => {
+  const t = text(where({ columnFilters: { type: { select: ["Gem"] } } }));
+  assert.match(t, /CASE WHEN t\."tenderType"::text = 'GEM' THEN 'Gem' ELSE 'Non-Gem' END/);
+});
+
+check("costing-derived columns read CostingSheetDetails, not the scalar", () => {
+  const t = text(where({ columnFilters: { cva: { select: ["__blank__"] } } }));
+  assert.match(t, /FROM "CostingSheetDetails" csd/);
+  assert.equal(t.includes('t."cva"'), false);
+});
+
+check("proposedErpQuantity keys off the item name, like flattenTender", () => {
+  const t = text(where({ columnFilters: { proposedErpQuantity: { select: ["__blank__"] } } }));
+  assert.match(t, /csd\."proposedErpItemName"/);
+  assert.equal(t.includes('t."proposedErpQuantity"'), false);
+});
+
+check("relation-dump columns only answer blank vs not blank", () => {
+  const t = text(where({ columnFilters: { reportings: { select: ["__blank__"] } } }));
+  assert.match(t, /EXISTS \(SELECT 1 FROM "reportings" r WHERE r\."tenderMergedId" = t\."id"\)/);
+});
+
+check("assignedDate is the earliest assignment in IST", () => {
+  const t = text(
+    where({ columnFilters: { assignedDate: { dateRange: { startDate: "2026-01-01", endDate: "" } } } }),
+  );
+  assert.match(t, /min\(ta\."createdAt"\)/);
+  assert.match(t, /interval '5 hours 30 minutes'/);
+});
+
+check("a merged column concatenates its fields", () => {
+  const sql = where({
+    mergedGroups: [GROUP_ORG],
+    columnFilters: { "Org @ Dept": { select: ["A @ B"] } },
+  });
+  const t = text(sql);
+  assert.match(t, /concat_ws\(\$\d+, NULLIF\(t\."organization"::text, ''\), NULLIF\(t\."departmentName"::text, ''\)\)/);
+  assert.ok(sql.values.includes(" @ "));
+  assert.ok(sql.values.includes("A @ B"));
+});
+
+check("a blank separator means the first field verbatim", () => {
+  const t = text(
+    where({
+      mergedGroups: [{ label: "Size", separator: "", fields: ["size", "quantity"] }],
+      columnFilters: { Size: { text: "x" } },
+    }),
+  );
+  assert.match(t, /t\."size"::text ILIKE/);
+  assert.equal(t.includes("concat_ws"), false);
+  assert.equal(t.includes('t."quantity"'), false);
+});
+
+check("a merged field that is itself derived nests correctly", () => {
+  const t = text(
+    where({
+      mergedGroups: [{ label: "Doc", separator: " / ", fields: ["tenderFileUrl", "website"] }],
+      columnFilters: { Doc: { text: "pdf" } },
+    }),
+  );
+  assert.match(t, /FROM "tender_files" tf/);
+  assert.match(t, /t\."website"::text/);
+});
+
+check("an unknown merged field contributes an empty string", () => {
+  const t = text(
+    where({
+      mergedGroups: [{ label: "Mix", separator: " @ ", fields: ["organization", "someExcelHeader"] }],
+      columnFilters: { Mix: { text: "x" } },
+    }),
+  );
+  assert.match(t, /NULLIF\(''\, ''\)|NULLIF\('', ''\)/);
+});
+
+check("a merged column sorts by its concatenation", () => {
+  const q: TenderQuery = {
+    ...emptyTenderQuery(),
+    mergedGroups: [GROUP_ORG],
+    sort: { column: "Org @ Dept", direction: "asc" },
+  };
+  const t = text(buildOrderBySql(q));
+  assert.match(t, /concat_ws/);
+  assert.match(t, /ASC NULLS FIRST, t\."id" ASC/);
+});
+
+check("unknown sort columns still fall back to id", () => {
+  const q: TenderQuery = { ...emptyTenderQuery(), sort: { column: "nope", direction: "asc" } };
+  assert.equal(text(buildOrderBySql(q)), 't."id" DESC');
+});
+
+// ------------------------------------------------------------------ facets ---
+
+check("only columns without hardcoded options hit the database", () => {
+  const q: TenderQuery = { ...emptyTenderQuery(), mergedGroups: [GROUP_ORG] };
+  for (const c of ["tenderFileUrl", "website", "assignedTo", "apm", "price", "cva", "deadline", "reportings"]) {
+    assert.equal(needsFacetQuery(c, q), false, `${c} should not query`);
+  }
+  for (const c of ["organization", "currentStatus", "Org @ Dept", "type"]) {
+    assert.equal(needsFacetQuery(c, q), true, `${c} should query`);
+  }
+  assert.equal(needsFacetQuery("someExcelHeader", q), false);
+});
+
 
 console.log(`tender-query: ${checks} checks passed`);

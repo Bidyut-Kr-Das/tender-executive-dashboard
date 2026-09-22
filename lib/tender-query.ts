@@ -16,6 +16,14 @@ import {
   ALU_KEY_SQL_PATTERN,
   CU_KEY_SQL_PATTERN,
 } from "@/lib/rawMaterials";
+import { needsFacetQuery as needsFacetQueryMeta } from "@/lib/tender-filter-meta";
+
+/** A user-defined merged column: one header stitched from several fields. */
+export interface MergedGroup {
+  label: string;
+  separator: string;
+  fields: string[];
+}
 
 /**
  * Serialized filter state for the /tenders page.
@@ -38,6 +46,8 @@ export interface TenderQuery {
   fileDateToIso: string | null;
   /** The implicit "hide past deadlines" rule in OptimizedTenderTable. */
   applyDefaultDeadlineFilter: boolean;
+  /** column_groups rows, so merged columns can be filtered and sorted. */
+  mergedGroups: MergedGroup[];
   sort: { column: string; direction: "asc" | "desc" } | null;
   page: number;
   pageSize: number;
@@ -53,6 +63,7 @@ export function emptyTenderQuery(): TenderQuery {
     fileDateFromIso: null,
     fileDateToIso: null,
     applyDefaultDeadlineFilter: true,
+    mergedGroups: [],
     sort: null,
     page: 1,
     pageSize: 50,
@@ -80,23 +91,6 @@ const DATETIME_COLUMNS: ReadonlySet<string> = new Set([
   "updatedAt",
 ]);
 
-/** Accessors flattenTender synthesises. Only assignedTo has a real predicate. */
-const DERIVED_ACCESSORS: ReadonlySet<string> = new Set([
-  "type",
-  "assignedTo",
-  "assignedDate",
-  "costingFileUrl",
-  "tenderFiles",
-  "reportings",
-  "evaluations",
-  "itemSchedules",
-  "costingDetails",
-  "typeTests",
-]);
-
-export function isQueryableColumn(accessor: string): boolean {
-  return TENDER_COLUMNS.has(accessor) || accessor === "assignedTo";
-}
 
 /** Quoted column reference. Never call with unvalidated input. */
 function col(name: string): Prisma.Sql {
@@ -106,13 +100,133 @@ function col(name: string): Prisma.Sql {
   return Prisma.raw(`t."${name}"`);
 }
 
+// ------------------------------------------------------ derived value SQL ---
+
+const EMPTY_TEXT = Prisma.sql`''`;
+
+/** flattenTender writes tenderFiles tagged like this into their own columns. */
+function taggedFileUrlSql(tag: string): Prisma.Sql {
+  return Prisma.sql`coalesce((SELECT tf."url" FROM "tender_files" tf WHERE tf."tenderMergedId" = t."id" AND ${tag} = ANY(tf."tags") ORDER BY tf."id" ASC LIMIT 1), '')`;
+}
+
+/** costingFileUrl rewrites non-sheet sources to an internal viewer link. */
+const COSTING_FILE_URL_SQL = Prisma.sql`coalesce((SELECT CASE WHEN tf."source" IS NOT NULL AND tf."source" <> 'SHEET_SYNC' THEN '/api/executive-files/view/' || tf."source" ELSE tf."url" END FROM "tender_files" tf WHERE tf."tenderMergedId" = t."id" AND 'costingAttachment' = ANY(tf."tags") ORDER BY tf."id" ASC LIMIT 1), '')`;
+
 /**
- * Text form of a column. flattenTender stringifies every value before the
- * client compares it, so ::text is the faithful translation for enums,
- * booleans and numbers alike.
+ * Distinct non-empty values of one CostingSheetDetails field, comma-joined.
+ *
+ * ponytail: the cell actually holds a JSON array, so this is not string-equal
+ * to what the user sees. These columns are in UNIQUE_OPTION_SKIP and have
+ * never offered dropdown values, so only Blank and "contains" matter, and
+ * joined text serves both better than a JSON blob would. Filter the child
+ * table directly if exact per-item matching is ever needed.
  */
-function colText(name: string): Prisma.Sql {
-  return Prisma.sql`${col(name)}::text`;
+function costingAggSql(field: string): Prisma.Sql {
+  const ref = Prisma.raw(`csd."${field}"`);
+  return Prisma.sql`coalesce((SELECT string_agg(DISTINCT btrim(${ref}), ', ') FROM "CostingSheetDetails" csd WHERE csd."tenderMergedId" = t."id" AND btrim(coalesce(${ref}, '')) <> ''), '')`;
+}
+
+const TYPE_TESTS_SQL = Prisma.sql`coalesce((SELECT string_agg(DISTINCT tt."testCertificateNo", ', ') FROM "CostingSheetDetails" csd JOIN "type_tests" tt ON upper(btrim(tt."itemCode")) = upper(btrim(csd."itemCode")) WHERE csd."tenderMergedId" = t."id"), '')`;
+
+/** Blank vs not-blank for a column that renders a JSON dump of a relation. */
+function relationPresentSql(table: string): Prisma.Sql {
+  const ref = Prisma.raw(`"${table}"`);
+  return Prisma.sql`CASE WHEN EXISTS (SELECT 1 FROM ${ref} r WHERE r."tenderMergedId" = t."id") THEN '1' ELSE '' END`;
+}
+
+const ASSIGNED_TO_SQL = Prisma.sql`coalesce((SELECT string_agg(ta."associationId"::text, ',' ORDER BY ta."id") FROM "tender_associations" ta WHERE ta."tenderMergedId" = t."id"), '')`;
+
+/** Earliest assignment date as an IST calendar key, matching flattenTender. */
+const ASSIGNED_DATE_SQL = Prisma.sql`coalesce(to_char((SELECT min(ta."createdAt") FROM "tender_associations" ta WHERE ta."tenderMergedId" = t."id") + interval '5 hours 30 minutes', 'YYYY-MM-DD'), '')`;
+
+const TENDER_TYPE_SQL = Prisma.sql`CASE WHEN t."tenderType"::text = 'GEM' THEN 'Gem' ELSE 'Non-Gem' END`;
+
+const DERIVED_VALUE_SQL: Record<string, Prisma.Sql> = {
+  type: TENDER_TYPE_SQL,
+  assignedTo: ASSIGNED_TO_SQL,
+  assignedDate: ASSIGNED_DATE_SQL,
+  tenderFileUrl: taggedFileUrlSql("tenderDocument"),
+  costingFileUrl: COSTING_FILE_URL_SQL,
+  itemSchedules: costingAggSql("itemSchedule"),
+  cva: costingAggSql("cva"),
+  proposedErpItemName: costingAggSql("proposedErpItemName"),
+  // flattenTender gates the quantity string on proposedErpItemName being set.
+  proposedErpQuantity: costingAggSql("proposedErpItemName"),
+  typeTests: TYPE_TESTS_SQL,
+  typetest: TYPE_TESTS_SQL,
+  tenderFiles: relationPresentSql("tender_files"),
+  reportings: relationPresentSql("reportings"),
+  evaluations: relationPresentSql("evaluations"),
+  costingDetails: relationPresentSql("CostingSheetDetails"),
+};
+
+const MAX_MERGE_DEPTH = 3;
+
+function mergedGroupSql(
+  group: MergedGroup,
+  q: TenderQuery,
+  depth: number,
+): Prisma.Sql {
+  const exprs = group.fields.map(
+    (f) => columnValueSql(f, q, depth + 1) ?? EMPTY_TEXT,
+  );
+  if (exprs.length === 0) return EMPTY_TEXT;
+
+  // A blank separator means "show the first field verbatim", not "join".
+  if (group.separator.trim().length === 0) return exprs[0];
+
+  // concat_ws skips NULLs, which is what the client's .filter(Boolean) does.
+  const parts = exprs.map((e) => Prisma.sql`NULLIF(${e}, '')`);
+  return Prisma.sql`concat_ws(${group.separator}, ${Prisma.join(parts, ", ")})`;
+}
+
+/**
+ * SQL producing exactly the text flattenTender puts in this cell.
+ *
+ * Returns null when the accessor is not something the database can produce -
+ * an extra field, a gem-only column, an unknown name. Callers skip those
+ * filters rather than guessing at a same-named scalar, which is what made
+ * tenderFileUrl and the costing columns filter on stale values.
+ */
+export function columnValueSql(
+  accessor: string,
+  q: TenderQuery,
+  depth = 0,
+): Prisma.Sql | null {
+  if (depth > MAX_MERGE_DEPTH) return null;
+
+  const group = q.mergedGroups?.find((g) => g.label === accessor);
+  if (group) return mergedGroupSql(group, q, depth);
+
+  const derived = DERIVED_VALUE_SQL[accessor];
+  if (derived) return derived;
+
+  if (TENDER_COLUMNS.has(accessor)) {
+    // flattenTender stringifies every value before the client compares it, so
+    // ::text is the faithful translation for enums, booleans and numbers.
+    return Prisma.sql`${col(accessor)}::text`;
+  }
+  return null;
+}
+
+export function isQueryableColumn(accessor: string, q: TenderQuery): boolean {
+  return columnValueSql(accessor, q) !== null;
+}
+
+/**
+ * Whether a dropdown should hit the database for its values.
+ *
+ * False for every column whose options are hardcoded (Available / Not
+ * Available, Yes / No, the association list) and for every column that has
+ * never offered values at all. Shared with the client so no wasted round
+ * trip is made on open.
+ */
+export function needsFacetQuery(accessor: string, q: TenderQuery): boolean {
+  return needsFacetQueryMeta(
+    accessor,
+    (q.mergedGroups ?? []).map((g) => g.label),
+    (a) => TENDER_COLUMNS.has(a),
+  );
 }
 
 // ------------------------------------------------------------------ dates ---
@@ -147,45 +261,46 @@ function normalizeKey(input: string | null | undefined): string | null {
   return toISTDateKey(trimmed);
 }
 
+const ISO_DATE_PREFIX = "^\\s*[0-9]{4}-[0-9]{2}-[0-9]{2}";
+
 /**
  * IST date-key range on a column.
  *
  * Real DateTime columns compare against instants, so no timezone-dependent
- * expression appears in the predicate. String date columns (bgDate, claimDate,
+ * expression appears in the predicate. Text columns (bgDate, assignedDate,
  * expectedRaDate ...) compare the leading YYYY-MM-DD instead, and keep the
  * client's behaviour of passing rows whose value does not parse.
  *
- * ponytail: the string branch reads the stored value as already-IST. A stored
+ * ponytail: the text branch reads the stored value as already-IST. A stored
  * instant carrying a timezone offset can land a day off. Make the column a
  * real DateTime if that ever matters.
  */
 function dateKeyRangeSql(
-  name: string,
+  accessor: string,
+  expr: Prisma.Sql,
   fromKey: string | null,
   toKey: string | null,
 ): Prisma.Sql | null {
   if (!fromKey && !toKey) return null;
 
-  if (DATETIME_COLUMNS.has(name)) {
+  if (DATETIME_COLUMNS.has(accessor)) {
     const parts: Prisma.Sql[] = [];
     if (fromKey) {
-      parts.push(Prisma.sql`${col(name)} >= ${istDateKeyToUtcRange(fromKey).start}`);
+      parts.push(Prisma.sql`${col(accessor)} >= ${istDateKeyToUtcRange(fromKey).start}`);
     }
     if (toKey) {
-      parts.push(Prisma.sql`${col(name)} < ${istDateKeyToUtcRange(toKey).endExclusive}`);
+      parts.push(Prisma.sql`${col(accessor)} < ${istDateKeyToUtcRange(toKey).endExclusive}`);
     }
     // A null date has no key, and the client keeps those rows.
-    return Prisma.sql`(${col(name)} IS NULL OR (${Prisma.join(parts, " AND ")}))`;
+    return Prisma.sql`(${col(accessor)} IS NULL OR (${Prisma.join(parts, " AND ")}))`;
   }
 
-  const key = Prisma.sql`left(btrim(${colText(name)}), 10)`;
+  const key = Prisma.sql`left(btrim(${expr}), 10)`;
   const parts: Prisma.Sql[] = [];
   if (fromKey) parts.push(Prisma.sql`${key} >= ${fromKey}`);
   if (toKey) parts.push(Prisma.sql`${key} <= ${toKey}`);
-  return Prisma.sql`(${colText(name)} !~ ${ISO_DATE_PREFIX} OR (${Prisma.join(parts, " AND ")}))`;
+  return Prisma.sql`(${expr} !~ ${ISO_DATE_PREFIX} OR (${Prisma.join(parts, " AND ")}))`;
 }
-
-const ISO_DATE_PREFIX = "^\\s*[0-9]{4}-[0-9]{2}-[0-9]{2}";
 
 export const DEADLINE_PRESETS: readonly DeadlinePreset[] = [
   "thisWeek",
@@ -216,19 +331,31 @@ export const HAS_ANY_ASSOCIATION = Prisma.sql`EXISTS (SELECT 1 FROM "tender_asso
 const BLANK_TOKEN = "__blank__";
 const NOT_ANALYSED_TOKEN = "not_analysed";
 
-function blankSql(name: string): Prisma.Sql {
-  return Prisma.sql`(${col(name)} IS NULL OR ${colText(name)} = '' OR ${colText(name)} = 'NOT_DECIDED')`;
+function blankSql(expr: Prisma.Sql): Prisma.Sql {
+  return Prisma.sql`(${expr} IS NULL OR ${expr} = '' OR ${expr} = 'NOT_DECIDED')`;
 }
 
-function emptySql(name: string): Prisma.Sql {
-  return Prisma.sql`(${col(name)} IS NULL OR ${colText(name)} = '')`;
+function emptySql(expr: Prisma.Sql): Prisma.Sql {
+  return Prisma.sql`(${expr} IS NULL OR ${expr} = '')`;
 }
 
-function selectSql(name: string, selected: string[]): Prisma.Sql | null {
+/** Columns rendered as Available / Not Available rather than as their value. */
+const AVAILABILITY_COLUMNS: ReadonlySet<string> = new Set([
+  "tenderFileUrl",
+  "website",
+  "costingFileUrl",
+]);
+
+function selectSql(
+  accessor: string,
+  expr: Prisma.Sql,
+  selected: string[],
+): Prisma.Sql | null {
   if (selected.length === 0) return null;
 
-  // assignedTo is a CSV of association ids in the flattened row.
-  if (name === "assignedTo") {
+  // assignedTo is a CSV of association ids; matching ids through the relation
+  // is both cheaper and immune to the ordering of the aggregated string.
+  if (accessor === "assignedTo") {
     const branches: Prisma.Sql[] = [];
     const ids = selected.filter((s) => /^\d+$/.test(s)).map(Number);
     if (ids.length > 0) branches.push(hasAssociationSql(ids));
@@ -240,7 +367,7 @@ function selectSql(name: string, selected: string[]): Prisma.Sql | null {
   }
 
   const branches: Prisma.Sql[] = [];
-  const isAvailability = name === "tenderFileUrl" || name === "website";
+  const isAvailability = AVAILABILITY_COLUMNS.has(accessor);
   const plain = selected.filter(
     (v) =>
       v !== BLANK_TOKEN &&
@@ -248,35 +375,35 @@ function selectSql(name: string, selected: string[]): Prisma.Sql | null {
       !(isAvailability && (v === "Available" || v === "Not Available")),
   );
 
-  if (selected.includes(BLANK_TOKEN)) branches.push(blankSql(name));
-  if (selected.includes(NOT_ANALYSED_TOKEN)) branches.push(emptySql(name));
+  if (selected.includes(BLANK_TOKEN)) branches.push(blankSql(expr));
+  if (selected.includes(NOT_ANALYSED_TOKEN)) branches.push(emptySql(expr));
 
   if (isAvailability) {
     if (selected.includes("Available")) {
-      branches.push(Prisma.sql`(${col(name)} IS NOT NULL AND ${colText(name)} <> '')`);
+      branches.push(Prisma.sql`(${expr} IS NOT NULL AND ${expr} <> '')`);
     }
-    if (selected.includes("Not Available")) branches.push(emptySql(name));
+    if (selected.includes("Not Available")) branches.push(emptySql(expr));
   }
 
   if (plain.length > 0) {
-    branches.push(Prisma.sql`${colText(name)} IN (${Prisma.join(plain)})`);
-    if (plain.includes("")) branches.push(Prisma.sql`${col(name)} IS NULL`);
+    branches.push(Prisma.sql`${expr} IN (${Prisma.join(plain)})`);
+    if (plain.includes("")) branches.push(Prisma.sql`${expr} IS NULL`);
   }
 
   if (branches.length === 0) return Prisma.sql`FALSE`;
   return Prisma.sql`(${Prisma.join(branches, " OR ")})`;
 }
 
-function textSql(name: string, text: string): Prisma.Sql | null {
+function textSql(expr: Prisma.Sql, text: string): Prisma.Sql | null {
   if (!text) return null;
-  return Prisma.sql`${colText(name)} ILIKE ${`%${text}%`}`;
+  return Prisma.sql`${expr} ILIKE ${`%${text}%`}`;
 }
 
-function booleanSql(name: string, value: boolean): Prisma.Sql {
+function booleanSql(expr: Prisma.Sql, value: boolean): Prisma.Sql {
   // The client compares the stringified value to "true", so null counts false.
   return value
-    ? Prisma.sql`${colText(name)} = 'true'`
-    : Prisma.sql`${colText(name)} IS DISTINCT FROM 'true'`;
+    ? Prisma.sql`${expr} = 'true'`
+    : Prisma.sql`${expr} IS DISTINCT FROM 'true'`;
 }
 
 // ---------------------------------------------------------- raw materials ---
@@ -472,20 +599,22 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
 
   for (const [accessor, state] of Object.entries(q.columnFilters ?? {})) {
     if (!state || accessor === opts.skipColumn) continue;
-    if (!isQueryableColumn(accessor)) continue;
+    const expr = columnValueSql(accessor, q);
+    if (!expr) continue;
 
     if (accessor === "deadline" && state.select?.length) {
       const range = presetRange(state.select[0], now);
       if (range) {
-        const sql = dateKeyRangeSql("deadline", range.fromKey, range.toKey);
+        const sql = dateKeyRangeSql("deadline", expr, range.fromKey, range.toKey);
         if (sql) parts.push(sql);
       }
       continue;
     }
 
-    if (state.dateRange && TENDER_COLUMNS.has(accessor)) {
+    if (state.dateRange) {
       const sql = dateKeyRangeSql(
         accessor,
+        expr,
         normalizeKey(state.dateRange.startDate),
         normalizeKey(state.dateRange.endDate),
       );
@@ -493,17 +622,17 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
     }
 
     if (state.select?.length) {
-      const sql = selectSql(accessor, state.select);
+      const sql = selectSql(accessor, expr, state.select);
       if (sql) parts.push(sql);
     }
 
-    if (state.text && TENDER_COLUMNS.has(accessor)) {
-      const sql = textSql(accessor, state.text);
+    if (state.text) {
+      const sql = textSql(expr, state.text);
       if (sql) parts.push(sql);
     }
 
-    if (state.boolean != null && TENDER_COLUMNS.has(accessor)) {
-      parts.push(booleanSql(accessor, state.boolean));
+    if (state.boolean != null) {
+      parts.push(booleanSql(expr, state.boolean));
     }
 
     if (state.rawMaterials) {
@@ -549,15 +678,20 @@ export function buildOrderBySql(q: TenderQuery): Prisma.Sql {
   const sort = q.sort;
   if (!sort) return Prisma.sql`t."id" DESC`;
 
+  const dir = Prisma.raw(sort.direction === "asc" ? "ASC" : "DESC");
+
   if (sort.column === "rawMaterials") {
     // The client sorts by how many materials are listed, not by their values.
-    const dir = Prisma.raw(sort.direction === "asc" ? "ASC" : "DESC");
     return Prisma.sql`(SELECT count(*) FROM jsonb_each_text(${RAW_MATERIALS_JSON}) AS kv(k, v) WHERE btrim(kv.v) <> '') ${dir}, t."id" ASC`;
   }
 
-  if (!TENDER_COLUMNS.has(sort.column)) return Prisma.sql`t."id" DESC`;
+  const expr = columnValueSql(sort.column, q);
+  if (!expr) return Prisma.sql`t."id" DESC`;
+
+  // Real dates sort as instants; everything else sorts as the displayed text.
+  const sortExpr = DATETIME_COLUMNS.has(sort.column) ? col(sort.column) : expr;
 
   // The client sorts nulls first ascending, last descending.
-  const tail = Prisma.raw(sort.direction === "asc" ? "ASC NULLS FIRST" : "DESC NULLS LAST");
-  return Prisma.sql`${col(sort.column)} ${tail}, t."id" ASC`;
+  const nulls = Prisma.raw(sort.direction === "asc" ? "NULLS FIRST" : "NULLS LAST");
+  return Prisma.sql`${sortExpr} ${dir} ${nulls}, t."id" ASC`;
 }

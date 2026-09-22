@@ -18,6 +18,10 @@ import {
   RawMaterialsColumnFilter,
 } from "./filters";
 import {
+  STATIC_SELECT_SKIP,
+  UNIQUE_OPTION_SKIP,
+} from "@/lib/tender-filter-meta";
+import {
   countRawMaterials,
   anyRawMaterialInRange,
   isAlu,
@@ -135,37 +139,7 @@ function DebouncedColumnSearch({
 
 const EMPTY_SELECT_VALUES: string[] = [];
 
-const UNIQUE_OPTION_SKIP = new Set([
-  "reportings",
-  "tenderFiles",
-  "itemSchedules",
-  "proposedErpItemName",
-  "proposedErpQuantity",
-  "cva",
-  "competitors",
-  "evaluationTableData",
-  "checklist",
-  "downloadLink",
-  "costingFileUrl",
-  "beneficiaryBankDetails",
-  "applicableIndex",
-  "parseError",
-  "remarks",
-  "tenderFileUrl",
-  "website",
-  "rawMaterials",
-  "deadline",
-]);
 
-// Static select columns whose options are hardcoded and must not be pruned
-const STATIC_SELECT_SKIP = new Set([
-  "app",
-  "aps",
-  "apm",
-  "price",
-  "parseStatus",
-  "aiRelevanceValid",
-]);
 
 export interface ColumnDef<T> {
   header: string;
@@ -209,8 +183,8 @@ export interface ServerTableMode {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onSortChange: (sort: { column: string; direction: "asc" | "desc" } | null) => void;
-  /** Cached options for a column; empty until requestFacet resolves. */
-  getFacetOptions: (accessor: string) => FilterOption[];
+  /** Cached options for a column; null until requestFacet resolves. */
+  getFacetOptions: (accessor: string) => FilterOption[] | null;
   /** Called when a dropdown opens, so options are fetched on demand. */
   requestFacet: (accessor: string) => void;
   /** Every row the filters match, for the Excel export. */
@@ -1155,11 +1129,15 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
           );
         case "select": {
           const configuredOptions = col.filter.options ?? [];
+          const facetOptions = server ? server.getFacetOptions(accessorStr) : null;
           const computedOptions = server
-            ? server.getFacetOptions(accessorStr)
+            ? (facetOptions ?? [])
             : (uniqueSelectOptions[accessorStr] ?? []);
           let filteredConfigured = configuredOptions;
           if (
+            // Without loaded facet values there is nothing to prune against,
+            // and pruning would wipe the hardcoded options instead.
+            (!server || facetOptions !== null) &&
             !STATIC_SELECT_SKIP.has(accessorStr) &&
             !UNIQUE_OPTION_SKIP.has(accessorStr)
           ) {
@@ -1182,9 +1160,8 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
           return (
             <SelectColumnFilter
               onOpen={
-                server && !STATIC_SELECT_SKIP.has(accessorStr)
-                  ? () => server.requestFacet(accessorStr)
-                  : undefined
+                // requestFacet decides whether this column is worth a query.
+                server ? () => server.requestFacet(accessorStr) : undefined
               }
               value={filterState?.select ?? EMPTY_SELECT_VALUES}
               onChange={(values) => {
