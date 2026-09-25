@@ -249,10 +249,12 @@ export const loadParticipationCounts = createAsyncThunk(
     fetchParticipationCounts(args.query),
 );
 
-/** A filter change invalidates the page number and every cached facet. */
+/** A filter change sends the user back to page 1. */
 function onFilterChange(scope: ScopePageState) {
   scope.page = 1;
-  scope.facets = {};
+  // Facets are NOT cleared here: each entry records the tenderFilterKey it was
+  // computed for, so loadTenderFacet refetches a stale one on its own. Clearing
+  // them left an already-open dropdown rendering an empty option list.
 }
 
 export const tenderPageSlice = createSlice({

@@ -51,6 +51,7 @@ export default function PostParticipation() {
           copperMin={copperMin} setCopperMin={setCopperMin} copperMax={copperMax} setCopperMax={setCopperMax}
           serverCounts={table.counts}
           associationList={table.associations}
+          associationFilter={table.associationFilter} onAssociationFilterChange={table.setAssociationFilter}
         />
       </div>
       <div className="dashboard-workspace">

@@ -32,8 +32,6 @@ export default function NotParticipated() {
     aluminiumMax,
     copperMin,
     copperMax,
-    // Until the table reports its own state, the default end date still applies.
-    deadlineTo: todayStr,
   });
 
   const handleClearAllFilters = () => {

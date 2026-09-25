@@ -41,6 +41,16 @@ export function isRaPendingRow(row: Record<string, unknown>): boolean {
   );
 }
 
+/**
+ * ourRank is free text and the sheet records a first place as either "1" or
+ * "L1". Mirrors RANK_1 in lib/tender-query, which scripts/tenderQueryParity
+ * compares this against.
+ */
+function isRank1(row: Record<string, unknown>): boolean {
+  const rank = String(row.ourRank ?? "").trim().toUpperCase();
+  return rank === "1" || rank === "L1";
+}
+
 const TECHNICAL_OPEN_STATUSES = [
   "AWARDED",
   "FINANCIAL EVALUATION",
@@ -86,14 +96,14 @@ export function isFinancialNotOpenRow(row: Record<string, unknown>): boolean {
 export function isWeL1Row(row: Record<string, unknown>): boolean {
   return (
     row.participated === "true" &&
-    String(row.ourRank ?? "").trim() === "1"
+    isRank1(row)
   );
 }
 
 export function isWeLostRow(row: Record<string, unknown>): boolean {
   return (
     row.participated === "true" &&
-    String(row.ourRank ?? "").trim() !== "1"
+    !isRank1(row)
   );
 }
 
@@ -110,7 +120,7 @@ export function isExpRaDateRow(row: Record<string, unknown>): boolean {
 export function isContractReceivedRow(row: Record<string, unknown>): boolean {
   return (
     row.participated === "true" &&
-    String(row.ourRank ?? "").trim() === "1" &&
+    isRank1(row) &&
     row.contractNo != null &&
     String(row.contractNo).trim() !== ""
   );
@@ -119,7 +129,7 @@ export function isContractReceivedRow(row: Record<string, unknown>): boolean {
 export function isContractPendingRow(row: Record<string, unknown>): boolean {
   return (
     row.participated === "true" &&
-    String(row.ourRank ?? "").trim() === "1" &&
+    isRank1(row) &&
     (row.contractNo == null || String(row.contractNo).trim() === "")
   );
 }
@@ -140,11 +150,11 @@ function isFinancialBranchRow(row: Record<string, unknown>): boolean {
 }
 
 export function isFinancialWeL1Row(row: Record<string, unknown>): boolean {
-  return isFinancialBranchRow(row) && String(row.ourRank ?? "").trim() === "1";
+  return isFinancialBranchRow(row) && isRank1(row);
 }
 
 export function isFinancialWeLostRow(row: Record<string, unknown>): boolean {
-  return isFinancialBranchRow(row) && String(row.ourRank ?? "").trim() !== "1";
+  return isFinancialBranchRow(row) && !isRank1(row);
 }
 
 export function isFinancialContractReceivedRow(

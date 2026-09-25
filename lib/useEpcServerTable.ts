@@ -11,11 +11,12 @@ import {
   setPage,
   setPageSize,
   setSort,
+  tenderFilterKey,
   tenderQueryKey,
 } from "@/lib/slices/tenderPageSlice";
 import { fetchAllFilteredTenderRows } from "@/actions/tender-query";
 import { mapTenderSliceToEpcRecords } from "@/lib/mapTenderSliceToEpcRecords";
-import { buildEpcQueryFilters } from "@/lib/epc-table-query";
+import { buildCountsQuery, buildEpcQueryFilters } from "@/lib/epc-table-query";
 // Prisma-free imports only: lib/tender-query pulls the generated client in, so a
 // value import from it would drag Prisma into this client bundle.
 import type { TenderQuery, TenderScope } from "@/lib/tender-query";
@@ -104,16 +105,33 @@ export function useEpcServerTable(
     if (loadedKeyRef.current === queryKey) return;
     loadedKeyRef.current = queryKey;
     dispatch(loadTenderPage({ scope, query, includeMeta: !hasMetaRef.current }));
-    dispatch(loadParticipationCounts({ scope, query }));
   }, [dispatch, scope, query, queryKey]);
+
+  // The sidebar is a navigation baseline, not a view of the filtered page: its
+  // counts answer "how many dockets are in this stage", so they get their own
+  // query and their own key. tenderFilterKey zeroes page/pageSize/sort, so
+  // paging and sorting never refetch them either.
+  const countsQuery = useMemo(
+    () => buildCountsQuery(query, deadlineFrom, deadlineTo),
+    [query, deadlineFrom, deadlineTo],
+  );
+  const countsKey = useMemo(() => tenderFilterKey(countsQuery), [countsQuery]);
+  const loadedCountsKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (loadedCountsKeyRef.current === countsKey) return;
+    loadedCountsKeyRef.current = countsKey;
+    dispatch(loadParticipationCounts({ scope, query: countsQuery }));
+  }, [dispatch, scope, countsQuery, countsKey]);
 
   // A sync rewrites rows wholesale, so that one case still refetches.
   useEffect(() => {
     if (!page.stale) return;
     loadedKeyRef.current = null;
+    loadedCountsKeyRef.current = null;
     dispatch(loadTenderPage({ scope, query, includeMeta: false }));
-    dispatch(loadParticipationCounts({ scope, query }));
-  }, [dispatch, scope, query, page.stale]);
+    dispatch(loadParticipationCounts({ scope, query: countsQuery }));
+  }, [dispatch, scope, query, countsQuery, page.stale]);
 
   const records = useMemo<EpcTenderRecord[]>(() => {
     const data = {
@@ -203,8 +221,13 @@ export function useEpcServerTable(
   return {
     records,
     server,
-    /** First load only; later pages keep the table on screen. */
-    loading: page.status === "loading" && page.rows.length === 0,
+    /**
+     * First load only. Never key this on rows.length: a filter that matches
+     * nothing would unmount TenderTable, and its filter widgets are local
+     * state - they would come back empty and refetch the unfiltered page.
+     * `columns` arrives with includeMeta on the first response and stays.
+     */
+    loading: page.status === "loading" && page.columns.length === 0,
     counts: page.participationCounts,
     associations: page.associations,
     associationFilter: page.associationFilter,

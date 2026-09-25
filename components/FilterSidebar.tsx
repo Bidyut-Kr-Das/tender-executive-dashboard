@@ -137,79 +137,79 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     <div className="filter-sidebar-container" style={{ width: sidebarWidth }}>
       <div className="sidebar-header">Participation Filters</div>
       <div className="sidebar-content">
-        <ParticipationCards
-          variant="dark"
-          rows={rows}
-          onClearAssociation={() => onAssociationFilterChange?.(null)}
-          serverParticipated={serverCounts?.nodes.participated ?? null}
-        />
-        {showFlowChart ? (
-          <ParticipationFlowChart
-            rows={rows}
-            onClearAssociation={() => onAssociationFilterChange?.(null)}
-            serverCounts={flowCounts}
-          />
-        ) : (
+        {/* Cards and the funnel are post-participation only. The Assigned To
+            filter below them is on every page. */}
+        {showFlowChart && (
           <>
-            {/* Assigned To filter - replaces flow chart on executive pages */}
-            <div className="filter-section">
-              <label className="filter-label">Assigned To</label>
-              <Select
-                value={associationFilter ?? "all"}
-                onValueChange={(v) => onAssociationFilterChange?.(v === "all" ? null : v)}
-              >
-                <SelectTrigger
-                  size="sm"
-                  className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white [&_svg]:text-white/70"
-                >
-                  <SelectValue placeholder="All People" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All People</SelectItem>
-                  {associations.map((a) => (
-                    <SelectItem key={a.id} value={String(a.id)}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {personCounts.length > 0 && (
-              <div className="filter-section">
-                <label className="filter-label">Assigned Tenders by Person</label>
-                <div className="space-y-1.5">
-                  {personCounts.map((p) => {
-                    const isActive = associationFilter === String(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => onAssociationFilterChange?.(isActive ? null : String(p.id))}
-                        className={`w-full flex items-center justify-between py-2 px-2.5 rounded-lg transition-colors cursor-pointer border text-left ${
-                          isActive
-                            ? "bg-blue-500/20 border-blue-400/50"
-                            : "bg-white/10 border-white/10 hover:bg-white/20"
-                        }`}
-                      >
-                        <span className="text-xs text-white/70 truncate pr-2">{p.name}</span>
-                        <span className="text-xs font-semibold text-white tabular-nums shrink-0">{p.count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {associationFilter && (
-                  <button
-                    type="button"
-                    onClick={() => onAssociationFilterChange?.(null)}
-                    className="mt-2 text-[10px] font-medium text-white/50 hover:text-white/80 cursor-pointer"
-                  >
-                    Clear assignment filter
-                  </button>
-                )}
-              </div>
-            )}
+            <ParticipationCards
+              variant="dark"
+              rows={rows}
+              onClearAssociation={() => onAssociationFilterChange?.(null)}
+              serverParticipated={serverCounts?.nodes.participated ?? null}
+            />
+            <ParticipationFlowChart
+              onClearAssociation={() => onAssociationFilterChange?.(null)}
+              serverCounts={flowCounts}
+            />
           </>
+        )}
+
+        <div className="filter-section">
+          <label className="filter-label">Assigned To</label>
+          <Select
+            value={associationFilter ?? "all"}
+            onValueChange={(v) => onAssociationFilterChange?.(v === "all" ? null : v)}
+          >
+            <SelectTrigger
+              size="sm"
+              className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white [&_svg]:text-white/70"
+            >
+              <SelectValue placeholder="All People" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All People</SelectItem>
+              {associations.map((a) => (
+                <SelectItem key={a.id} value={String(a.id)}>
+                  {a.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {personCounts.length > 0 && (
+          <div className="filter-section">
+            <label className="filter-label">Assigned Tenders by Person</label>
+            <div className="space-y-1.5">
+              {personCounts.map((p) => {
+                const isActive = associationFilter === String(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => onAssociationFilterChange?.(isActive ? null : String(p.id))}
+                    className={`w-full flex items-center justify-between py-2 px-2.5 rounded-lg transition-colors cursor-pointer border text-left ${
+                      isActive
+                        ? "bg-blue-500/20 border-blue-400/50"
+                        : "bg-white/10 border-white/10 hover:bg-white/20"
+                    }`}
+                  >
+                    <span className="text-xs text-white/70 truncate pr-2">{p.name}</span>
+                    <span className="text-xs font-semibold text-white tabular-nums shrink-0">{p.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {associationFilter && (
+              <button
+                type="button"
+                onClick={() => onAssociationFilterChange?.(null)}
+                className="mt-2 text-[10px] font-medium text-white/50 hover:text-white/80 cursor-pointer"
+              >
+                Clear assignment filter
+              </button>
+            )}
+          </div>
         )}
 
         <div className="filter-section">

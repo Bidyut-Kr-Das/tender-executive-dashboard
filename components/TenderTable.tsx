@@ -2074,6 +2074,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
     if (next && server) server.requestFacet(next);
   };
 
+  // Checking a value refetches the page, which can make the open dropdown's
+  // cached options stale. Ask again while it is open rather than rendering an
+  // empty list; the thunk de-dupes, so this settles after one request.
+  const serverFacetMissing =
+    !!server && !!openDropdown && server.getFacetOptions(openDropdown) === null;
+  useEffect(() => {
+    if (!server || !openDropdown || !serverFacetMissing) return;
+    server.requestFacet(openDropdown);
+  }, [server, openDropdown, serverFacetMissing]);
+
   const toggleFilter = (accessor: string, value: string) => {
     setMultiSelectFilters((prev) => {
       const current = prev[accessor] ?? [];

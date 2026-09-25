@@ -17,6 +17,8 @@ import {
   CU_KEY_SQL_PATTERN,
 } from "@/lib/rawMaterials";
 import { needsFacetQuery as needsFacetQueryMeta } from "@/lib/tender-filter-meta";
+// Pure tree data, no React - the flow chart's ancestry is the one source of truth.
+import { PARTICIPATION_CHAINS } from "@/components/participation-flow/tree";
 import {
   EPC_TO_FLAT,
   EPC_UNFILTERABLE,
@@ -563,7 +565,8 @@ const RA_INCOMPLETE = Prisma.sql`(t."reverseAuctionStartDate" IS NULL OR t."reve
 export const APM_YES = Prisma.sql`t."apm"::text = 'YES'`;
 export const AI_YES = Prisma.sql`t."aiRelevanceValid" IS TRUE`;
 const STATUS = Prisma.sql`upper(btrim(coalesce(t."currentStatus", '')))`;
-const RANK_1 = Prisma.sql`btrim(coalesce(t."ourRank", '')) = '1'`;
+// Free-text field: the sheet records a first place as either "1" or "L1".
+const RANK_1 = Prisma.sql`upper(btrim(coalesce(t."ourRank", ''))) IN ('1', 'L1')`;
 const HAS_CONTRACT = Prisma.sql`btrim(coalesce(t."contractNo", '')) <> ''`;
 
 function statusIn(list: string[]): Prisma.Sql {
@@ -663,6 +666,27 @@ export function participationSql(
   };
 
   return map[filter]();
+}
+
+/**
+ * A flow node's predicate ANDed with its ancestors'. The sidebar counts each
+ * node this way so a child can never outcount its parent: weLost and
+ * technicalOpen carry no branch of their own, so counted alone they answer for
+ * both subtrees. Filters that are not flow nodes (the cards' participated /
+ * notParticipated / upcomingRa ...) have no chain and stand alone.
+ *
+ * buildWhereSql deliberately does NOT use this: the table already receives the
+ * whole chain from handleSelect, one dispatched filter per ancestor.
+ */
+export function participationChainSql(
+  filter: ParticipationFilter,
+  now?: Date,
+): Prisma.Sql {
+  const chain = PARTICIPATION_CHAINS[filter] ?? [filter];
+  return Prisma.join(
+    chain.map((f) => participationSql(f, now)),
+    " AND ",
+  );
 }
 
 // ------------------------------------------------------------------ scope ---
@@ -800,13 +824,20 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
     // table keeps them. Both behaviours are preserved.
     const dropUndated = q.scope !== "tenders";
 
+    // deadline's `select` carries a preset token, never a column value.
+    let ignoreSelect = false;
     if (flatAccessor === "deadline" && state.select?.length) {
       const range = presetRange(state.select[0], now);
       if (range) {
         const sql = dateKeyRangeSql("deadline", expr, range.fromKey, range.toKey, dropUndated);
         if (sql) parts.push(sql);
+        // A real preset replaces the typed window, by design.
+        continue;
       }
-      continue;
+      // An unrecognised token is neither a preset nor a deadline value. Ignore
+      // just the token and let a typed window still apply: continuing here left
+      // the column unconstrained, and matching it as a literal matches nothing.
+      ignoreSelect = true;
     }
 
     if (state.dateRange) {
@@ -820,7 +851,7 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
       if (sql) parts.push(sql);
     }
 
-    if (state.select?.length) {
+    if (state.select?.length && !ignoreSelect) {
       const sql = selectSql(flatAccessor, expr, state.select);
       if (sql) parts.push(sql);
     }
@@ -840,10 +871,23 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
     }
   }
 
-  // The implicit "hide past deadlines" rule, dropped once the user sets one.
-  const hasDeadlineFilter =
-    !!q.columnFilters?.deadline?.select?.length || !!q.columnFilters?.deadline?.dateRange;
-  if (q.applyDefaultDeadlineFilter && !hasDeadlineFilter && opts.skipColumn !== "deadline") {
+  // The implicit "hide past deadlines" rule, dropped only once the user gives a
+  // lower bound of their own. Testing mere presence of a dateRange object let
+  // "up to 29 Sep" and a cleared { startDate: "", endDate: "" } both mean "all
+  // history": such a window has no floor, and dropping the implicit one left
+  // nothing bounding it below.
+  //
+  // EPC scopes send this column as lastDateOfSubmission. They all pass
+  // applyDefaultDeadlineFilter: false today, so the second lookup only guards
+  // against a future caller that does not.
+  const deadlineFilter =
+    q.columnFilters?.deadline ?? q.columnFilters?.lastDateOfSubmission;
+  const presetFloor = deadlineFilter?.select?.length
+    ? !!presetRange(deadlineFilter.select[0], now)
+    : false;
+  const hasDeadlineFloor =
+    presetFloor || !!normalizeKey(deadlineFilter?.dateRange?.startDate);
+  if (q.applyDefaultDeadlineFilter && !hasDeadlineFloor && opts.skipColumn !== "deadline") {
     parts.push(Prisma.sql`(t."deadline" IS NULL OR t."deadline" >= ${todayStart(now)})`);
   }
 

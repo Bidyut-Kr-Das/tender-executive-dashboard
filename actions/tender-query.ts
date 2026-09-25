@@ -18,7 +18,7 @@ import {
   HAS_ANY_ASSOCIATION,
   needsFacetQuery,
   PARTICIPATION_FILTERS,
-  participationSql,
+  participationChainSql,
   type TenderQuery,
 } from "@/lib/tender-query";
 import { Prisma } from "@/generated/prisma/client";
@@ -265,10 +265,18 @@ export async function fetchTenderSummary(query: TenderQuery): Promise<TenderSumm
 /**
  * The sidebar cards and every flow-chart node, in one round trip.
  *
- * Counts are DISTINCT docket, matching dedupeByDocketNo / countUniqueDockets,
- * and they run under the page's active filters so the numbers agree with the
- * table. participationSql is the same translation the table filters use, so a
- * node count and the rows you get by clicking that node cannot disagree.
+ * Counts are DISTINCT docket, matching dedupeByDocketNo / countUniqueDockets.
+ * The caller passes a baseline query - see buildCountsQuery in
+ * lib/epc-table-query - so a count is the stage total, not the filtered row
+ * count: clicking a flow node must not collapse its own siblings, and a table
+ * filter must not move the sidebar.
+ *
+ * Each flow node is counted through participationChainSql, its own predicate
+ * ANDed with its ancestors', because weLost and technicalOpen carry no branch
+ * of their own and counted alone answer for both subtrees - which is how a
+ * child came to outcount its parent. Siblings are still not expected to sum to
+ * their parent: the funnel has real drop-off, e.g. a REJECTED or DISQUALIFIED
+ * docket matches neither Technical Open nor Technical Not Open.
  */
 export async function fetchParticipationCounts(
   query: TenderQuery,
@@ -278,7 +286,7 @@ export async function fetchParticipationCounts(
 
     const columns = PARTICIPATION_FILTERS.map(
       (f, i) =>
-        Prisma.sql`count(DISTINCT ${DOCKET_KEY_SQL}) FILTER (WHERE ${participationSql(f)}) AS ${Prisma.raw(`c${i}`)}`,
+        Prisma.sql`count(DISTINCT ${DOCKET_KEY_SQL}) FILTER (WHERE ${participationChainSql(f)}) AS ${Prisma.raw(`c${i}`)}`,
     );
 
     const [totals, perPerson] = await Promise.all([

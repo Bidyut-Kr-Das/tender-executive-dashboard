@@ -16,11 +16,13 @@ import {
   istDateKeyToUtcRange,
   needsFacetQuery,
   PARTICIPATION_FILTERS,
+  participationChainSql,
   participationSql,
   TENDER_COLUMNS,
   type TenderQuery,
 } from "@/lib/tender-query";
 import type { ParticipationFilter } from "@/lib/slices/filtersSlice";
+import { PARTICIPATION_CHAINS } from "@/components/participation-flow/tree";
 
 const NOW = new Date("2026-09-22T06:00:00.000Z"); // 11:30 IST on 22 Sep 2026
 
@@ -235,7 +237,7 @@ check("every participation filter produces SQL", () => {
 
 check("participation filters AND together", () => {
   const t = text(where({ participationFilters: ["weL1", "technicalOpen"] }));
-  assert.match(t, /btrim\(coalesce\(t\."ourRank", ''\)\) = '1'/);
+  assert.match(t, /upper\(btrim\(coalesce\(t\."ourRank", ''\)\)\) IN \('1', 'L1'\)/);
   assert.match(t, /upper\(btrim\(coalesce\(t\."currentStatus", ''\)\)\) IN/);
 });
 
@@ -244,7 +246,10 @@ check("notParticipated means undecided, not false", () => {
 });
 
 check("weLost keeps rows with no rank", () => {
-  assert.match(text(participationSql("weLost", NOW)), /NOT btrim\(coalesce\(t\."ourRank", ''\)\) = '1'/);
+  assert.match(
+    text(participationSql("weLost", NOW)),
+    /NOT upper\(btrim\(coalesce\(t\."ourRank", ''\)\)\) IN \('1', 'L1'\)/,
+  );
 });
 
 // ------------------------------------------------- analytics and exclusion ---
@@ -605,6 +610,114 @@ check("a /tenders deadline window keeps undated rows", () => {
     }),
   );
   assert.match(t, /t\."deadline" IS NULL OR/);
+});
+
+check("a flow node's chain is its ancestors then itself", () => {
+  assert.deepEqual(PARTICIPATION_CHAINS.weLost, [
+    "participatedWithRa",
+    "raDone",
+    "weLost",
+  ]);
+  assert.deepEqual(PARTICIPATION_CHAINS.financialContractPending, [
+    "participatedWithoutRa",
+    "technicalOpen",
+    "financialOpen",
+    "financialWeL1",
+    "financialContractPending",
+  ]);
+  // Keyed by filter, not node id: the branch roots' ids differ from their filters.
+  assert.ok(!("withRa" in PARTICIPATION_CHAINS));
+  assert.ok("participatedWithRa" in PARTICIPATION_CHAINS);
+});
+
+check("the chain ANDs the branch a node does not carry itself", () => {
+  // weLost alone is "participated and not rank 1" - it would outcount raDone.
+  assert.doesNotMatch(text(participationSql("weLost", NOW)), /reverseAuctionApplicable/);
+  const chained = text(participationChainSql("weLost", NOW));
+  assert.match(chained, /reverseAuctionApplicable" IS TRUE/);
+  assert.match(chained, /reverseAuctionStartDate" IS NOT NULL/);
+});
+
+check("a filter that is not a flow node is left alone", () => {
+  for (const f of ["participated", "notParticipated", "upcomingRa"] as ParticipationFilter[]) {
+    assert.equal(text(participationChainSql(f, NOW)), text(participationSql(f, NOW)));
+  }
+});
+
+check("every flow node's chain is at least as narrow as its parent's", () => {
+  for (const [filter, chain] of Object.entries(PARTICIPATION_CHAINS)) {
+    const parent = chain!.slice(0, -1);
+    if (parent.length === 0) continue;
+    const parentText = text(
+      participationChainSql(parent[parent.length - 1] as ParticipationFilter, NOW),
+    );
+    // The child's chain is the parent's chain plus one more conjunct.
+    assert.ok(
+      text(participationChainSql(filter as ParticipationFilter, NOW)).startsWith(parentText),
+      `${filter} does not extend its parent's chain`,
+    );
+  }
+});
+
+check("rank 1 is recorded as either 1 or L1", () => {
+  const t = text(participationSql("weL1", NOW));
+  assert.match(t, /IN \('1', 'L1'\)/);
+  assert.match(text(participationSql("weLost", NOW)), /NOT .*IN \('1', 'L1'\)/);
+});
+
+check("a deadline window with no start keeps the implicit floor", () => {
+  // End-only used to emit (deadline < $1) with nothing below it, and suppress
+  // the implicit floor as well: 36,646 of 36,953 rows, oldest deadline 0224-07-30.
+  const sql = where({
+    columnFilters: { deadline: { dateRange: { startDate: "", endDate: "2026-09-29" } } },
+  });
+  const t = text(sql);
+  assert.match(t, /t\."deadline" >= \$/); // the implicit floor
+  assert.match(t, /t\."deadline" < \$/); // the user's own ceiling
+  // Column filters are emitted before the implicit rule, so the floor is last.
+  assert.deepEqual(
+    (sql.values as Date[]).map((v) => v.toISOString()),
+    ["2026-09-29T18:30:00.000Z", "2026-09-21T18:30:00.000Z"],
+  );
+});
+
+check("a cleared deadline range does not degrade the whole WHERE to TRUE", () => {
+  const t = text(where({ columnFilters: { deadline: { dateRange: { startDate: "", endDate: "" } } } }));
+  assert.notEqual(t, "TRUE");
+  assert.match(t, /t\."deadline" IS NULL OR t\."deadline" >= \$1/);
+});
+
+check("a start bound is the user's own floor, never doubled", () => {
+  const t = text(
+    where({ columnFilters: { deadline: { dateRange: { startDate: "2026-09-25", endDate: "" } } } }),
+  );
+  assert.equal(t.match(/t\."deadline" >= \$/g)?.length, 1);
+});
+
+check("a recognised preset still replaces the implicit floor", () => {
+  const sql = where({ columnFilters: { deadline: { select: ["thisMonth"] } } });
+  assert.equal(sql.values.length, 2); // no third param from the implicit rule
+  assert.equal((sql.values[0] as Date).toISOString(), "2026-08-31T18:30:00.000Z");
+});
+
+check("an unrecognised preset token does not swallow the typed window", () => {
+  const t = text(
+    where({
+      columnFilters: {
+        deadline: {
+          select: ["Gem"],
+          dateRange: { startDate: "2026-09-25", endDate: "2026-09-29" },
+        },
+      },
+    }),
+  );
+  assert.match(t, /t\."deadline" >= \$/);
+  assert.match(t, /t\."deadline" < \$/);
+  assert.notEqual(t, "TRUE");
+  // The token is ignored, not matched as a literal deadline value - doing that
+  // ANDed in `t."deadline"::text IN ('Gem')` and returned zero rows.
+  assert.equal(/Gem/.test(t), false);
+  assert.equal(t.includes("::text IN"), false);
 });
 
 console.log(`tender-query: ${checks} checks passed`);

@@ -1,6 +1,13 @@
 import type { EpcTableFilters } from "@/components/TenderTable";
 import type { ColumnFilterState } from "@/lib/types";
+// Type-only: a value import from lib/tender-query drags Prisma into the client bundle.
+import type { TenderQuery } from "@/lib/tender-query";
 import { normalizeEpcSelectTokens } from "@/lib/epc-column-map";
+import {
+  getISTMonthRange,
+  getISTWeekRange,
+  getISTYearRange,
+} from "@/lib/format-ist";
 
 /**
  * Turns the filter widgets TenderTable owns into the ColumnFilterState map the
@@ -19,6 +26,8 @@ export interface EpcQueryFilterInput {
   /** An extra deadline window ANDed with the table's own (participatedDateRange). */
   deadlineFrom?: string;
   deadlineTo?: string;
+  /** Injectable for the self-check; defaults to now. */
+  now?: Date;
 }
 
 export interface EpcQueryFilters {
@@ -29,6 +38,30 @@ export interface EpcQueryFilters {
 
 function nonEmpty(value: string | undefined): string {
   return value?.trim() ?? "";
+}
+
+/**
+ * A deadline preset as an explicit IST window, the same way the table's own
+ * getDateRange() resolves it. Resolving it here means a preset and the page's
+ * window can both apply; sending the preset name on alone dropped the latter.
+ */
+function presetWindow(
+  preset: EpcTableFilters["datePreset"],
+  now: Date,
+): { from: string; to: string } | null {
+  if (preset === "thisWeek") {
+    const r = getISTWeekRange(now);
+    return { from: r.fromKey, to: r.toKey };
+  }
+  if (preset === "thisMonth") {
+    const r = getISTMonthRange(now);
+    return { from: r.fromKey, to: r.toKey };
+  }
+  if (preset === "thisYear") {
+    const r = getISTYearRange(now);
+    return { from: r.fromKey, to: r.toKey };
+  }
+  return null;
 }
 
 /** Two windows ANDed: the later start and the earlier end win. */
@@ -68,20 +101,17 @@ export function buildEpcQueryFilters(input: EpcQueryFilterInput): EpcQueryFilter
       out[accessor] = { ...out[accessor], text: trimmed };
     }
 
-    // A preset replaces the explicit window, exactly as getDateRange did.
-    if (t.datePreset) {
-      out.lastDateOfSubmission = {
-        ...out.lastDateOfSubmission,
-        select: [t.datePreset],
-      };
-    } else {
-      setDateRange(
-        out,
-        "lastDateOfSubmission",
-        intersect(nonEmpty(t.startDate), nonEmpty(input.deadlineFrom), "max"),
-        intersect(nonEmpty(t.endDate), nonEmpty(input.deadlineTo), "min"),
-      );
-    }
+    // A preset replaces the table's own start/end, exactly as getDateRange
+    // does - but never the page's window, which is ANDed on top either way.
+    const preset = presetWindow(t.datePreset, input.now ?? new Date());
+    const tableFrom = preset ? preset.from : nonEmpty(t.startDate);
+    const tableTo = preset ? preset.to : nonEmpty(t.endDate);
+    setDateRange(
+      out,
+      "lastDateOfSubmission",
+      intersect(tableFrom, nonEmpty(input.deadlineFrom), "max"),
+      intersect(tableTo, nonEmpty(input.deadlineTo), "min"),
+    );
 
     setDateRange(
       out,
@@ -133,5 +163,37 @@ export function buildEpcQueryFilters(input: EpcQueryFilterInput): EpcQueryFilter
     columnFilters: out,
     erpItemCategory: category && category !== "All" ? category : null,
     priceBasis: basis && basis.toLowerCase() !== "all" ? basis : null,
+  };
+}
+
+/**
+ * The sidebar's counts baseline: the scope predicate plus the sidebar's own
+ * deadline window, nothing else. Participation filters, every table widget and
+ * the sidebar's other controls are stripped, so clicking a flow node cannot
+ * change the numbers printed on the flow nodes, and a table filter cannot
+ * either. The window has to be rebuilt from the raw sidebar values because
+ * buildEpcQueryFilters already intersected it with the table's own.
+ */
+export function buildCountsQuery(
+  query: TenderQuery,
+  deadlineFrom?: string,
+  deadlineTo?: string,
+): TenderQuery {
+  const from = nonEmpty(deadlineFrom);
+  const to = nonEmpty(deadlineTo);
+  return {
+    ...query,
+    columnFilters:
+      from || to
+        ? { lastDateOfSubmission: { dateRange: { startDate: from, endDate: to } } }
+        : {},
+    participationFilters: [],
+    analyticsFilter: null,
+    exclusionFilter: null,
+    associationFilter: null,
+    erpItemCategory: null,
+    priceBasis: null,
+    fileDateFromIso: null,
+    fileDateToIso: null,
   };
 }

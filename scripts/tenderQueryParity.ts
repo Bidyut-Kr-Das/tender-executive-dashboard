@@ -166,9 +166,13 @@ function matchesColumnFilters(row: FlatRow, q: TenderQuery): boolean {
 function matchesInMemory(row: FlatRow, q: TenderQuery): boolean {
   if (!matchesColumnFilters(row, q)) return false;
 
-  const hasDeadlineFilter =
-    !!q.columnFilters.deadline?.select?.length || !!q.columnFilters.deadline?.dateRange;
-  if (q.applyDefaultDeadlineFilter && !hasDeadlineFilter) {
+  // Mirrors buildWhereSql: the implicit floor is dropped only once the user
+  // supplies a lower bound, not merely a dateRange object.
+  const deadlineFilter = q.columnFilters.deadline;
+  const hasDeadlineFloor =
+    !!deadlineFilter?.select?.length ||
+    !!(deadlineFilter?.dateRange?.startDate ?? "").trim();
+  if (q.applyDefaultDeadlineFilter && !hasDeadlineFloor) {
     const raw = row.deadline;
     if (raw != null && raw !== "") {
       const k = key(raw);
