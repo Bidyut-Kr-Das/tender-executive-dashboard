@@ -11,9 +11,11 @@ import type { Prisma } from "@/generated/prisma/client";
 import {
   buildOrderBySql,
   buildWhereSql,
+  DOCKET_KEY_SQL,
   emptyTenderQuery,
   istDateKeyToUtcRange,
   needsFacetQuery,
+  PARTICIPATION_FILTERS,
   participationSql,
   TENDER_COLUMNS,
   type TenderQuery,
@@ -424,5 +426,185 @@ check("only columns without hardcoded options hit the database", () => {
   assert.equal(needsFacetQuery("someExcelHeader", q), false);
 });
 
+
+// ------------------------------------------------------ scopes and EPC SQL ---
+
+function epc(scope: TenderQuery["scope"], patch: Partial<TenderQuery> = {}): string {
+  return text(where({ scope, groupByDocket: true, applyDefaultDeadlineFilter: false, ...patch }));
+}
+
+check("/tenders adds no scope predicate", () => {
+  assert.equal(text(where({ applyDefaultDeadlineFilter: false })), "TRUE");
+});
+
+check("home is APM yes, undecided, deadline still ahead", () => {
+  const t = epc("home");
+  assert.match(t, /t\."apm"::text = 'YES'/);
+  assert.match(t, /t\."participated" IS NULL/);
+  assert.match(t, /t\."deadline" IS NOT NULL/);
+  assert.match(t, /t\."deadline" >= \$/);
+});
+
+check("post participation is APM yes and participated, with no deadline rule", () => {
+  const t = epc("postParticipation");
+  assert.match(t, /t\."participated" IS TRUE/);
+  assert.equal(/deadline/.test(t), false);
+});
+
+check("not participated keeps explicit noes regardless of deadline", () => {
+  const t = epc("notParticipated");
+  assert.match(t, /t\."participated" IS FALSE OR/);
+  assert.match(t, /t\."deadline" < \$/);
+});
+
+check("EPC accessors resolve to their real columns", () => {
+  const t = epc("home", { columnFilters: { nameOfTheClient: { select: ["NTPC"] } } });
+  assert.match(t, /t\."organization"::text IN \(\$/);
+  assert.equal(/nameOfTheClient/.test(t), false);
+});
+
+check("lastDateOfSubmission ranges compare deadline as an instant", () => {
+  const t = epc("home", {
+    columnFilters: {
+      lastDateOfSubmission: { dateRange: { startDate: "2026-09-01", endDate: "2026-09-30" } },
+    },
+  });
+  assert.match(t, /t\."deadline" >= \$/);
+  assert.match(t, /t\."deadline" < \$/);
+});
+
+check("a deadline preset still works through the EPC accessor", () => {
+  const t = epc("home", { columnFilters: { lastDateOfSubmission: { select: ["thisMonth"] } } });
+  assert.match(t, /t\."deadline" >= \$/);
+});
+
+check("reverseAuctionApplicable follows raQualificationRule on the EPC pages", () => {
+  const t = epc("postParticipation", {
+    columnFilters: { reverseAuctionApplicable: { boolean: true } },
+  });
+  assert.match(t, /raQualificationRule/);
+});
+
+check("/tenders keeps the raw reverseAuctionApplicable column", () => {
+  const t = text(
+    where({
+      applyDefaultDeadlineFilter: false,
+      columnFilters: { reverseAuctionApplicable: { boolean: true } },
+    }),
+  );
+  assert.match(t, /t\."reverseAuctionApplicable"::text = 'true'/);
+  assert.equal(/raQualificationRule/.test(t), false);
+});
+
+check("participationSql still reads the raw RA column, like the flow chart", () => {
+  const t = text(participationSql("raDone", NOW));
+  assert.match(t, /t\."reverseAuctionApplicable" IS TRUE/);
+  assert.equal(/raQualificationRule/.test(t), false);
+});
+
+check("an empty tenderUpdateStatus reads as OPEN", () => {
+  const t = epc("postParticipation", { columnFilters: { tenderUpdateStatus: { select: ["OPEN"] } } });
+  assert.match(t, /coalesce\(nullif\(btrim\(t\."tenderUpdateStatus"\), ''\), 'OPEN'\)/);
+});
+
+check("tenderPrepareBy filters on association names", () => {
+  const t = epc("home", { columnFilters: { tenderPrepareBy: { text: "ravi" } } });
+  assert.match(t, /string_agg\(a\."name"/);
+});
+
+check("an unfilterable EPC accessor is skipped", () => {
+  const t = epc("home", { columnFilters: { attachmentUrl: { text: "x" } } });
+  assert.equal(/attachmentUrl/.test(t), false);
+});
+
+check("the XLPE ERP category excludes AB cable", () => {
+  const sql = where({
+    scope: "home",
+    groupByDocket: true,
+    applyDefaultDeadlineFilter: false,
+    erpItemCategory: "XLPE Cable",
+  });
+  assert.match(text(sql), /FROM "CostingSheetDetails" csd/);
+  assert.match(text(sql), /NOT LIKE \$/);
+  assert.equal(sql.values.includes("%ab cable%"), true);
+});
+
+check("an unknown ERP category filters nothing", () => {
+  assert.equal(/CostingSheetDetails/.test(epc("home", { erpItemCategory: "nope" })), false);
+});
+
+check("price basis treats a blank column as Firm", () => {
+  const sql = where({
+    scope: "home",
+    groupByDocket: true,
+    applyDefaultDeadlineFilter: false,
+    priceBasis: "Firm",
+  });
+  assert.match(text(sql), /coalesce\(nullif\(btrim\(t\."price"\), ''\), 'firm'\)/);
+  assert.equal(sql.values.includes("firm"), true);
+});
+
+check("All means no price filter", () => {
+  assert.equal(/price/.test(epc("home", { priceBasis: "All" })), false);
+});
+
+check("the association filter can be skipped for person counts", () => {
+  const q: TenderQuery = { ...emptyTenderQuery(), scope: "home", associationFilter: "7" };
+  assert.match(text(buildWhereSql(q, { now: NOW })), /tender_associations/);
+  assert.equal(
+    /tender_associations/.test(text(buildWhereSql(q, { now: NOW, skipAssociationFilter: true }))),
+    false,
+  );
+});
+
+check("the docket key uppercases and falls back to the row id", () => {
+  const t = text(DOCKET_KEY_SQL);
+  assert.match(t, /upper\(btrim\(t\."docketNo"\)\)/);
+  assert.match(t, /'__row_' \|\| t\."id"::text/);
+});
+
+check("every participation filter has a runtime entry", () => {
+  assert.equal(PARTICIPATION_FILTERS.length, 23);
+  for (const f of PARTICIPATION_FILTERS) {
+    assert.ok(text(participationSql(f, NOW)).length > 0);
+  }
+});
+
+check("EPC sorting uses the real column, not the accessor", () => {
+  const q: TenderQuery = {
+    ...emptyTenderQuery(),
+    scope: "home",
+    sort: { column: "lastDateOfSubmission", direction: "desc" },
+  };
+  assert.match(text(buildOrderBySql(q)), /t\."deadline" DESC NULLS LAST/);
+});
+
+check("EPC dropdowns only query for columns that can offer values", () => {
+  const q: TenderQuery = { ...emptyTenderQuery(), scope: "home" };
+  for (const c of ["lastDateOfSubmission", "rawMaterials", "remarks", "participated", "attachmentUrl", "files"]) {
+    assert.equal(needsFacetQuery(c, q), false, `${c} should not query`);
+  }
+  for (const c of ["nameOfTheClient", "currentStatus", "tenderPrepareBy"]) {
+    assert.equal(needsFacetQuery(c, q), true, `${c} should query`);
+  }
+});
+
+
+check("an EPC deadline window drops undated rows", () => {
+  const t = epc("postParticipation", {
+    columnFilters: { lastDateOfSubmission: { dateRange: { startDate: "2026-01-01", endDate: "" } } },
+  });
+  assert.match(t, /t\."deadline" IS NOT NULL AND/);
+});
+
+check("a /tenders deadline window keeps undated rows", () => {
+  const t = text(
+    where({
+      applyDefaultDeadlineFilter: false,
+      columnFilters: { deadline: { dateRange: { startDate: "2026-01-01", endDate: "" } } },
+    }),
+  );
+  assert.match(t, /t\."deadline" IS NULL OR/);
+});
 
 console.log(`tender-query: ${checks} checks passed`);

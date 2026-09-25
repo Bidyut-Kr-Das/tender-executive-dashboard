@@ -28,6 +28,8 @@ import { FlowNodeCard } from "@/components/participation-flow/FlowNodeCard";
 interface ParticipationFlowChartProps {
   rows: Record<string, unknown>[];
   onClearAssociation?: () => void;
+  /** Docket-deduped node counts from fetchParticipationCounts, keyed by node id. */
+  serverCounts?: FlowCounts | null;
 }
 
 /** Counts keyed by FlowNode.id. */
@@ -262,6 +264,7 @@ function FlowSubtree({
 export function ParticipationFlowChart({
   rows,
   onClearAssociation,
+  serverCounts = null,
 }: ParticipationFlowChartProps) {
   const dispatch = useAppDispatch();
   const participationFilters = useAppSelector(
@@ -275,12 +278,13 @@ export function ParticipationFlowChart({
 
   const counts = useMemo(
     () =>
+      serverCounts ??
       computeFlowCounts(
         rows,
         participatedDateRange?.from,
         participatedDateRange?.to,
       ),
-    [rows, participatedDateRange],
+    [rows, participatedDateRange, serverCounts],
   );
 
   const isActive = useCallback(

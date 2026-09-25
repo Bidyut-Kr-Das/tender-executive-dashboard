@@ -311,12 +311,18 @@ interface ParticipationCardsProps {
   rows: Record<string, unknown>[];
   variant?: "light" | "dark";
   onClearAssociation?: () => void;
+  /**
+   * Docket-deduped count from fetchParticipationCounts. When given, the client
+   * scan is skipped entirely - the pages that pass it hold no dataset to scan.
+   */
+  serverParticipated?: number | null;
 }
 
 export function ParticipationCards({
   rows,
   variant = "light",
   onClearAssociation,
+  serverParticipated = null,
 }: ParticipationCardsProps) {
   const dispatch = useAppDispatch();
   const participationFilters = useAppSelector(
@@ -327,6 +333,7 @@ export function ParticipationCards({
   );
 
   const counts = useMemo(() => {
+    if (serverParticipated != null) return { participated: serverParticipated };
     const participatedRaw = rows.filter(
       (row) =>
         isParticipatedRow(row) &&
@@ -344,7 +351,7 @@ export function ParticipationCards({
     return {
       participated: participated.length,
     };
-  }, [rows, participatedDateRange]);
+  }, [rows, participatedDateRange, serverParticipated]);
 
   const handleCardClick = (value: CardValue) => {
     dispatch(toggleParticipationFilter(value));

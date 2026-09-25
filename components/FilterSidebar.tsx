@@ -8,7 +8,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ParticipationCards } from "@/components/tender-viewer/participation-cards";
-import { ParticipationFlowChart } from "@/components/ParticipationFlowChart";
+import {
+  ParticipationFlowChart,
+  type FlowCounts,
+} from "@/components/ParticipationFlowChart";
+import { FLOW_TREES, flatten } from "@/components/participation-flow/tree";
+import type { ParticipationCountsResult } from "@/lib/participation-counts";
 import { useAppSelector } from "@/lib/hooks";
 import "./FilterSidebar.css";
 
@@ -28,6 +33,13 @@ interface FilterSidebarProps {
   associationFilter?: string | null;
   onAssociationFilterChange?: (val: string | null) => void;
   showFlowChart?: boolean;
+  /**
+   * Server-computed analytics. When supplied, no card scans rows - the EPC
+   * pages no longer load a dataset to scan. All counts are DISTINCT docket.
+   */
+  serverCounts?: ParticipationCountsResult | null;
+  /** Association list for the pages that do not stream tenders.data. */
+  associationList?: { id: number; name: string; email: string }[];
 }
 
 // A fresh [] inside a selector is a new reference on every store update,
@@ -43,16 +55,26 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   associationFilter = null,
   onAssociationFilterChange,
   showFlowChart = false,
+  serverCounts = null,
+  associationList,
 }) => {
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
-  const associations = useAppSelector((s) => s.tenders.data?.associations) ?? EMPTY_ASSOCIATIONS;
+  const streamedAssociations =
+    useAppSelector((s) => s.tenders.data?.associations) ?? EMPTY_ASSOCIATIONS;
+  const associations = associationList ?? streamedAssociations;
 
   // Single pass over the rows. This used to scan the whole array once per
   // association, allocating a split/map/filter chain per row per association.
   const personCounts = useMemo(() => {
     if (associations.length === 0) return [];
+    if (serverCounts) {
+      const byId = new Map(serverCounts.personCounts.map((p) => [p.id, p.count]));
+      return associations
+        .map((a) => ({ ...a, count: byId.get(a.id) ?? 0 }))
+        .filter((p) => p.count > 0);
+    }
     const sourceRows = filteredRows ?? rows;
     const countsById = new Map<string, number>();
     const seen = new Set<string>();
@@ -72,7 +94,21 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     return associations
       .map((a) => ({ ...a, count: countsById.get(String(a.id)) ?? 0 }))
       .filter((p) => p.count > 0);
-  }, [rows, filteredRows, associations]);
+  }, [rows, filteredRows, associations, serverCounts]);
+
+  // Flow-chart nodes are keyed by node id; the server answers by
+  // ParticipationFilter. Every node carries its filter, so the tree itself is
+  // the mapping - no second table to keep in step.
+  const flowCounts = useMemo((): FlowCounts | null => {
+    if (!serverCounts) return null;
+    const out: FlowCounts = {};
+    for (const { tree } of FLOW_TREES) {
+      for (const node of flatten(tree)) {
+        out[node.id] = serverCounts.nodes[node.filter] ?? 0;
+      }
+    }
+    return out;
+  }, [serverCounts]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -101,9 +137,18 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     <div className="filter-sidebar-container" style={{ width: sidebarWidth }}>
       <div className="sidebar-header">Participation Filters</div>
       <div className="sidebar-content">
-        <ParticipationCards variant="dark" rows={rows} onClearAssociation={() => onAssociationFilterChange?.(null)} />
+        <ParticipationCards
+          variant="dark"
+          rows={rows}
+          onClearAssociation={() => onAssociationFilterChange?.(null)}
+          serverParticipated={serverCounts?.nodes.participated ?? null}
+        />
         {showFlowChart ? (
-          <ParticipationFlowChart rows={rows} onClearAssociation={() => onAssociationFilterChange?.(null)} />
+          <ParticipationFlowChart
+            rows={rows}
+            onClearAssociation={() => onAssociationFilterChange?.(null)}
+            serverCounts={flowCounts}
+          />
         ) : (
           <>
             {/* Assigned To filter - replaces flow chart on executive pages */}

@@ -259,24 +259,27 @@ function formatColumnName(name: string): string {
 
 const EMPTY_FILTER_OPTIONS: Record<string, FilterOption[]> = {};
 
+/** This page's slot in the scope-keyed tenderPage slice. */
+const SCOPE = "tenders" as const;
+
 export default function Dashboard() {
   const dispatch = useAppDispatch();
   const selectedDateFrom = useAppSelector((s) => s.files.selectedDateFrom);
   const selectedDateTo = useAppSelector((s) => s.files.selectedDateTo);
   const files = useAppSelector((s) => s.files.items);
   const loadingFiles = useAppSelector((s) => s.files.loading);
-  const pageRows = useAppSelector((s) => s.tenderPage.rows);
-  const pageColumns = useAppSelector((s) => s.tenderPage.columns);
-  const pageAssociations = useAppSelector((s) => s.tenderPage.associations);
-  const pageStatus = useAppSelector((s) => s.tenderPage.status);
-  const pageTotal = useAppSelector((s) => s.tenderPage.total);
-  const pageNumber = useAppSelector((s) => s.tenderPage.page);
-  const pageSize = useAppSelector((s) => s.tenderPage.pageSize);
-  const pageSort = useAppSelector((s) => s.tenderPage.sort);
-  const pageFacets = useAppSelector((s) => s.tenderPage.facets);
-  const pageSummary = useAppSelector((s) => s.tenderPage.summary);
-  const pageStale = useAppSelector((s) => s.tenderPage.stale);
-  const associationFilter = useAppSelector((s) => s.tenderPage.associationFilter);
+  const pageRows = useAppSelector((s) => s.tenderPage.byScope.tenders.rows);
+  const pageColumns = useAppSelector((s) => s.tenderPage.byScope.tenders.columns);
+  const pageAssociations = useAppSelector((s) => s.tenderPage.byScope.tenders.associations);
+  const pageStatus = useAppSelector((s) => s.tenderPage.byScope.tenders.status);
+  const pageTotal = useAppSelector((s) => s.tenderPage.byScope.tenders.total);
+  const pageNumber = useAppSelector((s) => s.tenderPage.byScope.tenders.page);
+  const pageSize = useAppSelector((s) => s.tenderPage.byScope.tenders.pageSize);
+  const pageSort = useAppSelector((s) => s.tenderPage.byScope.tenders.sort);
+  const pageFacets = useAppSelector((s) => s.tenderPage.byScope.tenders.facets);
+  const pageSummary = useAppSelector((s) => s.tenderPage.byScope.tenders.summary);
+  const pageStale = useAppSelector((s) => s.tenderPage.byScope.tenders.stale);
+  const associationFilter = useAppSelector((s) => s.tenderPage.byScope.tenders.associationFilter);
 
   // The table still consumes the same {columns, rows, associations} shape the
   // streamed dataset had - it is just one page wide now.
@@ -320,7 +323,7 @@ export default function Dashboard() {
   >([]);
   // Merged column definitions live in the store so selectTenderQuery can send
   // them to the server, which needs them to filter and sort those columns.
-  const mergedGroups = useAppSelector((s) => s.tenderPage.mergedGroups);
+  const mergedGroups = useAppSelector((s) => s.tenderPage.byScope.tenders.mergedGroups);
   const [feedbackRow, setFeedbackRow] = useState<Record<
     string,
     unknown
@@ -385,7 +388,7 @@ export default function Dashboard() {
   // Kept so callers (parse completion, uploads) can force a reload; it now
   // refetches the current page instead of the whole table.
   const refreshTenders = useCallback(() => {
-    dispatch(clearStale());
+    dispatch(clearStale({ scope: SCOPE }));
     reloadRef.current?.();
   }, [dispatch]);
 
@@ -430,13 +433,14 @@ export default function Dashboard() {
         }
         if (groups) {
           dispatch(
-            setMergedGroups(
-              groups.map((g) => ({
+            setMergedGroups({
+              scope: SCOPE,
+              groups: groups.map((g) => ({
                 label: g.label,
                 separator: g.separator,
                 fields: JSON.parse(g.fields) as string[],
               })),
-            ),
+            }),
           );
         }
         if (indices) {
@@ -681,7 +685,7 @@ export default function Dashboard() {
 
   const setAssociationFilter = useCallback(
     (value: string | null) => {
-      dispatch(setAssociationFilterAction(value));
+      dispatch(setAssociationFilterAction({ scope: SCOPE, associationFilter: value }));
     },
     [dispatch],
   );
@@ -728,7 +732,7 @@ export default function Dashboard() {
   // fires when something the server cares about actually changed.
   const query = useAppSelector(
     (s): TenderQuery =>
-      selectTenderQuery(s, s.filters.participationFilters.length === 0),
+      selectTenderQuery(s, SCOPE, s.filters.participationFilters.length === 0),
     (a, b) => tenderQueryKey(a) === tenderQueryKey(b),
   );
   const queryKey = useMemo(() => tenderQueryKey(query), [query]);
@@ -737,8 +741,8 @@ export default function Dashboard() {
   hasMetaRef.current = pageColumns.length > 0;
 
   const reload = useCallback(() => {
-    dispatch(loadTenderPage({ query, includeMeta: !hasMetaRef.current }));
-    dispatch(loadTenderSummary({ query }));
+    dispatch(loadTenderPage({ scope: SCOPE, query, includeMeta: !hasMetaRef.current }));
+    dispatch(loadTenderSummary({ scope: SCOPE, query }));
     loadedKeyRef.current = queryKey;
   }, [dispatch, query, queryKey]);
 
@@ -752,7 +756,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!pageStale) return;
-    dispatch(clearStale());
+    dispatch(clearStale({ scope: SCOPE }));
     reloadRef.current();
   }, [pageStale, dispatch]);
 
@@ -766,7 +770,7 @@ export default function Dashboard() {
       // Hardcoded-option columns (Available / Not Available, Yes / No, the
       // association list) never need a round trip.
       if (!needsFacetQuery(accessor, mergedLabels)) return;
-      dispatch(loadTenderFacet({ query, column: accessor }));
+      dispatch(loadTenderFacet({ scope: SCOPE, query, column: accessor }));
     },
     [dispatch, query, mergedLabels],
   );
@@ -814,10 +818,10 @@ export default function Dashboard() {
       pageSize,
       sort: pageSort,
       loading: pageStatus === "loading",
-      onPageChange: (p: number) => dispatch(setPage(p)),
-      onPageSizeChange: (n: number) => dispatch(setPageSize(n)),
+      onPageChange: (p: number) => dispatch(setPage({ scope: SCOPE, page: p })),
+      onPageSizeChange: (n: number) => dispatch(setPageSize({ scope: SCOPE, pageSize: n })),
       onSortChange: (next: { column: string; direction: "asc" | "desc" } | null) =>
-        dispatch(setSort(next)),
+        dispatch(setSort({ scope: SCOPE, sort: next })),
       getFacetOptions,
       requestFacet,
       getAllFilteredRows: loadRowsForExport,

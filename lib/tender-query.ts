@@ -17,6 +17,25 @@ import {
   CU_KEY_SQL_PATTERN,
 } from "@/lib/rawMaterials";
 import { needsFacetQuery as needsFacetQueryMeta } from "@/lib/tender-filter-meta";
+import {
+  EPC_TO_FLAT,
+  EPC_UNFILTERABLE,
+  epcNeedsFacetQuery,
+} from "@/lib/epc-column-map";
+
+/**
+ * Which dashboard route a query belongs to.
+ *
+ * "tenders" is the /tenders page and adds no predicate of its own. The other
+ * three mirror the row filters that lived in lib/selectors/tenderSelectors.ts,
+ * and they are ANDed unconditionally so a user cannot clear them away with the
+ * Reset Filters button.
+ */
+export type TenderScope =
+  | "tenders"
+  | "home"
+  | "postParticipation"
+  | "notParticipated";
 
 /** A user-defined merged column: one header stitched from several fields. */
 export interface MergedGroup {
@@ -33,6 +52,16 @@ export interface MergedGroup {
  * filters and the file-date window that lived in the reselect chain.
  */
 export interface TenderQuery {
+  scope: TenderScope;
+  /**
+   * Page over distinct docket keys instead of rows - TenderTable renders one
+   * rowSpan'd docketNo cell per group, so the page unit has to be the group.
+   */
+  groupByDocket: boolean;
+  /** One of the five hardcoded proposedErpItemName rule sets, or null. */
+  erpItemCategory: string | null;
+  /** "Firm" / "Variable" from the sidebar; null or "All" means no filter. */
+  priceBasis: string | null;
   columnFilters: Record<string, ColumnFilterState>;
   participationFilters: ParticipationFilter[];
   analyticsFilter: AnalyticsFilter;
@@ -55,6 +84,10 @@ export interface TenderQuery {
 
 export function emptyTenderQuery(): TenderQuery {
   return {
+    scope: "tenders",
+    groupByDocket: false,
+    erpItemCategory: null,
+    priceBasis: null,
     columnFilters: {},
     participationFilters: [],
     analyticsFilter: null,
@@ -91,6 +124,14 @@ const DATETIME_COLUMNS: ReadonlySet<string> = new Set([
   "updatedAt",
 ]);
 
+
+/**
+ * The docket a row belongs to, as dedupeByDocketNo sees it (lib/docket.ts:12).
+ *
+ * A blank docketNo is its own group, so every count using this expression
+ * agrees with countUniqueDockets and with TenderTable's getDocketGroupKey.
+ */
+export const DOCKET_KEY_SQL = Prisma.sql`coalesce(nullif(upper(btrim(t."docketNo")), ''), '__row_' || t."id"::text)`;
 
 /** Quoted column reference. Never call with unvalidated input. */
 function col(name: string): Prisma.Sql {
@@ -160,6 +201,23 @@ const DERIVED_VALUE_SQL: Record<string, Prisma.Sql> = {
   costingDetails: relationPresentSql("CostingSheetDetails"),
 };
 
+/**
+ * Expressions that hold only for the EPC pages, because
+ * mapTenderSliceToEpcRecords derives the displayed value instead of copying the
+ * scalar. They are NOT applied to /tenders, which renders the raw flat row -
+ * overriding them there would silently change that page's filters.
+ */
+const EPC_DERIVED_VALUE_SQL: Record<string, Prisma.Sql> = {
+  // mapTenderSliceToEpcRecords:73-79 - a non-empty raQualificationRule forces
+  // true, otherwise the stored tri-state.
+  reverseAuctionApplicable: Prisma.sql`CASE WHEN btrim(coalesce(t."raQualificationRule", '')) <> '' THEN 'true' ELSE coalesce(t."reverseAuctionApplicable"::text, '') END`,
+  // mapTenderSliceToEpcRecords:134 - an empty column displays as OPEN.
+  tenderUpdateStatus: Prisma.sql`coalesce(nullif(btrim(t."tenderUpdateStatus"), ''), 'OPEN')`,
+  // mapTenderSliceToEpcRecords:70 - the cell shows names, not ids.
+  tenderPrepareBy: Prisma.sql`coalesce((SELECT string_agg(a."name", ', ' ORDER BY ta."id") FROM "tender_associations" ta JOIN "associations" a ON a."id" = ta."associationId" WHERE ta."tenderMergedId" = t."id"), '')`,
+  merged_office_consignees: Prisma.sql`concat_ws(' ', NULLIF(t."officeName", ''), NULLIF(t."consigneesReportingOfficer", ''))`,
+};
+
 const MAX_MERGE_DEPTH = 3;
 
 function mergedGroupSql(
@@ -198,6 +256,14 @@ export function columnValueSql(
   const group = q.mergedGroups?.find((g) => g.label === accessor);
   if (group) return mergedGroupSql(group, q, depth);
 
+  if (q.scope !== "tenders") {
+    if (EPC_UNFILTERABLE.has(accessor)) return null;
+    const epcDerived = EPC_DERIVED_VALUE_SQL[accessor];
+    if (epcDerived) return epcDerived;
+    const renamed = EPC_TO_FLAT[accessor];
+    if (renamed) accessor = renamed;
+  }
+
   const derived = DERIVED_VALUE_SQL[accessor];
   if (derived) return derived;
 
@@ -222,6 +288,10 @@ export function isQueryableColumn(accessor: string, q: TenderQuery): boolean {
  * trip is made on open.
  */
 export function needsFacetQuery(accessor: string, q: TenderQuery): boolean {
+  if (q.scope !== "tenders") {
+    if (!epcNeedsFacetQuery(accessor)) return false;
+    return columnValueSql(accessor, q) !== null;
+  }
   return needsFacetQueryMeta(
     accessor,
     (q.mergedGroups ?? []).map((g) => g.label),
@@ -280,6 +350,7 @@ function dateKeyRangeSql(
   expr: Prisma.Sql,
   fromKey: string | null,
   toKey: string | null,
+  dropNulls = false,
 ): Prisma.Sql | null {
   if (!fromKey && !toKey) return null;
 
@@ -291,8 +362,13 @@ function dateKeyRangeSql(
     if (toKey) {
       parts.push(Prisma.sql`${col(accessor)} < ${istDateKeyToUtcRange(toKey).endExclusive}`);
     }
-    // A null date has no key, and the client keeps those rows.
-    return Prisma.sql`(${col(accessor)} IS NULL OR (${Prisma.join(parts, " AND ")}))`;
+    const bounded = Prisma.sql`(${Prisma.join(parts, " AND ")})`;
+    // The two tables disagree on undated rows: OptimizedTenderTable keeps them,
+    // TenderTable drops them (`if (!record.lastDateOfSubmission) return false`).
+    if (dropNulls) {
+      return Prisma.sql`(${col(accessor)} IS NOT NULL AND ${bounded})`;
+    }
+    return Prisma.sql`(${col(accessor)} IS NULL OR ${bounded})`;
   }
 
   const key = Prisma.sql`left(btrim(${expr}), 10)`;
@@ -497,6 +573,40 @@ function statusIn(list: string[]): Prisma.Sql {
 const FINANCIAL_BRANCH = Prisma.sql`(${PARTICIPATED} AND ${RA_NOT_APPLICABLE} AND ${statusIn(FINANCIAL_OPEN_STATUSES)})`;
 
 /**
+ * Every ParticipationFilter as a runtime list. `satisfies` makes a forgotten
+ * member a compile error, the same guarantee the predicate map below gives.
+ */
+const PARTICIPATION_FILTER_KEYS = {
+  participated: true,
+  participatedTotal: true,
+  notParticipated: true,
+  upcomingRa: true,
+  participatedWithRa: true,
+  participatedWithoutRa: true,
+  yetToOpenRa: true,
+  bidOpeningPendingExclRa: true,
+  raDone: true,
+  raPending: true,
+  technicalOpen: true,
+  technicalNotOpen: true,
+  weL1: true,
+  weLost: true,
+  expRaDate: true,
+  contractReceived: true,
+  contractPending: true,
+  financialOpen: true,
+  financialNotOpen: true,
+  financialWeL1: true,
+  financialWeLost: true,
+  financialContractReceived: true,
+  financialContractPending: true,
+} satisfies Record<ParticipationFilter, true>;
+
+export const PARTICIPATION_FILTERS = Object.keys(
+  PARTICIPATION_FILTER_KEYS,
+) as ParticipationFilter[];
+
+/**
  * Exhaustive map, so adding a ParticipationFilter member is a compile error
  * until it is handled here - same guarantee the predicate map on the client
  * was written to give.
@@ -555,6 +665,76 @@ export function participationSql(
   return map[filter]();
 }
 
+// ------------------------------------------------------------------ scope ---
+
+/**
+ * The route's own dataset, mirroring lib/selectors/tenderSelectors.ts.
+ *
+ * ponytail: "today" is the IST calendar day. The selectors used the browser's
+ * local midnight; IST is the intent everywhere else here and is the only choice
+ * that behaves identically on the server.
+ */
+export function scopeSql(scope: TenderScope, now: Date): Prisma.Sql | null {
+  const today = todayStart(now);
+  const HAS_DEADLINE = Prisma.sql`t."deadline" IS NOT NULL`;
+
+  switch (scope) {
+    case "tenders":
+      return null;
+    // APM yes, participation undecided, deadline not yet passed.
+    case "home":
+      return Prisma.sql`(${APM_YES} AND t."participated" IS NULL AND ${HAS_DEADLINE} AND t."deadline" >= ${today})`;
+    // APM yes and participated. No deadline condition.
+    case "postParticipation":
+      return Prisma.sql`(${APM_YES} AND t."participated" IS TRUE)`;
+    // Explicitly not participated, or undecided with the deadline gone by.
+    case "notParticipated":
+      return Prisma.sql`(${APM_YES} AND (t."participated" IS FALSE OR (t."participated" IS NULL AND ${HAS_DEADLINE} AND t."deadline" < ${today})))`;
+  }
+}
+
+// --------------------------------------------------------- ERP categories ---
+
+/**
+ * The five hardcoded proposedErpItemName rule sets from TenderTable's
+ * matchesErpItemCategory, as substring matches over CostingSheetDetails.
+ */
+const ERP_CATEGORY_RULES: Record<
+  string,
+  { include: string[]; exclude: string[] }
+> = {
+  "ab cable": { include: ["ab cable", "ab cables"], exclude: [] },
+  conductor: {
+    include: ["conductor", "acsr", "aaac", "a.c.s.r."],
+    exclude: [],
+  },
+  "xlpe cable": { include: ["xlpe"], exclude: ["ab cable", "ab cables"] },
+  "pvc cable": { include: ["pvc"], exclude: [] },
+  "control cable": { include: ["control", "instrumentation"], exclude: [] },
+};
+
+/**
+ * The sidebar's price basis. The client compared `record.price || "Firm"`
+ * case-insensitively, so an empty column counts as Firm here too.
+ */
+function priceBasisSql(basis: string): Prisma.Sql | null {
+  const wanted = basis.trim();
+  if (wanted === "" || wanted.toLowerCase() === "all") return null;
+  return Prisma.sql`lower(coalesce(nullif(btrim(t."price"), ''), 'firm')) = ${wanted.toLowerCase()}`;
+}
+
+function erpCategorySql(category: string): Prisma.Sql | null {
+  const rule = ERP_CATEGORY_RULES[category.trim().toLowerCase()];
+  if (!rule) return null;
+
+  const name = Prisma.sql`lower(coalesce(csd."proposedErpItemName", ''))`;
+  const hits = rule.include.map((w) => Prisma.sql`${name} LIKE ${`%${w}%`}`);
+  const misses = rule.exclude.map((w) => Prisma.sql`${name} NOT LIKE ${`%${w}%`}`);
+  const parts = [Prisma.sql`(${Prisma.join(hits, " OR ")})`, ...misses];
+
+  return Prisma.sql`EXISTS (SELECT 1 FROM "CostingSheetDetails" csd WHERE csd."tenderMergedId" = t."id" AND ${Prisma.join(parts, " AND ")})`;
+}
+
 // -------------------------------------------------------------- analytics ---
 
 function analyticsSql(filter: NonNullable<AnalyticsFilter>): Prisma.Sql {
@@ -589,6 +769,12 @@ function exclusionSql(filter: string): Prisma.Sql | null {
 export interface BuildOptions {
   /** Drop this column's own filters - this is what makes facets cascade. */
   skipColumn?: string;
+  /**
+   * Drop the association filter, so per-person counts stay stable while one
+   * person is selected - what the client got by counting baseFiltered rather
+   * than activeDataset.
+   */
+  skipAssociationFilter?: boolean;
   now?: Date;
 }
 
@@ -597,15 +783,27 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
   const now = opts.now ?? new Date();
   const parts: Prisma.Sql[] = [];
 
+  const scope = scopeSql(q.scope ?? "tenders", now);
+  if (scope) parts.push(scope);
+
   for (const [accessor, state] of Object.entries(q.columnFilters ?? {})) {
     if (!state || accessor === opts.skipColumn) continue;
     const expr = columnValueSql(accessor, q);
     if (!expr) continue;
 
-    if (accessor === "deadline" && state.select?.length) {
+    // Date and availability handling keys off the real column, so an EPC
+    // accessor has to be resolved before those branches see it.
+    const flatAccessor =
+      q.scope !== "tenders" ? (EPC_TO_FLAT[accessor] ?? accessor) : accessor;
+
+    // TenderTable drops rows with no date once a window is set; the /tenders
+    // table keeps them. Both behaviours are preserved.
+    const dropUndated = q.scope !== "tenders";
+
+    if (flatAccessor === "deadline" && state.select?.length) {
       const range = presetRange(state.select[0], now);
       if (range) {
-        const sql = dateKeyRangeSql("deadline", expr, range.fromKey, range.toKey);
+        const sql = dateKeyRangeSql("deadline", expr, range.fromKey, range.toKey, dropUndated);
         if (sql) parts.push(sql);
       }
       continue;
@@ -613,16 +811,17 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
 
     if (state.dateRange) {
       const sql = dateKeyRangeSql(
-        accessor,
+        flatAccessor,
         expr,
         normalizeKey(state.dateRange.startDate),
         normalizeKey(state.dateRange.endDate),
+        dropUndated,
       );
       if (sql) parts.push(sql);
     }
 
     if (state.select?.length) {
-      const sql = selectSql(accessor, expr, state.select);
+      const sql = selectSql(flatAccessor, expr, state.select);
       if (sql) parts.push(sql);
     }
 
@@ -663,7 +862,21 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
     parts.push(participationSql(filter, now));
   }
 
-  if (q.associationFilter && /^\d+$/.test(q.associationFilter)) {
+  if (q.erpItemCategory) {
+    const sql = erpCategorySql(q.erpItemCategory);
+    if (sql) parts.push(sql);
+  }
+
+  if (q.priceBasis) {
+    const sql = priceBasisSql(q.priceBasis);
+    if (sql) parts.push(sql);
+  }
+
+  if (
+    !opts.skipAssociationFilter &&
+    q.associationFilter &&
+    /^\d+$/.test(q.associationFilter)
+  ) {
     parts.push(hasAssociationSql([Number(q.associationFilter)]));
   }
 
@@ -688,8 +901,13 @@ export function buildOrderBySql(q: TenderQuery): Prisma.Sql {
   const expr = columnValueSql(sort.column, q);
   if (!expr) return Prisma.sql`t."id" DESC`;
 
+  const flatColumn =
+    q.scope !== "tenders"
+      ? (EPC_TO_FLAT[sort.column] ?? sort.column)
+      : sort.column;
+
   // Real dates sort as instants; everything else sorts as the displayed text.
-  const sortExpr = DATETIME_COLUMNS.has(sort.column) ? col(sort.column) : expr;
+  const sortExpr = DATETIME_COLUMNS.has(flatColumn) ? col(flatColumn) : expr;
 
   // The client sorts nulls first ascending, last descending.
   const nulls = Prisma.raw(sort.direction === "asc" ? "NULLS FIRST" : "NULLS LAST");
