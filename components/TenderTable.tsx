@@ -5243,7 +5243,6 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                     <SelectValue placeholder="None" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">None</SelectItem>
                                     {CURRENT_STATUS_OPTIONS.map(opt => (
                                       <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                                     ))}

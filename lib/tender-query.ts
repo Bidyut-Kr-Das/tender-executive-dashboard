@@ -551,6 +551,7 @@ const TECHNICAL_OPEN_STATUSES = [
   "FINANCIAL EVALUATION",
   "TENDER CANCELLED",
   "TECHNICAL BID OPENED",
+  "DISQUALIFIED",
 ];
 const FINANCIAL_OPEN_STATUSES = [
   "AWARDED",
@@ -631,8 +632,8 @@ export function participationSql(
     notParticipated: () => Prisma.sql`(${APM_YES} AND t."participated" IS NULL)`,
     upcomingRa: () =>
       Prisma.sql`(${RA_APPLICABLE} AND t."reverseAuctionStartDate" >= ${today})`,
-    participatedWithRa: () => Prisma.sql`(${PARTICIPATED} AND ${RA_APPLICABLE})`,
-    participatedWithoutRa: () => Prisma.sql`(${PARTICIPATED} AND ${RA_NOT_APPLICABLE})`,
+    participatedWithRa: () => Prisma.sql`(${APM_YES} AND ${PARTICIPATED} AND ${RA_APPLICABLE})`,
+    participatedWithoutRa: () => Prisma.sql`(${APM_YES} AND ${PARTICIPATED} AND ${RA_NOT_APPLICABLE})`,
     yetToOpenRa: () =>
       Prisma.sql`(${PARTICIPATED} AND ${RA_APPLICABLE} AND t."reverseAuctionStartDate" >= ${tomorrow})`,
     bidOpeningPendingExclRa: () =>
