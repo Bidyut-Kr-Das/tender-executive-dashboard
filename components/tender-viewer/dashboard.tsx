@@ -41,7 +41,7 @@ import {
   tenderQueryKey,
 } from "@/lib/slices/tenderPageSlice";
 import type { FilterOption } from "@/lib/types";
-import type { TenderQuery } from "@/lib/tender-query";
+import type { TenderQuery, MergedGroup } from "@/lib/tender-query";
 import { needsFacetQuery } from "@/lib/tender-filter-meta";
 import { fetchAllFilteredTenderRows } from "@/actions/tender-query";
 import { loadColumnConfig } from "@/lib/columnConfig";
@@ -81,6 +81,37 @@ import { getDisplayNameMap } from "@/lib/tender-columns";
 import { getProvenance, getProvenanceForFields } from "@/lib/columnProvenance";
 
 const normalizeKey = (s: string) => s.toLowerCase().replace(/[\s_-]+/g, "");
+
+/**
+ * Merged columns are labels stitched from several source fields. Display rows
+ * get these values client-side; the export path must do the same or every
+ * merged column ships blank.
+ */
+function applyMergedGroups(
+  rows: Record<string, unknown>[],
+  groups: MergedGroup[],
+): Record<string, unknown>[] {
+  if (groups.length === 0) return rows;
+  return rows.map((row) => {
+    const newRow = { ...row } as Record<string, unknown>;
+    for (const g of groups) {
+      if (g.fields.length >= 2) {
+        const isConcatenated = g.separator.trim().length > 0;
+        if (isConcatenated) {
+          const parts = g.fields
+            .map((f) => String(row[f as keyof typeof row] ?? ""))
+            .filter(Boolean);
+          newRow[g.label] = parts.join(g.separator);
+        } else {
+          const firstField = g.fields[0];
+          const val = row[firstField as keyof typeof row];
+          newRow[g.label] = val != null && val !== "" ? String(val) : "";
+        }
+      }
+    }
+    return newRow;
+  });
+}
 
 function RemarksCell({
   value,
@@ -694,28 +725,10 @@ export default function Dashboard() {
   // all happen in SQL now, so the page needs no further narrowing.
   const analyticsFilteredRows = pageRows as unknown as Record<string, unknown>[];
 
-  const rowsWithMergedValues = useMemo(() => {
-    if (mergedGroups.length === 0) return analyticsFilteredRows;
-    return analyticsFilteredRows.map((row) => {
-      const newRow = { ...row } as Record<string, unknown>;
-      for (const g of mergedGroups) {
-        if (g.fields.length >= 2) {
-          const isConcatenated = g.separator.trim().length > 0;
-          if (isConcatenated) {
-            const parts = g.fields
-              .map((f) => String(row[f as keyof typeof row] ?? ""))
-              .filter(Boolean);
-            newRow[g.label] = parts.join(g.separator);
-          } else {
-            const firstField = g.fields[0];
-            const val = row[firstField as keyof typeof row];
-            newRow[g.label] = val != null && val !== "" ? String(val) : "";
-          }
-        }
-      }
-      return newRow;
-    });
-  }, [analyticsFilteredRows, mergedGroups]);
+  const rowsWithMergedValues = useMemo(
+    () => applyMergedGroups(analyticsFilteredRows, mergedGroups),
+    [analyticsFilteredRows, mergedGroups],
+  );
 
   // Row indices address the current page, which is exactly what the update
   // thunks expect now that tenderData is the page.
@@ -796,8 +809,9 @@ export default function Dashboard() {
   );
 
   const loadRowsForExport = useCallback(
-    (cols: string[]) => loadAllFilteredRows(cols),
-    [loadAllFilteredRows],
+    async (cols: string[]) =>
+      applyMergedGroups(await loadAllFilteredRows(cols), mergedGroups),
+    [loadAllFilteredRows, mergedGroups],
   );
 
   const loadRowsForAnalysis = useCallback(

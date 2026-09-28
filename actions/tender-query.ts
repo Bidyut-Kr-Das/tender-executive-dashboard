@@ -342,6 +342,14 @@ export async function fetchAllFilteredTenderRows(
     `;
     const ids = idRows.map((r) => r.id);
     const keep = columns && columns.length > 0 ? new Set([...columns, "type", "id"]) : null;
+    // Merged columns render from source fields, and those fields are hidden as
+    // individual columns once a merge exists. Keep them alive in the narrowed
+    // set or the client cannot rebuild merged values for the export.
+    if (keep) {
+      for (const g of query.mergedGroups ?? []) {
+        for (const f of g.fields) keep.add(f);
+      }
+    }
 
     const out: FlatRow[] = [];
     for (let i = 0; i < ids.length; i += FULL_SCAN_BATCH) {
