@@ -435,7 +435,7 @@ export const tenderPageSlice = createSlice({
       // { tenderMergedId, <fieldName>: value }, and the two odd shapes are
       // handled below. Nothing here is optimistic: only `fulfilled` lands.
       .addMatcher(
-        (action): action is { type: string; meta: { arg: unknown } } => {
+        (action): action is { type: string; meta: { arg: unknown }; payload: unknown } => {
           const type = (action as { type?: unknown }).type;
           if (typeof type !== "string") return false;
           if (!type.startsWith("tenders/") || !type.endsWith("/fulfilled")) return false;
@@ -466,11 +466,37 @@ export const tenderPageSlice = createSlice({
           }
           if (Object.keys(patch).length === 0) return;
 
+          // updateTenderMergedField returns server-computed diffs in the
+          // payload; the DB row carries them but the stored patch only names
+          // the edited field, so without this the Diff L1/L2 columns go stale.
+          const diffs = (action.payload as {
+            diffs?: {
+              diffPercentFromL1?: number | null;
+              diffPercentFromL2?: number | null;
+              differenceBetweenRank1?: string | null;
+              differenceBetweenRank2?: string | null;
+            };
+          } | undefined)?.diffs;
+
           for (const scope of SCOPES) {
             const row = state.byScope[scope].rows.find((r) => Number(r.id) === id);
             if (!row) continue;
             for (const [k, v] of Object.entries(patch)) {
               row[k] = v == null ? "" : String(v);
+            }
+            if (diffs) {
+              if (diffs.diffPercentFromL1 !== undefined) {
+                row.diffPercentFromL1 = diffs.diffPercentFromL1 == null ? "" : String(diffs.diffPercentFromL1);
+              }
+              if (diffs.diffPercentFromL2 !== undefined) {
+                row.diffPercentFromL2 = diffs.diffPercentFromL2 == null ? "" : String(diffs.diffPercentFromL2);
+              }
+              if (diffs.differenceBetweenRank1 !== undefined) {
+                row.differenceBetweenRank1 = diffs.differenceBetweenRank1 == null ? "" : String(diffs.differenceBetweenRank1);
+              }
+              if (diffs.differenceBetweenRank2 !== undefined) {
+                row.differenceBetweenRank2 = diffs.differenceBetweenRank2 == null ? "" : String(diffs.differenceBetweenRank2);
+              }
             }
           }
         },
