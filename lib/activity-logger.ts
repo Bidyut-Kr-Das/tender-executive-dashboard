@@ -11,6 +11,10 @@ export type LogActivityParams = {
   recordId?: string
   referenceNo?: string
   details?: string
+  // Overrides for callers without an auth session (public webhooks).
+  userId?: string | null
+  userName?: string | null
+  userEmail?: string | null
 }
 
 async function createActivityLogRecord(params: LogActivityParams) {
@@ -19,9 +23,9 @@ async function createActivityLogRecord(params: LogActivityParams) {
 
   return prisma.activityLog.create({
     data: {
-      userId: user?.id ?? null,
-      userName: user?.name ?? "Unknown",
-      userEmail: user?.email ?? "unknown@unknown",
+      userId: params.userId ?? user?.id ?? null,
+      userName: params.userName ?? user?.name ?? "Unknown",
+      userEmail: params.userEmail ?? user?.email ?? "unknown@unknown",
       action: params.action,
       tableName: params.tableName,
       recordId: params.recordId ?? null,

@@ -5,7 +5,8 @@ import { generateText, APICallError, Output } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAiFeedbackContext } from "@/lib/ai-feedback";
-import { logActivity } from "@/lib/activity-logger";
+import { logActivity, withLog } from "@/lib/activity-logger";
+import { publishAiRelevanceTask } from "@/lib/queue/publisher";
 
 const model = openai("gpt-5-mini");
 
@@ -128,6 +129,31 @@ export async function analyzeTenderValidity(
     return { success: false, error: "unknown" };
   }
 }
+
+async function publishAiAnalysisJobFn(params: {
+  referenceNo: string;
+  tenderBrief: string;
+  itemCategory: string;
+}): Promise<boolean> {
+  return publishAiRelevanceTask({
+    payloadType: "analysis",
+    referenceNo: params.referenceNo,
+    company: "laser",
+    tenderbrief: params.tenderBrief,
+    itemcategory: params.itemCategory,
+  });
+}
+
+export const publishAiAnalysisJob = withLog(
+  publishAiAnalysisJobFn,
+  (result, params) => ({
+    action: "CREATE" as const,
+    tableName: "agent:relevance",
+    recordId: undefined,
+    referenceNo: params.referenceNo,
+    details: `Published AI analysis job (sent=${result})`,
+  }),
+);
 
 export async function saveAiRelevance(params: {
   tenderMergedId: number;

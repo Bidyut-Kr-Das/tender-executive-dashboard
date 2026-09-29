@@ -595,26 +595,6 @@ export const saveAiFeedback = createAsyncThunk(
   },
 );
 
-export const analyzeTender = createAsyncThunk(
-  "tenders/analyzeTender",
-  async (params: { tenderMergedId: number; brief: string }) => {
-    const result = await analyzeTenderValidity(params.brief);
-    if (!result.success) throw new Error(result.error);
-
-    await saveAiRelevance({
-      tenderMergedId: params.tenderMergedId,
-      valid: result.data.valid,
-      reason: result.data.reason,
-    });
-
-    return {
-      tenderMergedId: params.tenderMergedId,
-      valid: String(result.data.valid),
-      reason: result.data.reason,
-    };
-  },
-);
-
 export const downloadTenderPdf = createAsyncThunk(
   "tenders/downloadTenderPdf",
   async (params: {
@@ -1284,29 +1264,6 @@ export const tendersSlice = createSlice({
     builder.addCase(saveAiFeedback.rejected, (state, action) => {
       const key = `${action.meta.arg.tenderMergedId}-feedback`;
       state.feedbackSaving[key] = false;
-    });
-
-    // analyzeTender
-    builder.addCase(analyzeTender.pending, (state, action) => {
-      state.updatingCells[
-        `${action.meta.arg.tenderMergedId}-analyze`
-      ] = true;
-    });
-    builder.addCase(analyzeTender.fulfilled, (state, action) => {
-      const { tenderMergedId, valid, reason } = action.payload;
-      state.updatingCells[`${tenderMergedId}-analyze`] = false;
-      if (state.data) {
-        const row = state.data.rows.find((r) => Number(r.id) === tenderMergedId);
-        if (row) {
-          row.aiRelevanceValid = valid;
-          row.aiRelevanceReason = reason;
-        }
-      }
-    });
-    builder.addCase(analyzeTender.rejected, (state, action) => {
-      state.updatingCells[
-        `${action.meta.arg.tenderMergedId}-analyze`
-      ] = false;
     });
 
     // downloadTenderPdf

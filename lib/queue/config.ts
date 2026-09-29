@@ -3,4 +3,5 @@ export const QUEUES = {
   TENDER_PARSING: "tender:parsing",
   KNOWLEDGEBASE: "agent:knowledgebase",
   AGENT_INTELLIGENCE: "agent:intelligence",
+  AGENT_RELEVANCE: "agent:relevance",
 } as const;

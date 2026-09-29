@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { useAppDispatch } from "@/lib/hooks";
-import {
-  analyzeTender,
-  downloadTenderPdf,
-  parseTenderPdf,
-} from "@/lib/slices/tendersSlice";
+import { publishAiAnalysisJob } from "@/actions/ai-analysis";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +28,6 @@ export default function ConfirmAnalysisDialog({
   filteredRows,
   loadRows,
 }: ConfirmAnalysisDialogProps) {
-  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [reRunAll, setReRunAll] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -54,129 +48,72 @@ export default function ConfirmAnalysisDialog({
       const targets = source.filter((r) => {
         const brief = String(r.tenderBrief ?? "");
         if (!brief || brief === "\u2014") return false;
+        if (!String(r.referenceNo ?? "")) return false;
         if (!checked && r.aiRelevanceValid) return false;
         return true;
       });
 
       if (targets.length === 0) {
         toast.info(
-          "No tenders to analyze — all filtered tenders already have an AI result or are missing a tender brief",
+          "No tenders to queue — all filtered tenders already have an AI result or are missing a tender brief",
         );
         setIsAnalyzing(false);
         setOpen(false);
         return;
       }
 
-      const toastId = toast.loading(`Analyzing ${targets.length} tender(s)...`);
+      const toastId = toast.loading(
+        `Queueing ${targets.length} tender(s) for AI analysis...`,
+      );
 
       setAnalysisProgress({ done: 0, total: targets.length });
       setOpen(false);
 
       let successCount = 0;
       let failCount = 0;
-      let stoppedByRateLimit = false;
 
-      const BATCH_SIZE = 10;
-
-      for (let i = 0; i < targets.length; i += BATCH_SIZE) {
+      for (let i = 0; i < targets.length; i++) {
         if (abortRef.current) {
-          toast.info(`Analysis stopped (${successCount} completed)`, {
-            id: toastId,
-          });
+          toast.info(`Stopped (${successCount} queued)`, { id: toastId });
           break;
         }
 
-        const batch = targets.slice(i, i + BATCH_SIZE);
+        const row = targets[i];
 
-        await Promise.all(
-          batch.map(async (row) => {
-            const brief = [
-              String(row.tenderBrief ?? "").trim(),
-              String(row.itemCategory ?? "").trim(),
-            ]
-              .filter(Boolean)
-              .join("@");
+        try {
+          const sent = await publishAiAnalysisJob({
+            referenceNo: String(row.referenceNo ?? ""),
+            tenderBrief: String(row.tenderBrief ?? ""),
+            itemCategory: String(row.itemCategory ?? ""),
+          });
 
-            try {
-              const result = await dispatch(
-                analyzeTender({
-                  tenderMergedId: Number(row.id),
-                  brief,
-                }),
-              ).unwrap();
-
-              successCount++;
-              toast.loading(
-                `Analyzing ${targets.length} tender(s)... (${successCount}/${targets.length})`,
-                { id: toastId },
-              );
-
-              if (result.valid === "true") {
-                if (row.type === "Gem") {
-                  const gemId = row.referenceNo as string | undefined;
-                  if (gemId) {
-                    try {
-                      const dlResult = await dispatch(
-                        downloadTenderPdf({
-                          tenderMergedId: Number(row.id),
-                          gemId,
-                          referenceNo: gemId,
-                        }),
-                      ).unwrap();
-
-                      if (dlResult.tenderFileUrl) {
-                        await dispatch(
-                          parseTenderPdf({
-                            tenderMergedId: Number(row.id),
-                          }),
-                        ).unwrap();
-                      }
-                    } catch {
-                      toast.error(`Failed to download/parse PDF for #${row.id}`);
-                    }
-                  }
-                } else if (row.type === "Non-Gem") {
-                  const referenceNo = row.referenceNo as string | undefined;
-
-                  if (referenceNo) {
-                    try {
-                      await dispatch(
-                        downloadTenderPdf({
-                          tenderMergedId: Number(row.id),
-                          referenceNo,
-                        }),
-                      ).unwrap();
-                    } catch {
-                      toast.error(`Failed to queue PDF download for #${row.id}`);
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              failCount++;
-              if (err instanceof Error && err.message === "rate_limit") {
-                abortRef.current = true;
-                stoppedByRateLimit = true;
-                toast.error("OpenAI rate limit reached — analysis stopped");
-              } else {
-                toast.error(`Analysis failed for #${row.id}`);
-              }
-            } finally {
-              setAnalysisProgress((prev) => ({ ...prev, done: prev.done + 1 }));
-            }
-          }),
-        );
+          if (sent) {
+            successCount++;
+            toast.loading(
+              `Queueing ${targets.length} tender(s)... (${successCount}/${targets.length})`,
+              { id: toastId },
+            );
+          } else {
+            failCount++;
+            toast.error(`Failed to queue #${row.id}`);
+          }
+        } catch {
+          failCount++;
+          toast.error(`Failed to queue #${row.id}`);
+        } finally {
+          setAnalysisProgress((prev) => ({ ...prev, done: prev.done + 1 }));
+        }
       }
 
-      if (!abortRef.current && !stoppedByRateLimit) {
+      if (!abortRef.current) {
         if (failCount === 0) {
           toast.success(
-            `Analysis complete — ${successCount} tender(s) analyzed`,
+            `${successCount} tender(s) queued for AI analysis`,
             { id: toastId },
           );
         } else {
           toast.warning(
-            `Analysis complete — ${successCount} succeeded, ${failCount} failed`,
+            `${successCount} queued, ${failCount} failed`,
             { id: toastId },
           );
         }
@@ -185,7 +122,7 @@ export default function ConfirmAnalysisDialog({
       setIsAnalyzing(false);
       setAnalysisProgress({ done: 0, total: 0 });
     },
-    [filteredRows, loadRows, dispatch],
+    [filteredRows, loadRows],
   );
 
   const handleStop = useCallback(() => {
