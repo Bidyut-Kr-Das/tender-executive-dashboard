@@ -99,7 +99,10 @@ export type AiRelevancePayload = {
 export async function publishAiRelevanceTask(
   payload: AiRelevancePayload,
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.AGENT_RELEVANCE, payload);
+  return publishToQueue(QUEUES.AGENT_RELEVANCE, {
+    ...payload,
+    client_id: process.env.TENDER_AGENT_CLIENT_ID ?? "",
+  });
 }
 
 export type AgentIntelligencePayload = {
