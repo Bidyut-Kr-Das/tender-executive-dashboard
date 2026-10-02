@@ -12,7 +12,7 @@ function validateField(field: string, value: string | null): string | null {
     if (v === "") return null;
     if (v.length > 1000) return "Too many emails (max 1000 chars)";
     const parts = v
-      .split(/[,;]+/)
+      .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
     if (parts.length === 0) return null;
@@ -65,6 +65,53 @@ async function runUpdateSupplyHistory(params: { saleBillNumber: string; itemCode
     if (!existing) throw Object.assign(new Error("Record not found for given saleBillNumber/itemCode"), { status: 404 });
   }
 
+  // Email: removals apply to the edited source row only. Additions propagate
+  // (appended, never removed) to every other row sharing the same partyName.
+  if (field === "email") {
+    const partyName = existing.partyName;
+    if (partyName && String(partyName).trim() !== "") {
+      const candidates = normalizedValue
+        ? normalizedValue.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+      const originalLower = (existing.email ?? "").toLowerCase();
+      const added = candidates.filter((c) => !originalLower.includes(c.toLowerCase()));
+
+      const partyRows = await prisma.supplyHistory.findMany({ where: { partyName } });
+      const updates: { id: string; email: string | null }[] = [];
+      // Source row is always replaced with the incoming value (handles removal + clear).
+      updates.push({ id: existing.id, email: normalizedValue });
+      for (const row of partyRows) {
+        if (row.id === existing.id) continue;
+        const current = (row.email ?? "").trim();
+        const lower = current.toLowerCase();
+        const toAdd = added.filter((c) => !lower.includes(c.toLowerCase()));
+        if (toAdd.length === 0) continue;
+        updates.push({ id: row.id, email: current === "" ? toAdd.join(",") : `${current},${toAdd.join(",")}` });
+      }
+
+      await prisma.$transaction(
+        updates.map((u) => prisma.supplyHistory.update({ where: { id: u.id }, data: { email: u.email } })),
+      );
+
+      const updatedRows = await prisma.supplyHistory.findMany({ where: { partyName } });
+      const primary = updatedRows.find((r) => r.id === existing.id) ?? existing;
+      return {
+        updated: primary,
+        field,
+        saleBillNumber: primary.saleBillNumber,
+        itemCode: primary.itemCode,
+        value: primary.email,
+        previousValue: existing.email,
+        updatedEmails: updatedRows.map((r) => ({
+          saleBillNumber: r.saleBillNumber,
+          itemCode: r.itemCode,
+          email: r.email,
+        })),
+        affectedCount: updates.length,
+      };
+    }
+  }
+
   const data: any = { [field]: normalizedValue };
   const updated = await prisma.supplyHistory.update({ where: id ? { id } : where, data });
 
@@ -91,7 +138,12 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await updateSupplyHistoryWithLog({ saleBillNumber, itemCode, field, value: value ?? null, id });
-    return NextResponse.json({ success: true, data: result.updated });
+    return NextResponse.json({
+      success: true,
+      data: result.updated,
+      updatedEmails: (result as any).updatedEmails ?? null,
+      affectedCount: (result as any).affectedCount ?? 1,
+    });
   } catch (err: any) {
     const status = err.status || 500;
     return NextResponse.json({ success: false, error: err.message || "Failed to update" }, { status });

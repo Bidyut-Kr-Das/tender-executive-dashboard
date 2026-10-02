@@ -409,7 +409,7 @@ const SupplyHistoryDashboard: React.FC = () => {
     // Validation — allow comma/semicolon separated list (to/cc)
     if (field === "email" && value) {
       const parts = value
-        .split(/[,;]+/)
+        .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -448,10 +448,25 @@ const SupplyHistoryDashboard: React.FC = () => {
       if (!res.ok || !json.success) throw new Error(json.error || "Update failed");
       // Optimistic local update
       const updatedRow = json.data;
-      setLocalData(prev => {
-        const base = prev ?? data;
-        return base.map(r => (r.saleBillNumber === saleBillNumber && r.itemCode === itemCode ? { ...r, [field]: updatedRow[field] ?? value } : r));
-      });
+      if (field === "email" && Array.isArray(json.updatedEmails)) {
+        // Party-wide: apply each row's appended email returned by the server.
+        const emailMap = new Map<string, string | null>();
+        for (const u of json.updatedEmails) {
+          emailMap.set(`${u.saleBillNumber}|${u.itemCode}`, u.email ?? null);
+        }
+        setLocalData(prev => {
+          const base = prev ?? data;
+          return base.map(r => {
+            const next = emailMap.get(`${r.saleBillNumber}|${r.itemCode}`);
+            return next === undefined ? r : { ...r, email: next };
+          });
+        });
+      } else {
+        setLocalData(prev => {
+          const base = prev ?? data;
+          return base.map(r => (r.saleBillNumber === saleBillNumber && r.itemCode === itemCode ? { ...r, [field]: updatedRow[field] ?? value } : r));
+        });
+      }
       toast.success(`${field} updated successfully!`);
       setEditingCell(null);
       setEditingDraft("");

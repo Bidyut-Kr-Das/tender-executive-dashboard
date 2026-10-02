@@ -76,11 +76,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
+    const data = body?.data ?? {};
+    const analysis = data?.result ?? {};
     const referenceNo =
-      typeof body.referenceNo === "string" ? body.referenceNo.trim() : "";
-    const company = typeof body.company === "string" ? body.company.trim().toLowerCase() : "";
-    const valid = body.valid;
-    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+      typeof data.reference_no === "string" ? data.reference_no.trim() : "";
+    const company =
+      typeof data.company === "string" ? data.company.trim().toLowerCase() : "";
+    const valid = analysis.valid;
+    const reason = typeof analysis.reason === "string" ? analysis.reason.trim() : "";
 
     if (!referenceNo) {
       return NextResponse.json({ error: "referenceNo is required" }, { status: 400 });
