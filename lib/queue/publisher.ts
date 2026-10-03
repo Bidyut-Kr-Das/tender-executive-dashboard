@@ -1,5 +1,5 @@
 import { getChannel } from "@/lib/rabbitmq";
-import { QUEUES } from "./config";
+import { QUEUES, automationQueues } from "./config";
 
 export type TenderTaskPayload = {
   tenderId: number;
@@ -12,6 +12,17 @@ export type TenderTaskPayload = {
   | { type: "NON_GEM_DOWNLOAD" }
   | { type: "COSTING_ATTACHMENT_PARSING"; file_link: string }
 );
+
+// Each stage's worker only calls back when the job carries that stage's client ID (docs/tender-lifecycle.md §7).
+export function requireClientId(envName: keyof NodeJS.ProcessEnv): string {
+  const clientId = process.env[envName];
+  if (!clientId) throw Object.assign(new Error(`${envName} is not set`), { status: 500 });
+  return clientId;
+}
+
+function withClientId<T extends object>(envName: keyof NodeJS.ProcessEnv, payload: T) {
+  return { ...payload, client_id: requireClientId(envName) };
+}
 
 async function publishToQueue(
   queue: string,
@@ -43,13 +54,19 @@ async function publishToQueue(
 export async function publishTenderTask(
   payload: TenderTaskPayload,
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.TENDER_TASKS, payload);
+  return publishToQueue(
+    automationQueues().tasks,
+    withClientId("TENDER_AUTOMATION_AUTOMATION_CLIENT_ID", payload),
+  );
 }
 
 export async function publishTenderParsingTask(
   payload: TenderTaskPayload & { type: "COSTING_ATTACHMENT_PARSING" },
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.TENDER_PARSING, payload);
+  return publishToQueue(
+    automationQueues().parsing,
+    withClientId("TENDER_AUTOMATION_PARSING_CLIENT_ID", payload),
+  );
 }
 
 export type NonGemBoqParsingPayload = {
@@ -61,7 +78,10 @@ export type NonGemBoqParsingPayload = {
 export async function publishNonGemBoqParsingTask(
   payload: NonGemBoqParsingPayload,
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.TENDER_PARSING, payload);
+  return publishToQueue(
+    automationQueues().parsing,
+    withClientId("TENDER_AUTOMATION_PARSING_CLIENT_ID", payload),
+  );
 }
 
 export type GemPdfParsingPayload = {
@@ -72,7 +92,25 @@ export type GemPdfParsingPayload = {
 export async function publishGemPdfParsingTask(
   payload: GemPdfParsingPayload,
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.TENDER_PARSING, payload);
+  return publishToQueue(
+    automationQueues().parsing,
+    withClientId("TENDER_AUTOMATION_PARSING_CLIENT_ID", payload),
+  );
+}
+
+export type TenderFileParsingPayload = {
+  type: "GEM_PDF_PARSING" | "RA_GEM_PDF_PARSING" | "NON_GEM_BOQ_PARSING";
+  referenceNo: string;
+  file_link: string;
+};
+
+export async function publishTenderFileParsingTask(
+  payload: TenderFileParsingPayload,
+): Promise<boolean> {
+  return publishToQueue(
+    automationQueues().parsing,
+    withClientId("TENDER_AUTOMATION_PARSING_CLIENT_ID", payload),
+  );
 }
 
 export type KnowledgebasePayload = {
@@ -99,10 +137,10 @@ export type AiRelevancePayload = {
 export async function publishAiRelevanceTask(
   payload: AiRelevancePayload,
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.AGENT_RELEVANCE, {
-    ...payload,
-    client_id: process.env.TENDER_AGENT_CLIENT_ID ?? "",
-  });
+  return publishToQueue(
+    QUEUES.AGENT_RELEVANCE,
+    withClientId("TENDER_AGENT_RELEVANCE_CLIENT_ID", payload),
+  );
 }
 
 export type AgentIntelligencePayload = {
@@ -116,5 +154,8 @@ export type AgentIntelligencePayload = {
 export async function publishAgentIntelligenceTask(
   payload: AgentIntelligencePayload,
 ): Promise<boolean> {
-  return publishToQueue(QUEUES.AGENT_INTELLIGENCE, payload);
+  return publishToQueue(
+    QUEUES.AGENT_INTELLIGENCE,
+    withClientId("TENDER_AGENT_INTELLIGENCE_CLIENT_ID", payload),
+  );
 }

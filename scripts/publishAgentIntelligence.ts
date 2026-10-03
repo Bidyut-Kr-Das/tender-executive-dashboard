@@ -36,6 +36,13 @@ async function main() {
     `Tenders found: ${tenders.length} (publish=${shouldPublish ? "ENABLED" : "DRY-RUN"})`
   );
 
+  // Intelligence agent only calls back when the job carries its client ID.
+  const client_id = process.env.TENDER_AGENT_INTELLIGENCE_CLIENT_ID;
+  if (!client_id) {
+    console.error("TENDER_AGENT_INTELLIGENCE_CLIENT_ID is not set");
+    process.exit(1);
+  }
+
   const ch = shouldPublish ? await getChannel() : null;
   if (shouldPublish && !ch) {
     console.error("[RabbitMQ] No channel available");
@@ -52,7 +59,7 @@ async function main() {
   for (const t of tenders) {
     const referenceNo = t.referenceNo;
     const tender_type = /gem/i.test(referenceNo) ? "gem" : "non_gem";
-    const payload = { referenceNo, tender_type };
+    const payload = { referenceNo, tender_type, client_id };
 
     if (!shouldPublish) {
       console.log(`[DRY] ${referenceNo} (${tender_type})`);

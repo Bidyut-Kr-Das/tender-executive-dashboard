@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const protectedRoutes = ["/admin"]
 const syncApiPaths = ["/api/sync", "/api/refresh-all"]
-const publicApiPaths = ["/api/external", "/api/test", "/api/notifications", "/api/sync-dockets", "/api/sync-costing-smartsheet", "/api/sync-bom", "/api/health", "/api/sync-to-merged", "/api/admin/reset-password", "/api/webhook/agent-report", "/api/webhook/ai-relevance"]
+const publicApiPaths = ["/api/external", "/api/test", "/api/notifications", "/api/sync-dockets", "/api/sync-costing-smartsheet", "/api/sync-bom", "/api/health", "/api/sync-to-merged", "/api/admin/reset-password", "/api/webhook/intelligence", "/api/webhook/ai-relevance", "/api/webhook/automation", "/api/webhook/parsing"]
 const ADMIN_ROLES = ["admin", "developer"]
 
 export default async function proxy(req: NextRequest) {

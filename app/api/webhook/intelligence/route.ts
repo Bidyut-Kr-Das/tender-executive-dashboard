@@ -40,7 +40,9 @@ const updateAgentReportWithLog = withLog(
 
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
+    const raw = await req.json();
+    // Webhook envelope ({ id, event, created_at, data }) carries the report in data; flat bodies still work.
+    const body = raw?.data && typeof raw.data === "object" && !Array.isArray(raw.data) ? raw.data : raw;
     const referenceNo =
       typeof body.referenceNo === "string"
         ? body.referenceNo.trim()
@@ -107,3 +109,5 @@ export async function PATCH(req: NextRequest) {
     );
   }
 }
+
+export const POST = PATCH;
