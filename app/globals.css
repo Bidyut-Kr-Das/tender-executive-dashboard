@@ -2,12 +2,8 @@
 
 @import "../components/TenderTable.css";
 @import "../components/AttachmentModal.css";
-@import "../components/ChartsSection.css";
 @import "../components/FilterSidebar.css";
-@import "../components/KpiSection.css";
 @import "../components/SupplyAttachmentModal.css";
-@import "../components/FolderMonitorWidget.css";
-@import "../components/AlertPanel.css";
 @import "../app/Dashboard.css";
 @import "../app/TenderDashboard.css";
 @import "../app/SupplyHistory.css";

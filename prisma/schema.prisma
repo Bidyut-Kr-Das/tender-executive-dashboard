@@ -681,6 +681,11 @@ model TenderFile {
   source    String
   tags      String[] @default([])
 
+  // null = never sent for parsing | PENDING | COMPLETED | FAILED (docs/tender-lifecycle.md)
+  parseStatus String?
+  parseResult Json?
+  parseError  String?
+
   tenderMergedId Int?
   tenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
 

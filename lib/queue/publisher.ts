@@ -143,6 +143,37 @@ export async function publishAiRelevanceTask(
   );
 }
 
+export type IngestionPayload = {
+  referenceNo: string;
+  files: {
+    id: number;
+    name: string;
+    extension: string;
+    url: string;
+    source: string;
+    tags: string[];
+  }[];
+};
+
+// Prisma select for the TenderFile rows sent in IngestionPayload.files.
+export const INGESTION_FILE_SELECT = {
+  id: true,
+  name: true,
+  extension: true,
+  url: true,
+  source: true,
+  tags: true,
+} as const;
+
+export async function publishIngestionTask(
+  payload: IngestionPayload,
+): Promise<boolean> {
+  return publishToQueue(
+    QUEUES.AGENT_INGESTION,
+    withClientId("TENDER_AGENT_INGESTION_CLIENT_ID", payload),
+  );
+}
+
 export type AgentIntelligencePayload = {
   payloadType: "analysis";
   referenceNo: string;

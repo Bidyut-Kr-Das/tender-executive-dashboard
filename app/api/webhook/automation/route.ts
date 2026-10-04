@@ -1,19 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { createWebhookHandler, type WebhookEvent } from "@/lib/webhook-event";
 import {
+  INGESTION_FILE_SELECT,
+  publishIngestionTask,
   publishTenderFileParsingTask,
   requireClientId,
   type TenderFileParsingPayload,
 } from "@/lib/queue/publisher";
-import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
+import { TENDER_FILE_TYPES, type TenderFileType } from "@/lib/tender-file-types";
 
-const PARSING_TYPES: Record<string, TenderFileParsingPayload["type"]> = {
-  GEM_DOWNLOAD: "GEM_PDF_PARSING",
-  RA_GEM_DOWNLOAD: "RA_GEM_PDF_PARSING",
-  NON_GEM_DOWNLOAD: "NON_GEM_BOQ_PARSING",
+// Per download type: parsing job type and the only file tag sent for parsing.
+const PARSING: Record<string, { type: TenderFileParsingPayload["type"]; tag: TenderFileType }> = {
+  GEM_DOWNLOAD: { type: "GEM_PDF_PARSING", tag: TENDER_FILE_TYPES.TENDER_DOCUMENT },
+  RA_GEM_DOWNLOAD: { type: "RA_GEM_PDF_PARSING", tag: TENDER_FILE_TYPES.TENDER_DOCUMENT },
+  NON_GEM_DOWNLOAD: { type: "NON_GEM_BOQ_PARSING", tag: TENDER_FILE_TYPES.BOQ_COMPARATIVE_CHART },
 };
-
-const VALID_TAGS = new Set<string>(Object.values(TENDER_FILE_TYPES));
 
 interface FetchedFile {
   name: string;
@@ -22,6 +23,8 @@ interface FetchedFile {
   tag: string;
   source: string;
 }
+
+const VALID_TAGS = new Set<string>(Object.values(TENDER_FILE_TYPES));
 
 function httpError(message: string, status: number) {
   return Object.assign(new Error(message), { status });
@@ -45,24 +48,34 @@ function parseFiles(result: unknown): FetchedFile[] {
     ) {
       throw httpError(`data.result.files[${i}] needs name, extension, url and source`, 400);
     }
-    if (!VALID_TAGS.has(f.tag)) {
+    const tag = tagFromName(f.name) ?? f.tag;
+    if (!VALID_TAGS.has(tag)) {
       throw httpError(`data.result.files[${i}].tag must be one of: ${[...VALID_TAGS].join(", ")}`, 400);
     }
-    return { name: f.name, extension: f.extension, url: f.url.trim(), tag: f.tag, source: f.source };
+    return { name: f.name, extension: f.extension, url: f.url.trim(), tag, source: f.source };
   });
+}
+
+// File names mentioning boq or costing override the worker's tag; otherwise the worker's tag is kept.
+function tagFromName(name: string): TenderFileType | null {
+  const lower = name.toLowerCase();
+  if (lower.includes("boq")) return TENDER_FILE_TYPES.BOQ_COMPARATIVE_CHART;
+  if (lower.includes("costing")) return TENDER_FILE_TYPES.COSTING_ATTACHMENT;
+  return null;
 }
 
 async function handleAutomationEvent(evt: WebhookEvent) {
   // Failure events are only logged.
   if (evt.event !== "file.fetched_success" || evt.data.error) return { handled: false };
 
-  const parsingType = PARSING_TYPES[evt.data.type];
-  if (!parsingType) {
-    throw httpError(`data.type must be one of: ${Object.keys(PARSING_TYPES).join(", ")}`, 400);
+  const parsing = PARSING[evt.data.type];
+  if (!parsing) {
+    throw httpError(`data.type must be one of: ${Object.keys(PARSING).join(", ")}`, 400);
   }
 
   // Fail before saving files: a retry skips saved URLs, so their parsing jobs would never be queued.
   requireClientId("TENDER_AUTOMATION_PARSING_CLIENT_ID");
+  requireClientId("TENDER_AGENT_INGESTION_CLIENT_ID");
 
   const files = parseFiles(evt.data.result);
   const { referenceNo } = evt.data;
@@ -80,6 +93,7 @@ async function handleAutomationEvent(evt: WebhookEvent) {
   });
   const seen = new Set(existing.map((f) => f.url));
   const newFiles = files.filter((f) => !seen.has(f.url) && seen.add(f.url));
+  const parsingFiles = newFiles.filter((f) => f.tag === parsing.tag);
 
   await prisma.tenderFile.createMany({
     data: newFiles.map((f) => ({
@@ -89,22 +103,46 @@ async function handleAutomationEvent(evt: WebhookEvent) {
       source: f.source,
       tags: [f.tag],
       tenderMergedId: tender.id,
+      // Only parsing candidates are PENDING; other files are never sent for parsing.
+      parseStatus: f.tag === parsing.tag ? "PENDING" : null,
     })),
   });
 
   // Publish failures must not fail the webhook — the files are already saved.
   let parsingQueued = 0;
-  for (const f of newFiles) {
+  for (const f of parsingFiles) {
     const ok = await publishTenderFileParsingTask({
-      type: parsingType,
+      type: parsing.type,
       referenceNo,
       file_link: f.url,
     });
-    if (ok) parsingQueued++;
-    else console.warn(`[automation] Parsing job not queued for ${referenceNo} ${f.url} (RabbitMQ unavailable?)`);
+    if (ok) {
+      parsingQueued++;
+      continue;
+    }
+    console.warn(`[automation] Parsing job not queued for ${referenceNo} ${f.url} (RabbitMQ unavailable?)`);
+    // A file that never reached the queue must not stay PENDING.
+    await prisma.tenderFile.updateMany({
+      where: { tenderMergedId: tender.id, url: f.url },
+      data: { parseStatus: "FAILED", parseError: "Parsing job not queued" },
+    });
   }
 
-  return { handled: true, filesCreated: newFiles.length, parsingQueued };
+  // Ingestion runs in parallel with parsing. Only when this event saved new files, so a retry does not re-publish.
+  let ingestionQueued = false;
+  if (newFiles.length > 0) {
+    const tenderFiles = await prisma.tenderFile.findMany({
+      where: { tenderMergedId: tender.id },
+      select: INGESTION_FILE_SELECT,
+      orderBy: { id: "asc" },
+    });
+    ingestionQueued = await publishIngestionTask({ referenceNo, files: tenderFiles });
+    if (!ingestionQueued) {
+      console.warn(`[automation] Ingestion job not queued for ${referenceNo} (RabbitMQ unavailable?)`);
+    }
+  }
+
+  return { handled: true, filesCreated: newFiles.length, parsingQueued, ingestionQueued };
 }
 
 export const POST = createWebhookHandler("Automation", handleAutomationEvent);

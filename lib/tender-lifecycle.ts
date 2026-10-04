@@ -9,8 +9,6 @@ export const TENDER_LIFECYCLE_STATUS = {
   RELEVANCE_FAILED: "RELEVANCE_FAILED",
   AUTOMATION_QUEUED: "AUTOMATION_QUEUED",
   AUTOMATION_FAILED: "AUTOMATION_FAILED",
-  PARSING_QUEUED: "PARSING_QUEUED",
-  PARSING_FAILED: "PARSING_FAILED",
   INGESTION_QUEUED: "INGESTION_QUEUED",
   INGESTION_FAILED: "INGESTION_FAILED",
   INTELLIGENCE_QUEUED: "INTELLIGENCE_QUEUED",
@@ -21,7 +19,9 @@ export const TENDER_LIFECYCLE_STATUS = {
 export type TenderLifecycleStatus =
   (typeof TENDER_LIFECYCLE_STATUS)[keyof typeof TENDER_LIFECYCLE_STATUS];
 
-// Ordered stages. A stage is "done" when the next stage is QUEUED (or COMPLETED after intelligence).
+// Stages in pipeline order. A stage is "done" when the next main-chain stage is QUEUED (or COMPLETED after intelligence).
+// PARSING is a side branch published together with INGESTION by the automation webhook; it has no tender status
+// and is tracked per file in TenderFile.parseStatus.
 export const TENDER_LIFECYCLE_STAGES = [
   {
     stage: "RELEVANCE",

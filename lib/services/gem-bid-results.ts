@@ -1,4 +1,4 @@
-import puppeteer, { type Page } from "puppeteer-core";
+import puppeteer, { type Page } from "puppeteer";
 import fs from "fs";
 
 export interface BidResultItem {
