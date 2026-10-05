@@ -46,9 +46,10 @@ credentials.json
 token.json
 *.csv
 *.xlsx
-kestra/data/database.mv.db
 *.db
-# kestra/data/database.mv.db
 *.tar
 # *.sql
 *.xls
+# runtime data / script output
+data/*.json
+docs/output*.txt

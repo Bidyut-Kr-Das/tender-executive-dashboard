@@ -11,6 +11,8 @@ export interface WebhookEvent {
     referenceNo: string;
     result: unknown;
     error: unknown;
+    // Echoed by the parsing worker to identify the TenderFile.
+    file_link?: string;
   };
 }
 
@@ -63,7 +65,13 @@ export function createWebhookHandler(source: string, onEvent?: EventHandler) {
         id: body.id,
         event: body.event,
         created_at: typeof body.created_at === "string" ? body.created_at : "",
-        data: { type: data.type, referenceNo, result: data.result ?? null, error: data.error ?? null },
+        data: {
+          type: data.type,
+          referenceNo,
+          result: data.result ?? null,
+          error: data.error ?? null,
+          ...(typeof data.file_link === "string" && { file_link: data.file_link.trim() }),
+        },
       });
       return NextResponse.json(result);
     } catch (err) {

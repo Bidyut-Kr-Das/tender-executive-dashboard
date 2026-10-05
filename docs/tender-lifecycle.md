@@ -4,7 +4,7 @@
 > Any change to queues, payloads, webhooks, client IDs or statuses must update this file **and**
 > [`lib/tender-lifecycle.ts`](../lib/tender-lifecycle.ts) / [`lib/queue/config.ts`](../lib/queue/config.ts) in the same change.
 >
-> Last updated: 2026-10-02
+> Last updated: 2026-10-03
 
 ## Contents
 
@@ -27,8 +27,13 @@ A tender passes through five asynchronous stages. The dashboard publishes a job 
 processes it, and the worker calls back a dashboard webhook. The webhook saves the result and publishes the job
 for the next stage.
 
+After automation the pipeline branches. Parsing and ingestion run in parallel. Parsing is a side branch: it stores
+a result per file and publishes nothing. The main chain continues ingestion → intelligence → completed.
+
 ```
-AI relevance ──(valid = yes)──► Automation ──► Parsing ──► Ingestion ──► Intelligence ──► Completed
+AI relevance ──(valid = yes)──► Automation ──┬──► Parsing (per file, side branch, ends at TenderFile.parseResult)
+      │                                      │
+      │                                      └──► Ingestion ──► Intelligence ──► Completed
       │
       └──(valid = no)──► Rejected (stop)
 ```
@@ -42,7 +47,7 @@ AI relevance ──(valid = yes)──► Automation ──► Parsing ──►
 | Ingestion stage | none | `agent:ingestion` |
 | Client ID in payload | **yes** (attached by publishers, both versions) | **yes** |
 | Worker callback format | flat JSON per webhook | shared envelope ([§8](#8-webhook-envelope)) |
-| Stage handoff | partly manual (scripts, UI actions) | each webhook publishes the next stage |
+| Stage handoff | partly manual (scripts, UI actions) | each webhook publishes the next stage; automation publishes parsing and ingestion in parallel |
 | Selected by | `AUTOMATION_VERSION=v1` | `AUTOMATION_VERSION=v2` |
 
 All tender task and parsing publishes (lifecycle, scripts, document routes, costing/CVA parsing) go to the queues of
@@ -77,10 +82,10 @@ flowchart LR
     H1 -->|yes| Q2[Publish automation]
     Q2 -->|automation-v2:tasks| W2[Automation worker]
     W2 -->|POST /api/webhook/automation| H2[Save TenderFile rows]
-    H2 -->|automation-v2:parsing, one job per file| W3[Parsing worker]
-    W3 -->|POST /api/webhook/parsing| H3[Save parse result]
-    H3 -->|agent:ingestion| W4[Ingestion agent]
-    W4 -->|POST /api/webhook/ingestion| H4[Save ingestion result]
+    H2 -->|automation-v2:parsing, one job per candidate file| W3[Parsing worker]
+    W3 -->|POST /api/webhook/parsing| H3([Save parse result on TenderFile])
+    H2 -->|agent:ingestion, one job per event| W4[Ingestion agent]
+    W4 -->|POST /api/webhook/ingestion| H4[Ingestion done]
     H4 -->|agent:intelligence| W5[Intelligence agent]
     W5 -->|POST /api/webhook/intelligence| H5[Save agentReport]
     H5 --> DONE([COMPLETED])
@@ -91,13 +96,14 @@ flowchart LR
 | # | Stage | Queue | Client ID env (sent in payload) | Webhook that receives the result | Webhook publishes next to |
 |---|---|---|---|---|---|
 | 1 | Relevance | `agent:relevance` | `TENDER_AGENT_RELEVANCE_CLIENT_ID` | `/api/webhook/ai-relevance` | `automation-v2:tasks` if `valid = true`, else stop |
-| 2 | Automation | `automation-v2:tasks` | `TENDER_AUTOMATION_AUTOMATION_CLIENT_ID` | `/api/webhook/automation` | `automation-v2:parsing` (one job per new file) |
-| 3 | Parsing | `automation-v2:parsing` | `TENDER_AUTOMATION_PARSING_CLIENT_ID` | `/api/webhook/parsing` | `agent:ingestion` |
+| 2 | Automation | `automation-v2:tasks` | `TENDER_AUTOMATION_AUTOMATION_CLIENT_ID` | `/api/webhook/automation` | `automation-v2:parsing` (one job per candidate file) **and** `agent:ingestion` (one job) |
+| 3 | Parsing (branch) | `automation-v2:parsing` | `TENDER_AUTOMATION_PARSING_CLIENT_ID` | `/api/webhook/parsing` | none (branch ends) |
 | 4 | Ingestion | `agent:ingestion` | `TENDER_AGENT_INGESTION_CLIENT_ID` | `/api/webhook/ingestion` | `agent:intelligence` |
 | 5 | Intelligence | `agent:intelligence` | `TENDER_AGENT_INTELLIGENCE_CLIENT_ID` | `/api/webhook/intelligence` | none (terminal) |
 
 Rule: **the client ID for a stage is read from env and attached by whoever publishes to that stage's queue**,
-which is the webhook of the previous stage (or the trigger, for relevance).
+which is the webhook of the previous stage (or the trigger, for relevance). Parsing and ingestion are both
+published by `/api/webhook/automation`.
 
 ## 4. v2 stage details
 
@@ -159,28 +165,34 @@ Payload (`type` by `TenderMerged.tenderType`):
 Webhook `POST /api/webhook/automation` (envelope, [§8](#8-webhook-envelope)):
 
 - Success event: `file.fetched_success`. Other events are logged only.
-- `data.result.files[]`: `{ name, extension, url, tag, source }`. `tag` must be a value of `TENDER_FILE_TYPES` (`lib/tender-file-types.ts`).
+- `data.result.files[]`: `{ name, extension, url, tag, source }`. The file name overrides `tag` (case-insensitive): contains `boq` → `boqComparativeChart`, contains `costing` → `costingAttachment`. Otherwise the worker's `tag` is kept and must be a value of `TENDER_FILE_TYPES` (`lib/tender-file-types.ts`), else `400`.
+- `TENDER_AUTOMATION_PARSING_CLIENT_ID` and `TENDER_AGENT_INGESTION_CLIENT_ID` are checked before anything is saved.
 - DB write: one `TenderFile` row per new URL. URLs already stored are skipped (retry-safe).
-- Publish stage 3 for each new file, status `PARSING_QUEUED`.
+- Parsing branch: only candidate files get `parseStatus = PENDING` and a stage 3 job. Candidates by `data.type`:
+  `GEM_DOWNLOAD` / `RA_GEM_DOWNLOAD` → tag `tenderDocument`; `NON_GEM_DOWNLOAD` → tag `boqComparativeChart`.
+  Other files keep `parseStatus = null`. If a parsing job is not published, that file is set to
+  `parseStatus = FAILED` (`parseError = "Parsing job not queued"`).
+- Ingestion: if the event saved at least one new file, publish stage 4 once with all `TenderFile` rows of the
+  tender, status `INGESTION_QUEUED`. It does not wait for parsing. A retry that saves no new file publishes nothing.
 - Worker error: status `AUTOMATION_FAILED`.
 
 Parsing type mapping:
 
-| Automation `data.type` | Parsing `type` |
-|---|---|
-| `GEM_DOWNLOAD` | `GEM_PDF_PARSING` |
-| `RA_GEM_DOWNLOAD` | `RA_GEM_PDF_PARSING` |
-| `NON_GEM_DOWNLOAD` | `NON_GEM_BOQ_PARSING` |
+| Automation `data.type` | Parsing `type` | File tag sent for parsing |
+|---|---|---|
+| `GEM_DOWNLOAD` | `GEM_PDF_PARSING` | `tenderDocument` |
+| `RA_GEM_DOWNLOAD` | `RA_GEM_PDF_PARSING` | `tenderDocument` |
+| `NON_GEM_DOWNLOAD` | `NON_GEM_BOQ_PARSING` | `boqComparativeChart` |
 
 ### Stage 3 — Parsing
 
 | | |
 |---|---|
-| Trigger | `/api/webhook/automation` |
+| Trigger | `/api/webhook/automation` (candidate files only) |
 | Publisher | `publishTenderFileParsingTask` (`lib/queue/publisher.ts`) |
 | Queue | `automation-v2:parsing` (`QUEUES.AUTOMATION_V2_PARSING`) |
 | Client ID | `TENDER_AUTOMATION_PARSING_CLIENT_ID` |
-| Status on publish | `PARSING_QUEUED` |
+| Status on publish | `TenderFile.parseStatus = PENDING` (per file, not tender status) |
 
 Payload:
 
@@ -195,34 +207,52 @@ Payload:
 
 Webhook `POST /api/webhook/parsing` (envelope):
 
-- Saves parse result for the file.
-- Publishes stage 4, status `INGESTION_QUEUED`.
-- Worker error: status `PARSING_FAILED`.
-- A tender with several files has several parsing jobs. Ingestion is published once per tender, after the last
-  file finishes parsing. (Exact completion rule to be fixed during implementation.)
+- Events: `file.parsed_success`, `file.parsed_failed`. Other events are logged only.
+- `data.file_link` is **required**. The worker echoes the `file_link` of the job. It identifies the `TenderFile`
+  (`tenderMergedId` + `url`). Missing: `400`.
+- Success: `TenderFile.parseStatus = COMPLETED`, `parseResult = data.result` (JSON, shape by parsing type).
+- Failure (`file.parsed_failed` or non-null `data.error`): `parseStatus = FAILED`, `parseError = data.error`.
+- Only a `PENDING` file is updated. A retried event for a settled file is a no-op (`handled: false`).
+- Nothing is published. Parsing is a side branch and does not gate ingestion or intelligence.
+
+`TenderFile.parseStatus` values: `null` (never sent for parsing), `PENDING`, `COMPLETED`, `FAILED`.
 
 ### Stage 4 — Ingestion
 
 | | |
 |---|---|
-| Trigger | `/api/webhook/parsing` |
-| Publisher | `publishIngestionTask` (to be added) |
+| Trigger | `/api/webhook/automation` (in parallel with parsing) |
+| Publisher | `publishIngestionTask` (`lib/queue/publisher.ts`) |
 | Queue | `agent:ingestion` (`QUEUES.AGENT_INGESTION`) |
 | Client ID | `TENDER_AGENT_INGESTION_CLIENT_ID` |
 | Status on publish | `INGESTION_QUEUED` |
 
-Payload (minimum):
+Payload:
 
 ```json
 {
   "referenceNo": "GEM/2026/B/1234567",
+  "files": [
+    {
+      "id": 1,
+      "name": "bid.pdf",
+      "extension": "pdf",
+      "url": "https://...",
+      "source": "gem",
+      "tags": ["tenderDocument"]
+    }
+  ],
   "client_id": "<TENDER_AGENT_INGESTION_CLIENT_ID>"
 }
 ```
 
-Webhook `POST /api/webhook/ingestion` (envelope, to be added):
+`files` holds file metadata only. Parse results are not included, because parsing may still be running.
 
-- Publishes stage 5, status `INTELLIGENCE_QUEUED`.
+Webhook `POST /api/webhook/ingestion` (envelope):
+
+- Success: event ending in `_success` and `data.error` null. Other events are logged only.
+- Nothing is stored. Publishes stage 5 with `tenderBrief` / `itemCategory` from `TenderMerged` (`company = laser`),
+  status `INTELLIGENCE_QUEUED`.
 - Worker error: status `INGESTION_FAILED`.
 
 ### Stage 5 — Intelligence
@@ -301,16 +331,16 @@ Not persisted yet. It needs a column on `TenderMerged` (database migration run b
 | `RELEVANCE_FAILED` | Agent error or publish failure | relevance trigger / webhook |
 | `AUTOMATION_QUEUED` | Job on `automation-v2:tasks` | `/api/webhook/ai-relevance` |
 | `AUTOMATION_FAILED` | File fetch error or publish failure | `/api/webhook/automation` / `/api/webhook/ai-relevance` |
-| `PARSING_QUEUED` | Jobs on `automation-v2:parsing` | `/api/webhook/automation` |
-| `PARSING_FAILED` | Parsing error or publish failure | `/api/webhook/parsing` / `/api/webhook/automation` |
-| `INGESTION_QUEUED` | Job on `agent:ingestion` | `/api/webhook/parsing` |
-| `INGESTION_FAILED` | Ingestion error or publish failure | `/api/webhook/ingestion` / `/api/webhook/parsing` |
+| `INGESTION_QUEUED` | Job on `agent:ingestion` | `/api/webhook/automation` |
+| `INGESTION_FAILED` | Ingestion error or publish failure | `/api/webhook/ingestion` / `/api/webhook/automation` |
 | `INTELLIGENCE_QUEUED` | Job on `agent:intelligence` | `/api/webhook/ingestion` |
 | `INTELLIGENCE_FAILED` | Intelligence error or publish failure | `/api/webhook/intelligence` / `/api/webhook/ingestion` |
 | `COMPLETED` | `agentReport` saved. Terminal. | `/api/webhook/intelligence` |
 
 Rules:
 
+- Tender status follows the main chain only. Parsing has no tender status; it is tracked per file in
+  `TenderFile.parseStatus` (`null`, `PENDING`, `COMPLETED`, `FAILED`).
 - No separate `*_DONE` status. A stage is done when the next stage is `*_QUEUED`.
 - A publish failure sets the **next** stage to `*_FAILED`, because that stage never received its job.
 - A worker error event sets the **current** stage to `*_FAILED`.
@@ -324,9 +354,7 @@ stateDiagram-v2
     RELEVANCE_QUEUED --> RELEVANCE_FAILED
     RELEVANCE_QUEUED --> AUTOMATION_QUEUED
     AUTOMATION_QUEUED --> AUTOMATION_FAILED
-    AUTOMATION_QUEUED --> PARSING_QUEUED
-    PARSING_QUEUED --> PARSING_FAILED
-    PARSING_QUEUED --> INGESTION_QUEUED
+    AUTOMATION_QUEUED --> INGESTION_QUEUED
     INGESTION_QUEUED --> INGESTION_FAILED
     INGESTION_QUEUED --> INTELLIGENCE_QUEUED
     INTELLIGENCE_QUEUED --> INTELLIGENCE_FAILED
@@ -344,7 +372,7 @@ All are required. They are listed in `.env.example` and typed in `types/env.d.ts
 | `TENDER_AGENT_RELEVANCE_CLIENT_ID` | `agent:relevance` | relevance trigger (`actions/ai-analysis.ts`) |
 | `TENDER_AUTOMATION_AUTOMATION_CLIENT_ID` | `automation-v2:tasks` | `/api/webhook/ai-relevance` |
 | `TENDER_AUTOMATION_PARSING_CLIENT_ID` | `automation-v2:parsing` | `/api/webhook/automation` |
-| `TENDER_AGENT_INGESTION_CLIENT_ID` | `agent:ingestion` | `/api/webhook/parsing` |
+| `TENDER_AGENT_INGESTION_CLIENT_ID` | `agent:ingestion` | `/api/webhook/automation` |
 | `TENDER_AGENT_INTELLIGENCE_CLIENT_ID` | `agent:intelligence` | `/api/webhook/ingestion` |
 | `TENDER_AGENT_FEEDBACK_CLIENT_ID` | feedback agent | outside the main lifecycle |
 
@@ -361,7 +389,7 @@ Rules:
 | `publishAiRelevanceTask` | `TENDER_AGENT_RELEVANCE_CLIENT_ID` |
 | `publishTenderTask` | `TENDER_AUTOMATION_AUTOMATION_CLIENT_ID` |
 | `publishTenderParsingTask`, `publishGemPdfParsingTask`, `publishNonGemBoqParsingTask`, `publishTenderFileParsingTask` | `TENDER_AUTOMATION_PARSING_CLIENT_ID` |
-| `publishIngestionTask` (to be added) | `TENDER_AGENT_INGESTION_CLIENT_ID` |
+| `publishIngestionTask` | `TENDER_AGENT_INGESTION_CLIENT_ID` |
 | `publishAgentIntelligenceTask` | `TENDER_AGENT_INTELLIGENCE_CLIENT_ID` |
 
 ## 8. Webhook envelope
@@ -406,18 +434,19 @@ Validation errors return `400`. An unknown `referenceNo` returns `404`.
 
 ## 10. Implementation gaps
 
-State of the code on 2026-10-02 compared with v2. Tick each item when done.
+State of the code on 2026-10-03 compared with v2. Tick each item when done.
 
 - [x] `publishAiRelevanceTask` attaches `TENDER_AGENT_RELEVANCE_CLIENT_ID`.
 - [ ] `/api/webhook/ai-relevance` uses a flat body, not the envelope.
 - [x] `/api/webhook/ai-relevance` download job carries `TENDER_AUTOMATION_AUTOMATION_CLIENT_ID` (attached by `publishTenderTask`).
 - [x] All parsing publishers attach `TENDER_AUTOMATION_PARSING_CLIENT_ID`.
 - [x] Download and parsing publishers pick v1 or v2 queues from `AUTOMATION_VERSION`.
-- [ ] `/api/webhook/parsing` only logs. It must save the result and publish to `agent:ingestion`.
-- [ ] No ingestion publisher (`publishIngestionTask`) and no `/api/webhook/ingestion` route.
+- [x] `/api/webhook/parsing` saves the result on `TenderFile`. It publishes nothing (side branch).
+- [x] `/api/webhook/automation` publishes parsing and ingestion in parallel.
+- [x] `publishIngestionTask` and `/api/webhook/ingestion` added.
 - [ ] `/api/webhook/intelligence` does not use `createWebhookHandler` and does not check `client_id`.
 - [x] `publishAgentIntelligenceTask` attaches `TENDER_AGENT_INTELLIGENCE_CLIENT_ID`.
 - [ ] `TENDER_LIFECYCLE_STATUS` is not persisted. It needs a `TenderMerged` column (migration run by the team).
-- [ ] Rule for "all files parsed" before ingestion is not defined.
+- [ ] Parsing worker must echo `file_link` in `data` (`automation_v2/dispatch.py`).
 - [x] Queue constants `AUTOMATION_V2_TASKS`, `AUTOMATION_V2_PARSING`, `AGENT_INGESTION` added to `QUEUES`.
 - [x] `/api/webhook/agent-report` renamed to `/api/webhook/intelligence`.
