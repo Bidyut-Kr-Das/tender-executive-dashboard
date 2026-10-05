@@ -594,6 +594,14 @@ check("EPC dropdowns only query for columns that can offer values", () => {
   }
 });
 
+check("EPC Costing File filters on tender_files availability", () => {
+  const t = epc("home", {
+    columnFilters: { attachmentUrl: { select: ["Available"] } },
+  });
+  assert.match(t, /FROM "tender_files" tf/);
+  assert.match(t, /<> ''/);
+});
+
 
 check("an EPC deadline window drops undated rows", () => {
   const t = epc("postParticipation", {

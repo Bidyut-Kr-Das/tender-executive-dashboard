@@ -28,6 +28,10 @@ export const EPC_TO_FLAT: Readonly<Record<string, string>> = {
   tenderSubmittedDate: "scrapedDate",
   // The cell renders the tenderDocument-tagged file, which is tenderFileUrl.
   tenderDocument: "tenderFileUrl",
+  // The Costing File cell renders the costingAttachment-tagged file; costingFileUrl
+  // is the same tender_files row with the viewer-link rewrite, and it is the key
+  // AVAILABILITY_COLUMNS already knows how to filter.
+  attachmentUrl: "costingFileUrl",
 };
 
 /**
@@ -39,7 +43,6 @@ export const EPC_UNFILTERABLE: ReadonlySet<string> = new Set([
   "tenderFor",
   "emdValidity",
   "finalRemarks",
-  "attachmentUrl",
   "extrudedSemiconductivePrice",
   "htXlpePrice",
   "pvcTypeSt2Price",
@@ -60,7 +63,6 @@ export const EPC_UNFILTERABLE: ReadonlySet<string> = new Set([
  */
 export const EPC_UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
   "lastDateOfSubmission",
-  "attachmentUrl",
   "files",
   "boqChart",
   "rawMaterials",
@@ -81,11 +83,17 @@ export const EPC_BOOLEAN_COLUMNS: ReadonlySet<string> = new Set([
   "reverseAuctionApplicable",
 ]);
 
+/** Columns rendered as Available / Not Available, with a hardcoded option list. */
+export const EPC_AVAILABILITY_COLUMNS: ReadonlySet<string> = new Set([
+  "attachmentUrl",
+]);
+
 /** Whether an EPC dropdown should hit the database for its values. */
 export function epcNeedsFacetQuery(accessor: string): boolean {
   if (EPC_UNFILTERABLE.has(accessor)) return false;
   if (EPC_UNIQUE_OPTION_SKIP.has(accessor)) return false;
   if (EPC_BOOLEAN_COLUMNS.has(accessor)) return false;
+  if (EPC_AVAILABILITY_COLUMNS.has(accessor)) return false;
   return true;
 }
 

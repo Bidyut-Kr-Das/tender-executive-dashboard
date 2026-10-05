@@ -10,7 +10,7 @@ import { AttachmentModal } from "./AttachmentModal";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import type { AppDispatch } from "@/lib/store";
 import { updateTenderDocketNo, updateTenderBgNoUtrNo, updateTenderRemarks, updateTenderBeneficiaryBankDetails, updateTenderReason, updateTenderLoiPoNoAndDate, updateTenderCompetitors, updateTenderCell, updateTenderStatusAndAction, updateTenderMergedField, updateWebsiteMapping, uploadTenderDocument, triggerReverseAuctionWebhook } from "@/lib/slices/tendersSlice";
-import { EPC_BOOLEAN_COLUMNS, EPC_UNIQUE_OPTION_SKIP } from "@/lib/epc-column-map";
+import { EPC_BOOLEAN_COLUMNS, EPC_AVAILABILITY_COLUMNS, EPC_UNIQUE_OPTION_SKIP } from "@/lib/epc-column-map";
 import { toast } from "sonner";
 import {
   Search,
@@ -84,6 +84,7 @@ const formatMoney = (v: unknown): string => {
 // Shared with the SQL layer so a column cannot be filterable in one and not
 // the other. See lib/epc-column-map.ts.
 const BOOLEAN_COLUMNS = EPC_BOOLEAN_COLUMNS;
+const AVAILABILITY_COLUMNS = EPC_AVAILABILITY_COLUMNS;
 const SKIP_FILTER_COLUMNS = EPC_UNIQUE_OPTION_SKIP;
 
 const TENDER_UPDATE_STATUS_FILTER_OPTIONS: Array<[string, string]> = [
@@ -2100,6 +2101,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
     if (BOOLEAN_COLUMNS.has(accessor)) {
       all.push("Yes", "No");
     }
+    if (AVAILABILITY_COLUMNS.has(accessor)) {
+      all.push("Available", "Not Available");
+    }
     all.push("(Blank)");
     setMultiSelectFilters((prev) => ({ ...prev, [accessor]: all }));
     setCurrentPage(1);
@@ -3837,51 +3841,30 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               </button>
                             </div>
                             <div className="multiselect-options-list">
-                              {BOOLEAN_COLUMNS.has(col.accessor) ? (
-                                <>
-                                  {["Yes", "No"].map((opt) => (
-                                    <label
-                                      key={opt}
-                                      className="multiselect-option-label"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={
-                                          multiSelectFilters[col.accessor]?.includes(
-                                            opt,
-                                          ) ?? false
-                                        }
-                                        onChange={() =>
-                                          toggleFilter(col.accessor, opt)
-                                        }
-                                      />
-                                      <span>{opt}</span>
-                                    </label>
-                                  ))}
-                                </>
-                              ) : (
-                                (uniqueValueCache[col.accessor] ?? []).map(
-                                  (val) => (
-                                    <label
-                                      key={val}
-                                      className="multiselect-option-label"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={
-                                          multiSelectFilters[col.accessor]?.includes(
-                                            val,
-                                          ) ?? false
-                                        }
-                                        onChange={() =>
-                                          toggleFilter(col.accessor, val)
-                                        }
-                                      />
-                                      <span>{val}</span>
-                                    </label>
-                                  ),
-                                )
-                              )}
+                              {(BOOLEAN_COLUMNS.has(col.accessor)
+                                ? ["Yes", "No"]
+                                : AVAILABILITY_COLUMNS.has(col.accessor)
+                                  ? ["Available", "Not Available"]
+                                  : uniqueValueCache[col.accessor] ?? []
+                              ).map((val) => (
+                                <label
+                                  key={val}
+                                  className="multiselect-option-label"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={
+                                      multiSelectFilters[col.accessor]?.includes(
+                                        val,
+                                      ) ?? false
+                                    }
+                                    onChange={() =>
+                                      toggleFilter(col.accessor, val)
+                                    }
+                                  />
+                                  <span>{val}</span>
+                                </label>
+                              ))}
                               <label className="multiselect-option-label">
                                 <input
                                   type="checkbox"
@@ -3901,7 +3884,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         )}
                       </div>
                     )}
-                    {col.accessor !== "lastDateOfSubmission" && col.accessor !== "rawMaterials" && col.accessor !== "proposedErpItemName" && col.accessor !== "remarks" &&  (
+                    {/* attachmentUrl is availability-only: its cell renders a link, not
+                        searchable text, so it gets no search box. */}
+                    {col.accessor !== "attachmentUrl" && col.accessor !== "lastDateOfSubmission" && col.accessor !== "rawMaterials" && col.accessor !== "proposedErpItemName" && col.accessor !== "remarks" &&  (
                       <input
                         type="text"
                         className="column-search-input"
