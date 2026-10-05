@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { GoogleSheetService } from "./googleSheetService";
+import { AttachmentJoinService } from "./attachmentJoinService";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { getNetworkFolderIndex, resolveRootPath } from "./documentIndexer";
 import { extractNumericDocket } from "@/lib/extractNumericDocket";
@@ -391,16 +392,24 @@ export async function syncSheetToTenderMerged(): Promise<SyncResult> {
 
   // ── Costing attachment sync from fetched records ──
   const allTenders = await prisma.tenderMerged.findMany({
-    select: { id: true, referenceNo: true },
+    select: { id: true, referenceNo: true, docketNo: true },
   });
-  const refToId = new Map(allTenders.map((t) => [t.referenceNo, t.id]));
+  const docketToTender = new Map(
+    allTenders
+      .filter((t) => t.docketNo)
+      .map((t) => [
+        AttachmentJoinService.normalizeKey(t.docketNo),
+        { id: t.id, referenceNo: t.referenceNo },
+      ] as const),
+  );
   let costingCount = 0;
 
   for (const row of records) {
-    const refNo = row.tenderNoNitNo?.trim();
-    if (!refNo) continue;
-    const mergedId = refToId.get(refNo);
-    if (!mergedId) continue;
+    const docketNo = AttachmentJoinService.normalizeKey(row.docketNo);
+    if (!docketNo) continue;
+    const matched = docketToTender.get(docketNo);
+    if (!matched) continue;
+    const { id: mergedId, referenceNo: refNo } = matched;
 
     if (row.attachmentUrl) {
       await prisma.tenderFile.deleteMany({
