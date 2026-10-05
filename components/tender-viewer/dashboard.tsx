@@ -168,7 +168,7 @@ function RemarksCell({
   if (!canEdit) {
     return (
       <div style={{ maxHeight: 80, overflowY: "auto", whiteSpace: "normal" }}>
-        {val || <span className="text-slate-300">-</span>}
+        {val || <span className="text-muted-foreground/50">-</span>}
       </div>
     );
   }
@@ -198,14 +198,14 @@ function RemarksCell({
             fontSize: 11,
             padding: "4px 6px",
             resize: "vertical",
-            border: "1px solid #dadce0",
+            border: "1px solid var(--border)",
             borderRadius: 4,
           }}
         />
         <button
           onClick={save}
           disabled={isSaving}
-          className="flex-shrink-0 mt-0.5 w-6 h-6 rounded flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+          className="flex-shrink-0 mt-0.5 w-6 h-6 rounded flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500/80 dark:hover:bg-blue-500 dark:text-blue-50 cursor-pointer"
           title="Save"
         >
           {isSaving ? (
@@ -221,10 +221,10 @@ function RemarksCell({
   return (
     <div className="relative group/cell h-full">
       <div style={{ maxHeight: 80, overflowY: "auto", whiteSpace: "normal" }}>
-        {val || <span className="text-slate-300">-</span>}
+        {val || <span className="text-muted-foreground/50">-</span>}
       </div>
       <button
-        className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer"
+        className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer"
         title="Edit Remarks"
         onClick={(e) => {
           e.stopPropagation();
@@ -233,9 +233,9 @@ function RemarksCell({
         }}
       >
         {isSaving ? (
-          <Loader2 className="w-4 h-4 text-white animate-spin" />
+          <Loader2 className="w-4 h-4 text-white dark:text-blue-50 animate-spin" />
         ) : (
-          <Pencil className="w-4 h-4 text-white" />
+          <Pencil className="w-4 h-4 text-white dark:text-blue-50" />
         )}
       </button>
     </div>
@@ -244,13 +244,13 @@ function RemarksCell({
 
 function DivisionOrDepartmentCell({ value }: { value: unknown }) {
   const raw = String(value ?? "").trim();
-  if (!raw) return <span className="text-slate-300">-</span>;
+  if (!raw) return <span className="text-muted-foreground/50">-</span>;
   const key = raw.toUpperCase();
   const map: Record<string, string> = {
-    "LASER PROJECTS": "bg-blue-50 text-blue-700 border-blue-200",
-    "LASER MANUFACTURING": "bg-emerald-50 text-emerald-700 border-emerald-200",
+    "LASER PROJECTS": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25",
+    "LASER MANUFACTURING": "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/25",
   };
-  const cls = map[key] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  const cls = map[key] ?? "bg-muted text-muted-foreground border-border";
   return (
     <Badge className={`text-[10px] font-medium border ${cls}`}>{raw}</Badge>
   );
@@ -264,7 +264,7 @@ const AgentReportCell = memo(function AgentReportCell({
   onOpen: (report: string) => void;
 }) {
   const raw = String(value ?? "").trim();
-  if (!raw) return <span className="text-slate-300">-</span>;
+  if (!raw) return <span className="text-muted-foreground/50">-</span>;
   return (
     <button
       type="button"
@@ -273,7 +273,7 @@ const AgentReportCell = memo(function AgentReportCell({
         e.stopPropagation();
         onOpen(raw);
       }}
-      className="rounded-md bg-blue-50 border-2 border-blue-500 text-blue-600 px-3 py-1.5 text-xs font-medium hover:bg-blue-500 hover:text-white transition-colors cursor-pointer"
+      className="rounded-md bg-blue-50 border-2 border-blue-500 text-blue-600 px-3 py-1.5 text-xs font-medium hover:bg-blue-500 hover:text-white dark:bg-blue-500/10 dark:border-blue-500/25 dark:text-blue-300 dark:hover:bg-blue-500/80 dark:hover:text-blue-50 transition-colors cursor-pointer"
     >
       Show Agent Report
     </button>
@@ -662,6 +662,8 @@ export default function Dashboard() {
       "remark",
       "quotationno",
       "quotation no",
+      // Rendered inside the category column.
+      "subcategory",
     ]);
     const seen = new Set<string>();
     let cols = [...tenderData.columns].filter((col) => {
@@ -893,6 +895,39 @@ export default function Dashboard() {
         const colLower = col.toLowerCase();
         const colIndex = indexMap.get(normalizeKey(col));
 
+        if (col === "category") {
+          return {
+            header: displayNameMap[col] ?? "Category",
+            accessor: col as keyof Record<string, unknown>,
+            defaultWidth: colIndex?.width ?? 150,
+            hidden: colIndex ? !colIndex.visible : false,
+            searchable: false,
+            frozen: true,
+            renderCell: (value: unknown, row: Record<string, unknown>) => {
+              const category = String(value ?? "");
+              const subCategory = String(row.subCategory ?? "");
+              if (!category) return <span className="text-muted-foreground/50">-</span>;
+              return (
+                <div className="flex flex-col leading-tight">
+                  <span className="text-xs font-medium">{category}</span>
+                  {subCategory && (
+                    <span className="text-[11px] text-muted-foreground">
+                      {subCategory}
+                    </span>
+                  )}
+                </div>
+              );
+            },
+            filter: {
+              type: "select" as const,
+              options: [
+                ...(selectFilterOptions[col] ?? []),
+                { value: "__blank__", label: "Blank" },
+              ],
+            },
+          };
+        }
+
         if (col === "app" || col === "aps" || col === "apm") {
           return {
             header: col,
@@ -919,10 +954,10 @@ export default function Dashboard() {
                     }
                     className={`w-7 h-7 rounded text-xs font-bold border-2 transition-colors cursor-pointer ${
                       isUpdating
-                        ? "opacity-50 cursor-not-allowed bg-slate-200 text-slate-400 border-slate-300"
+                        ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
                         : isYes
-                          ? "bg-green-500 text-white border-green-600"
-                          : "bg-white text-slate-400 border-slate-300 hover:border-slate-400"
+                          ? "bg-green-500 text-white border-green-600 dark:bg-green-500/80 dark:text-green-50 dark:border-green-500/25"
+                          : "bg-card text-muted-foreground border-input hover:border-muted-foreground"
                     }`}
                   >
                     {isUpdating ? (
@@ -939,10 +974,10 @@ export default function Dashboard() {
                     }
                     className={`w-7 h-7 rounded text-xs font-bold border-2 transition-colors cursor-pointer ${
                       isUpdating
-                        ? "opacity-50 cursor-not-allowed bg-slate-200 text-slate-400 border-slate-300"
+                        ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
                         : isNo
-                          ? "bg-red-500 text-white border-red-600"
-                          : "bg-white text-slate-400 border-slate-300 hover:border-slate-400"
+                          ? "bg-red-500 text-white border-red-600 dark:bg-red-500/80 dark:text-red-50 dark:border-red-500/25"
+                          : "bg-card text-muted-foreground border-input hover:border-muted-foreground"
                     }`}
                   >
                     {isUpdating ? (
@@ -1010,13 +1045,13 @@ export default function Dashboard() {
                     <div
                       key={i}
                       style={{
-                        background: "#f1f3f4",
+                        background: "var(--muted)",
                         padding: "2px 6px",
                         borderRadius: "4px",
                         fontSize: "11px",
-                        border: "1px solid #dadce0",
+                        border: "1px solid var(--border)",
                         width: "fit-content",
-                        color: "#202124",
+                        color: "var(--foreground)",
                       }}
                     >
                       {part}
@@ -1058,7 +1093,7 @@ export default function Dashboard() {
             renderCell: (_value: unknown, row: Record<string, unknown>) => {
               const valid = String(row.aiRelevanceValid ?? "");
               const reason = String(row.aiRelevanceReason ?? "");
-              if (!valid) return <span className="text-slate-300">-</span>;
+              if (!valid) return <span className="text-muted-foreground/50">-</span>;
               const isYes = valid === "true";
               const hasFeedback = !!row.aiFeedbackCorrected;
               const feedbackKey = `${row.id}-${row.type === "Gem" ? "Gem" : "NonGem"}`;
@@ -1077,17 +1112,17 @@ export default function Dashboard() {
                       <Badge
                         className={`inline-flex w-fit text-[10px] font-medium ${
                           isYes
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                            : "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/25 dark:hover:bg-emerald-500/10"
+                            : "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/25 dark:hover:bg-rose-500/10"
                         }`}
                       >
                         {isYes ? "YES" : "NO"}
                       </Badge>
-                      <span className="text-[11px] text-slate-500 leading-snug">
+                      <span className="text-[11px] text-muted-foreground leading-snug">
                         {reason}
                       </span>
                       {hasFeedback && (
-                        <Badge className="inline-flex w-fit text-[10px] font-medium bg-red-50 text-red-600 border-red-200">
+                        <Badge className="inline-flex w-fit text-[10px] font-medium bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/25">
                           Feedback Given
                         </Badge>
                       )}
@@ -1095,7 +1130,7 @@ export default function Dashboard() {
                   </div>
                   {!hasFeedback && (
                     <button
-                      className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer"
+                      className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer"
                       title="Provide Feedback"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1103,9 +1138,9 @@ export default function Dashboard() {
                       }}
                     >
                       {isSaving ? (
-                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                        <Loader2 className="w-4 h-4 text-white dark:text-blue-50 animate-spin" />
                       ) : (
-                        <MessageSquare className="w-4 h-4 text-white" />
+                        <MessageSquare className="w-4 h-4 text-white dark:text-blue-50" />
                       )}
                     </button>
                   )}
@@ -1298,13 +1333,13 @@ export default function Dashboard() {
         if (col === "parseStatus") {
           const statusColors: Record<string, string> = {
             COMPLETED:
-              "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50",
+              "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/25 dark:hover:bg-emerald-500/10",
             FAILED:
-              "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100",
+              "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/25 dark:hover:bg-rose-500/10",
             RATE_LIMITED:
-              "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50",
+              "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/25 dark:hover:bg-amber-500/10",
             PROCESSING:
-              "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50",
+              "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25 dark:hover:bg-blue-500/10",
           };
           return {
             header: "Parse Status",
@@ -1323,10 +1358,10 @@ export default function Dashboard() {
             renderCell: (_value: unknown, row: Record<string, unknown>) => {
               const status = String(row.parseStatus ?? "");
               const error = String(row.parseError ?? "");
-              if (!status) return <span className="text-slate-300">-</span>;
+              if (!status) return <span className="text-muted-foreground/50">-</span>;
               const colorClass =
                 statusColors[status] ??
-                "bg-slate-50 text-slate-600 border-slate-200";
+                "bg-muted text-muted-foreground border-border";
               return (
                 <div className="flex flex-col gap-0.5" title={error}>
                   <Badge
@@ -1426,17 +1461,17 @@ export default function Dashboard() {
                           e.stopPropagation();
                           handleOpenAttachmentModal(tenderDocFiles);
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-md bg-rose-100 border-2 border-rose-500 text-rose-500 px-3 py-1.5 text-xs font-medium hover:bg-rose-500 hover:text-rose-100 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-md bg-rose-100 border-2 border-rose-500 text-rose-500 px-3 py-1.5 text-xs font-medium hover:bg-rose-500 hover:text-rose-100 dark:bg-rose-500/10 dark:border-rose-500/25 dark:text-rose-300 dark:hover:bg-rose-500/70 dark:hover:text-rose-50 transition-colors cursor-pointer"
                         title="View tender documents"
                       >
                         <FileText className="h-3.5 w-3.5" />
                         Show Tender Documents
                       </button>
                     ) : (
-                      <span className="text-slate-300">-</span>
+                      <span className="text-muted-foreground/50">-</span>
                     )}
                     <button
-                      className="opacity-0 group-hover/cell:opacity-100 transition-all w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer shrink-0"
+                      className="opacity-0 group-hover/cell:opacity-100 transition-all w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer shrink-0"
                       title="Upload Tender Document"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1444,9 +1479,9 @@ export default function Dashboard() {
                       }}
                     >
                       {isSaving ? (
-                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                        <Loader2 className="w-4 h-4 text-white dark:text-blue-50 animate-spin" />
                       ) : (
-                        <Pencil className="w-4 h-4 text-white" />
+                        <Pencil className="w-4 h-4 text-white dark:text-blue-50" />
                       )}
                     </button>
                   </div>
@@ -1477,7 +1512,7 @@ export default function Dashboard() {
             },
             renderCell: (_value: unknown, row: Record<string, unknown>) => {
               const raw = String(row[col] ?? "");
-              if (!raw) return <span className="text-slate-300">-</span>;
+              if (!raw) return <span className="text-muted-foreground/50">-</span>;
               let entries: {
                 officer: string;
                 address?: string;
@@ -1486,10 +1521,10 @@ export default function Dashboard() {
               try {
                 entries = JSON.parse(raw);
               } catch {
-                return <span className="text-slate-300">-</span>;
+                return <span className="text-muted-foreground/50">-</span>;
               }
               if (!entries.length)
-                return <span className="text-slate-300">-</span>;
+                return <span className="text-muted-foreground/50">-</span>;
               return (
                 <div
                   className="flex flex-col gap-1 text-xs"
@@ -1503,7 +1538,7 @@ export default function Dashboard() {
                     <div key={i} className="flex gap-2">
                       <span className="font-medium">{e.officer}</span>
                       {e.quantity && (
-                        <span className="text-slate-500">
+                        <span className="text-muted-foreground">
                           qty: {e.quantity}
                         </span>
                       )}
@@ -1562,7 +1597,7 @@ export default function Dashboard() {
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 underline hover:text-blue-800 text-xs"
+                            className="text-blue-600 underline hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200 text-xs"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {url}
@@ -1570,11 +1605,11 @@ export default function Dashboard() {
                         ))}
                       </div>
                     ) : (
-                      <span className="text-slate-300">-</span>
+                      <span className="text-muted-foreground/50">-</span>
                     )}
                   </div>
                   <button
-                    className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer"
+                    className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer"
                     title="Edit Website"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1582,9 +1617,9 @@ export default function Dashboard() {
                     }}
                   >
                     {isSaving ? (
-                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      <Loader2 className="w-4 h-4 text-white dark:text-blue-50 animate-spin" />
                     ) : (
-                      <Pencil className="w-4 h-4 text-white" />
+                      <Pencil className="w-4 h-4 text-white dark:text-blue-50" />
                     )}
                   </button>
                 </div>
@@ -1642,7 +1677,7 @@ export default function Dashboard() {
                 } catch {}
               }
               if (addresses.length === 0) {
-                return <span className="text-slate-300">-</span>;
+                return <span className="text-muted-foreground/50">-</span>;
               }
               return (
                 <div
@@ -1677,19 +1712,19 @@ export default function Dashboard() {
                   badge = {
                     label: "POST",
                     className:
-                      "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50",
+                      "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/25 dark:hover:bg-emerald-500/10",
                   };
                 } else if (participated === "false") {
                   badge = {
                     label: "NOT_PARTICIPATED",
                     className:
-                      "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100",
+                      "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/25 dark:hover:bg-rose-500/10",
                   };
                 } else {
                   badge = {
                     label: "PRE",
                     className:
-                      "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50",
+                      "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25 dark:hover:bg-blue-500/10",
                   };
                 }
               }
@@ -1699,7 +1734,7 @@ export default function Dashboard() {
                   {val ? (
                     <span className="text-xs font-mono">{val}</span>
                   ) : (
-                    <span className="text-slate-300">-</span>
+                    <span className="text-muted-foreground/50">-</span>
                   )}
                   {badge && (
                     <Badge
@@ -1730,14 +1765,14 @@ export default function Dashboard() {
             frozen: true,
             renderCell: (value: unknown) => {
               const val = String(value ?? "");
-              if (!val) return <span className="text-slate-300">-</span>;
+              if (!val) return <span className="text-muted-foreground/50">-</span>;
               const isGem = val === "Gem";
               return (
                 <Badge
                   className={`text-[10px] font-medium ${
                     isGem
-                      ? "bg-blue-100 text-blue-800 border-blue-200"
-                      : "bg-slate-100 text-slate-600 border-slate-200"
+                      ? "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25"
+                      : "bg-muted text-muted-foreground border-border"
                   }`}
                 >
                   {val}
@@ -2033,12 +2068,12 @@ export default function Dashboard() {
               const org = String(row.organization ?? "");
               const dept = String(row.departmentName ?? "");
               if (!org && !dept)
-                return <span className="text-slate-300">-</span>;
+                return <span className="text-muted-foreground/50">-</span>;
               return (
                 <div className="flex flex-col leading-tight">
                   <span className="text-xs font-medium">{org || "-"}</span>
                   {dept && (
-                    <span className="text-[11px] text-slate-500">{dept}</span>
+                    <span className="text-[11px] text-muted-foreground">{dept}</span>
                   )}
                 </div>
               );
@@ -2080,13 +2115,13 @@ export default function Dashboard() {
                     <div
                       key={i}
                       style={{
-                        background: "#f1f3f4",
+                        background: "var(--muted)",
                         padding: "2px 6px",
                         borderRadius: "4px",
                         fontSize: "11px",
-                        border: "1px solid #dadce0",
+                        border: "1px solid var(--border)",
                         width: "fit-content",
-                        color: "#202124",
+                        color: "var(--foreground)",
                       }}
                     >
                       {part}
@@ -2158,6 +2193,10 @@ export default function Dashboard() {
       return 0;
     });
 
+    // Category is always the first (sticky) column.
+    const categoryIdx = result.findIndex((d) => d.accessor === "category");
+    if (categoryIdx > 0) result.unshift(...result.splice(categoryIdx, 1));
+
     return result;
   }, [
     orderedColumns,
@@ -2228,7 +2267,7 @@ export default function Dashboard() {
                       width: "100%",
                       textAlign: "left",
                       fontSize: 12,
-                      borderTop: "1px solid var(--color-border)",
+                      borderTop: "1px solid var(--border)",
                       marginTop: 4,
                       paddingTop: 6,
                     }}
@@ -2328,7 +2367,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="flex flex-1 overflow-hidden bg-[#f4f6f8]">
+    <div className="flex flex-1 overflow-hidden bg-muted dark:bg-background">
       <TenderSidebar
         rows={filteredRows}
         analytics={sidebarAnalytics}
@@ -2340,7 +2379,7 @@ export default function Dashboard() {
       <div className="flex flex-col flex-1 min-w-0">
         <main className="flex-1 overflow-auto p-6">
           {loadingFiles && (
-            <div className="flex items-center justify-center py-12 text-sm text-slate-400">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               <svg
                 className="size-5 animate-spin mr-2 text-primary"
                 fill="none"
@@ -2386,7 +2425,7 @@ export default function Dashboard() {
             files.length > 0 &&
             !tenderData &&
             !loadingTenders && (
-              <div className="flex items-center justify-center py-12 text-sm text-slate-400 bg-white rounded-sm border border-slate-200">
+              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground bg-card rounded-sm border border-border">
                 No tender data found
               </div>
             )}

@@ -55,7 +55,7 @@ export const EmdEditableCell = memo(function EmdEditableCell({
               flex: 1,
               padding: "6px 8px",
               borderRadius: "6px",
-              border: `1px solid ${hasInvalidDraft ? "#ef4444" : "#dadce0"}`,
+              border: `1px solid ${hasInvalidDraft ? "var(--danger)" : "var(--input)"}`,
               fontSize: "12px",
               resize: "vertical",
               minHeight: "56px",
@@ -73,8 +73,8 @@ export const EmdEditableCell = memo(function EmdEditableCell({
               style={{
                 padding: "6px",
                 borderRadius: "4px",
-                background: "#0a2540",
-                color: "white",
+                background: "var(--brand)",
+                color: "var(--brand-foreground)",
                 border: "none",
                 opacity: hasInvalidDraft ? 0.5 : 1,
               }}
@@ -90,7 +90,7 @@ export const EmdEditableCell = memo(function EmdEditableCell({
               style={{
                 padding: "6px",
                 borderRadius: "4px",
-                background: "#e5e7eb",
+                background: "var(--border)",
                 border: "none",
               }}
             >
@@ -99,7 +99,7 @@ export const EmdEditableCell = memo(function EmdEditableCell({
           </div>
         </div>
         {hasInvalidDraft && (
-          <div style={{ fontSize: "10px", color: "#dc2626", marginTop: "4px" }}>
+          <div style={{ fontSize: "10px", color: "var(--danger)", marginTop: "4px" }}>
             Invalid: {invalidDraft.join(", ")}
           </div>
         )}
@@ -120,8 +120,8 @@ export const EmdEditableCell = memo(function EmdEditableCell({
       style={{
         padding: "6px 8px",
         borderRadius: "6px",
-        border: invalidStored ? "1px solid #ef4444" : "1px solid transparent",
-        background: updating ? "#f1f3f4" : invalidStored ? "#fef2f2" : "transparent",
+        border: invalidStored ? "1px solid var(--danger)" : "1px solid transparent",
+        background: updating ? "var(--muted)" : invalidStored ? "var(--danger-soft)" : "transparent",
         cursor: "pointer",
         fontSize: "12px",
         minHeight: "28px",
@@ -133,7 +133,7 @@ export const EmdEditableCell = memo(function EmdEditableCell({
       {value ? (
         <span
           style={{
-            color: invalidStored ? "#dc2626" : undefined,
+            color: invalidStored ? "var(--danger)" : undefined,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -142,7 +142,7 @@ export const EmdEditableCell = memo(function EmdEditableCell({
           {value}
         </span>
       ) : (
-        <span style={{ color: "#9ca3af" }}>{emptyLabel}</span>
+        <span style={{ color: "var(--muted-foreground)" }}>{emptyLabel}</span>
       )}
     </div>
   );

@@ -79,9 +79,9 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md bg-card">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[#0a2540]">
+          <DialogTitle className="flex items-center gap-2 text-brand-ink">
             <KeyRound size={18} />
             Change Password
           </DialogTitle>
@@ -94,7 +94,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
           <div>
             <label
               htmlFor="oldPassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-foreground/80"
             >
               Old Password
             </label>
@@ -112,7 +112,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
               <button
                 type="button"
                 onClick={() => setShowOld((v) => !v)}
-                className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
               >
                 {showOld ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -123,7 +123,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
           <div>
             <label
               htmlFor="newPassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-foreground/80"
             >
               New Password
             </label>
@@ -141,7 +141,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
               <button
                 type="button"
                 onClick={() => setShowNew((v) => !v)}
-                className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
               >
                 {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -152,7 +152,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-foreground/80"
             >
               Confirm New Password
             </label>
@@ -170,7 +170,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
               >
                 {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -179,7 +179,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="rounded-lg bg-red-50 dark:bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">
               {error}
             </div>
           )}
@@ -196,7 +196,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
             <Button
               type="submit"
               disabled={isPending}
-              className="bg-[#0a2540] text-white hover:bg-[#0d2d4f]"
+              className="bg-brand text-brand-foreground hover:bg-brand-hover"
             >
               {isPending ? (
                 <>

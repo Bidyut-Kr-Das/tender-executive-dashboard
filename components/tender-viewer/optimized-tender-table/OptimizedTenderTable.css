@@ -1,42 +1,12 @@
 /* OptimizedTenderTable.css - Premium Vanilla CSS styling for the Generalized Tender Table */
 
-:root {
-  --color-primary: #0a2540;
-  --color-primary-light: #1e3d59;
-  --color-accent: #0070f3;
-  --color-bg-light: #f4f6f8;
-  --color-bg-white: #ffffff;
-  --color-border: #e1e6eb;
-
-  /* Status Badge Colors */
-  --status-won-bg: #e6f7ed;
-  --status-won-text: #137333;
-  --status-won-border: #c3e6cb;
-
-  --status-lost-bg: #fce8e6;
-  --status-lost-text: #c5221f;
-  --status-lost-border: #fad2cf;
-
-  --status-eval-bg: #fef7e0;
-  --status-eval-text: #b06000;
-  --status-eval-border: #ffe89e;
-
-  --status-sub-bg: #e8f0fe;
-  --status-sub-text: #1a73e8;
-  --status-sub-border: #d2e3fc;
-
-  --status-loi-bg: #e2f0d9;
-  --status-loi-text: #385723;
-  --status-loi-border: #c5e0b4;
-}
-
 .optimized-tender-table-container {
   display: flex;
   flex-direction: column;
   flex: 1;
   height: 100%;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(10, 37, 64, 0.05);
   font-family:
@@ -46,9 +16,11 @@
     "Segoe UI",
     Roboto,
     sans-serif;
-  color: #333333;
+  color: var(--foreground);
   overflow: hidden;
 }
+
+.dark .optimized-tender-table-container { box-shadow: none; }
 
 /* Top Toolbar: Search, Filters & Export */
 .optimized-tender-table-toolbar {
@@ -56,9 +28,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background-color: var(--color-primary);
-  color: var(--color-bg-white);
-  border-bottom: 1px solid var(--color-primary-light);
+  background-color: var(--brand);
+  color: var(--brand-foreground);
+  border-bottom: 1px solid var(--brand-hover);
   gap: 16px;
 }
 
@@ -78,13 +50,15 @@
 }
 
 .record-count-badge {
-  background-color: var(--color-primary-light);
+  background-color: var(--brand-hover);
   color: #38ef7d;
   padding: 4px 8px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
 }
+
+.dark .record-count-badge { color: #6ee7b7; border-color: rgb(52 211 153 / 50%); }
 
 .global-search-container {
   position: relative;
@@ -97,7 +71,7 @@
   background-color: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  color: var(--color-bg-white);
+  color: var(--brand-foreground);
   font-size: 13px;
   transition: all 0.2s ease;
 }
@@ -108,9 +82,9 @@
 
 .global-search-input:focus {
   outline: none;
-  background-color: var(--color-bg-white);
-  color: var(--color-primary);
-  border-color: var(--color-accent);
+  background-color: var(--card);
+  color: var(--brand-ink);
+  border-color: var(--info);
 }
 
 .search-icon {
@@ -136,7 +110,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  color: var(--color-bg-white);
+  color: var(--brand-foreground);
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 600;
@@ -154,7 +128,7 @@
   height: calc(100vh - 13rem);
   overflow-y: auto;
   position: relative;
-  background-color: var(--color-bg-white);
+  background-color: var(--card);
 }
 
 .optimized-tender-data-table {
@@ -171,14 +145,14 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: var(--color-bg-light);
-  color: var(--color-primary);
+  background-color: var(--muted);
+  color: var(--brand-ink);
   font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
   padding: 10px 12px;
-  border-bottom: 2px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: left;
   user-select: none;
   white-space: nowrap;
@@ -195,7 +169,7 @@
   /* position: sticky; */
   left: 0;
   /* z-index: 4; */
-  background-color: var(--color-bg-light);
+  background-color: var(--muted);
 }
 
 .optimized-tender-data-table td:first-child {
@@ -210,7 +184,7 @@
   position: sticky;
   z-index: 3;
   left: 0px;
-  background-color: var(--color-bg-light);
+  background-color: var(--muted);
 }
 
 .optimized-tender-data-table td.sticky-column {
@@ -230,7 +204,7 @@
 
 .sort-indicator {
   font-size: 10px;
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
   margin-left: 4px;
 }
 
@@ -247,15 +221,15 @@
 
 .column-resizer:hover,
 .column-resizer.resizing {
-  background-color: var(--color-accent);
+  background-color: var(--info);
   width: 4px;
 }
 
 /* Table Body Rows & Cells */
 .optimized-tender-data-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -268,22 +242,22 @@
 
 .tender-row {
   transition: background-color 0.15s ease;
-  background-color: var(--color-bg-white);
+  background-color: var(--card);
 }
 
 .tender-row:hover {
-  background-color: #f8fafc;
+  background-color: var(--accent);
 }
 
 .tender-row.expanded-row {
-  background-color: #fcfdff;
+  background-color: var(--muted);
 }
 
 /* Column Specific Alignments & Typography */
 .col-docket {
   font-family: monospace;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--brand-ink);
 }
 .col-currency {
   text-align: right;
@@ -351,21 +325,21 @@
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
-  background-color: var(--color-bg-light);
-  color: var(--color-primary);
-  border: 1px solid var(--color-border);
+  background-color: var(--muted);
+  color: var(--brand-ink);
+  border: 1px solid var(--border);
 }
 
 .decision-badge.go {
-  background-color: #e6f4ea;
-  color: #137333;
-  border-color: #ceead6;
+  background-color: var(--status-won-bg);
+  color: var(--status-won-text);
+  border-color: var(--status-won-border);
 }
 
 .decision-badge.nogo {
-  background-color: #fce8e6;
-  color: #c5221f;
-  border-color: #fad2cf;
+  background-color: var(--status-lost-bg);
+  color: var(--status-lost-text);
+  border-color: var(--status-lost-border);
 }
 
 /* Reverse Auction Icons */
@@ -378,16 +352,16 @@
 }
 
 .ra-icon.applicable {
-  color: #137333;
+  color: var(--status-won-text);
 }
 
 .ra-icon.not-applicable {
-  color: rgba(0, 0, 0, 0.15);
+  color: color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
 /* Action Button */
 .details-link {
-  color: var(--color-accent);
+  color: var(--info);
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
@@ -402,17 +376,19 @@
   color: #0056b3;
 }
 
+.dark .details-link:hover { color: var(--info); }
+
 /* Expandable Panel Row */
 .details-panel-row td {
   padding: 0;
-  border-bottom: 1px solid var(--color-border);
-  background-color: #fafbfd;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--muted);
 }
 
 .details-panel-content {
   padding: 16px 24px;
   animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  border-left: 4px solid var(--color-accent);
+  border-left: 4px solid var(--info);
 }
 
 @keyframes slideDown {
@@ -445,14 +421,14 @@
 .details-label {
   font-size: 10px;
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.5);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .details-value {
   font-size: 13px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-weight: 500;
   word-break: break-word;
   white-space: normal;
@@ -464,8 +440,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  background-color: var(--color-bg-light);
-  border-top: 1px solid var(--color-border);
+  background-color: var(--muted);
+  border-top: 1px solid var(--border);
   font-size: 12px;
 }
 
@@ -478,21 +454,21 @@
 .rows-per-page-select {
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-white);
-  color: var(--color-primary);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--brand-ink);
   font-size: 12px;
   cursor: pointer;
 }
 
 .rows-per-page-select:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 .footer-center {
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
 }
 
 .footer-right {
@@ -502,10 +478,10 @@
 }
 
 .page-btn {
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   padding: 6px 10px;
   font-size: 11px;
   font-weight: 600;
@@ -516,14 +492,14 @@
 }
 
 .page-btn:hover:not(:disabled) {
-  background-color: var(--color-border);
-  border-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--border);
+  border-color: color-mix(in srgb, var(--foreground) 20%, transparent);
 }
 
 .page-btn.active {
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-bg-white);
+  background-color: var(--info);
+  border-color: var(--info);
+  color: var(--info-foreground);
 }
 
 .page-btn:disabled {
@@ -536,22 +512,24 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-accent);
+  color: var(--info);
   text-decoration: none;
   font-weight: 600;
   font-size: 12px;
   padding: 4px 8px;
-  background-color: #e8f0fe;
-  border: 1px solid #d2e3fc;
+  background-color: var(--info-soft);
+  border: 1px solid var(--status-sub-border);
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .table-attachment-link:hover {
-  background-color: #d2e3fc;
+  background-color: var(--status-sub-border);
   color: #0056b3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
+.dark .table-attachment-link:hover { color: var(--info); box-shadow: none; }
 
 /* Price Basis Badges */
 .price-basis-badge {
@@ -566,15 +544,15 @@
 }
 
 .price-basis-badge.firm {
-  background-color: #e6f7ed;
-  color: #137333;
-  border-color: #c3e6cb;
+  background-color: var(--status-won-bg);
+  color: var(--status-won-text);
+  border-color: var(--status-won-border);
 }
 
 .price-basis-badge.variable {
-  background-color: #ffe89e;
-  color: #b06000;
-  border-color: #ffe89e;
+  background-color: var(--status-eval-border);
+  color: var(--status-eval-text);
+  border-color: var(--status-eval-border);
 }
 
 /* Column Specific Date Filter */
@@ -590,10 +568,10 @@
   flex: 1;
   min-width: 0;
   padding: 4px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -603,12 +581,12 @@
 }
 
 .date-filter-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 .date-filter-to {
   font-size: 10px;
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
   font-weight: 600;
   text-transform: lowercase;
 }
@@ -616,7 +594,7 @@
 .date-filter-clear-btn {
   background: none;
   border: none;
-  color: var(--color-accent);
+  color: var(--info);
   cursor: pointer;
   padding: 0 4px;
   font-size: 10px;
@@ -643,10 +621,10 @@
 .status-filter-select {
   width: 100%;
   padding: 4px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -657,7 +635,7 @@
 }
 
 .status-filter-select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Column Specific Decision Filter */
@@ -671,10 +649,10 @@
 .decision-filter-select {
   width: 100%;
   padding: 4px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -685,7 +663,7 @@
 }
 
 .decision-filter-select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Column Select Filter (Generic) */
@@ -699,10 +677,10 @@
 .select-filter-input {
   width: 100%;
   padding: 4px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -713,7 +691,7 @@
 }
 
 .select-filter-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Column Text Filter */
@@ -728,10 +706,10 @@
 .text-filter-input {
   width: 100%;
   padding: 4px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -742,7 +720,7 @@
 }
 
 .text-filter-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Column Deadline Filter - Preset Dropdown + Date Range */
@@ -757,10 +735,10 @@
 .deadline-preset-select {
   width: 100%;
   padding: 4px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -772,7 +750,7 @@
 }
 
 .deadline-preset-select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 .deadline-date-range-row {
@@ -794,10 +772,10 @@
 .boolean-filter-btn {
   flex: 1;
   padding: 3px 6px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 10px;
   font-family: inherit;
   font-weight: 600;
@@ -807,13 +785,13 @@
 }
 
 .boolean-filter-btn:hover {
-  background-color: var(--color-bg-light);
+  background-color: var(--muted);
 }
 
 .boolean-filter-btn.active {
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-bg-white);
+  background-color: var(--info);
+  border-color: var(--info);
+  color: var(--info-foreground);
 }
 
 /* Raw Materials Column Styling */
@@ -828,26 +806,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background-color: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 10px;
   font-weight: 500;
-  color: var(--color-primary-light);
+  color: var(--brand-ink);
   min-width: 0;
 }
 
 .mat-lbl {
   font-weight: 600;
-  color: #64748b;
+  color: var(--muted-foreground);
   margin-right: 2px;
 }
 
 .mat-val {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -866,7 +844,7 @@
 }
 
 .no-rates-placeholder {
-  color: rgba(0, 0, 0, 0.25);
+  color: color-mix(in srgb, var(--foreground) 25%, transparent);
   font-weight: 500;
 }
 
@@ -877,8 +855,8 @@
   margin-top: 6px;
   width: 100%;
   gap: 4px;
-  background-color: #eef1f4;
-  border: 1px solid var(--color-border);
+  background-color: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 4px;
   box-sizing: border-box;
@@ -894,7 +872,7 @@
 .raw-mat-label {
   font-size: 10px;
   font-weight: 700;
-  color: #000000;
+  color: var(--foreground);
   width: 24px;
   text-align: right;
   flex-shrink: 0;
@@ -902,7 +880,7 @@
 
 .raw-mat-dash {
   font-size: 10px;
-  color: rgba(0, 0, 0, 0.35);
+  color: color-mix(in srgb, var(--foreground) 35%, transparent);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -911,10 +889,10 @@
   flex: 1;
   min-width: 0;
   padding: 2px 4px;
-  background-color: var(--color-bg-white);
-  border: 1px solid #cbd5e1;
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -925,14 +903,14 @@
 }
 
 .raw-mat-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Empty State */
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
 /* Column Picker / Hide Column Checklist */
@@ -947,7 +925,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  color: var(--color-bg-white);
+  color: var(--brand-foreground);
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 600;
@@ -972,14 +950,16 @@
   top: calc(100% + 4px);
   z-index: 50;
   width: 220px;
-  background-color: var(--color-bg-white);
+  background-color: var(--card);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(10, 37, 64, 0.15);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   padding: 8px;
   max-height: 320px;
   overflow-y: auto;
 }
+
+.dark .column-picker-dropdown { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
 
 .column-picker-dropdown--enhanced {
   width: 280px;
@@ -993,11 +973,11 @@
 .column-picker-header {
   font-size: 10px;
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.5);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
   padding: 4px 6px 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
   margin-bottom: 4px;
   display: flex;
   align-items: center;
@@ -1008,13 +988,13 @@
 .column-picker-count {
   font-size: 10px;
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--info);
   text-transform: none;
   letter-spacing: 0;
-  background: #e8f0fe;
+  background: var(--info-soft);
   padding: 2px 6px;
   border-radius: 10px;
-  border: 1px solid #d2e3fc;
+  border: 1px solid var(--status-sub-border);
 }
 
 .column-picker-search {
@@ -1028,7 +1008,7 @@
 .column-picker-search-icon {
   position: absolute;
   left: 8px;
-  color: #94a3b8;
+  color: var(--muted-foreground);
   pointer-events: none;
   flex-shrink: 0;
 }
@@ -1036,10 +1016,10 @@
 .column-picker-search-input {
   width: 100%;
   padding: 6px 28px 6px 28px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 12px;
   font-family: inherit;
   font-weight: 400;
@@ -1049,12 +1029,12 @@
 }
 
 .column-picker-search-input::placeholder {
-  color: #94a3b8;
+  color: var(--muted-foreground);
 }
 
 .column-picker-search-input:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.12);
+  border-color: var(--info);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--info) 12%, transparent);
 }
 
 .column-picker-search-clear {
@@ -1067,15 +1047,15 @@
   height: 20px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--muted-foreground);
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
 .column-picker-search-clear:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .column-picker-actions {
@@ -1093,10 +1073,10 @@
   justify-content: center;
   gap: 4px;
   padding: 6px 8px;
-  background: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -1104,12 +1084,12 @@
 }
 
 .column-picker-action-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--accent);
+  border-color: var(--border);
 }
 
 .column-picker-action-btn:active {
-  background: #f1f5f9;
+  background: var(--accent);
 }
 
 .column-picker-list {
@@ -1123,7 +1103,7 @@
 .column-picker-empty {
   text-align: center;
   padding: 16px 8px;
-  color: #94a3b8;
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
@@ -1135,18 +1115,18 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   transition: background-color 0.15s ease;
 }
 
 .column-picker-item:hover {
-  background-color: var(--color-bg-light);
+  background-color: var(--muted);
 }
 
 .column-picker-checkbox {
   width: 14px;
   height: 14px;
-  accent-color: var(--color-accent);
+  accent-color: var(--info);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -1156,10 +1136,10 @@
   width: 100%;
   padding: 3px 6px;
   margin-top: 4px;
-  background-color: var(--color-bg-white);
-  border: 1px solid var(--color-border);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 3px;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   font-size: 10px;
   font-family: inherit;
   font-weight: 500;
@@ -1170,7 +1150,7 @@
 }
 
 .column-search-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Assignment Dropdown (Assigned To column) */
@@ -1182,7 +1162,7 @@
   background: transparent;
   font-size: 12px;
   font-family: inherit;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   cursor: pointer;
   outline: none;
   height: 24px;
@@ -1190,24 +1170,24 @@
 }
 
 .assignment-select:hover {
-  border-color: var(--color-border);
+  border-color: var(--border);
 }
 
 .assignment-select:focus {
-  border-color: var(--color-accent);
-  background: var(--color-bg-white);
+  border-color: var(--info);
+  background: var(--card);
 }
 
 /* Price Type Dropdown (Price column) */
 .price-edit-select {
   width: 100%;
   padding: 2px 4px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   border-radius: 3px;
-  background: var(--color-bg-white);
+  background: var(--card);
   font-size: 11px;
   font-family: inherit;
-  color: var(--color-primary);
+  color: var(--brand-ink);
   cursor: pointer;
   outline: none;
   height: 22px;
@@ -1215,11 +1195,11 @@
 }
 
 .price-edit-select:hover {
-  border-color: #cbd5e1;
+  border-color: var(--border);
 }
 
 .price-edit-select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--info);
 }
 
 /* Reset Filters Button */
@@ -1230,7 +1210,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  color: var(--color-bg-white);
+  color: var(--brand-foreground);
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 600;

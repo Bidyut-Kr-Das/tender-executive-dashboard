@@ -656,7 +656,7 @@ export default function CredentialsTable({
                   style={{
                     textAlign: "center",
                     padding: "40px",
-                    color: "rgba(0,0,0,0.4)",
+                    color: "var(--muted-foreground)",
                   }}
                 >
                   No matching records found.
@@ -670,7 +670,7 @@ export default function CredentialsTable({
                       if (!canEdit) {
                         return (
                           <td key={String(col.accessor)} className="col-center">
-                            <span style={{ color: "#b0b8c1", fontSize: "11px" }}>-</span>
+                            <span style={{ color: "var(--muted-foreground)", fontSize: "11px" }}>-</span>
                           </td>
                         );
                       }
@@ -687,9 +687,9 @@ export default function CredentialsTable({
                               justifyContent: "center",
                               padding: "6px",
                               borderRadius: "6px",
-                              border: "1px solid #fecaca",
-                              background: "#fff",
-                              color: "#dc2626",
+                              border: "1px solid var(--danger-soft)",
+                              background: "var(--card)",
+                              color: "var(--danger)",
                               cursor: isDeleting ? "wait" : "pointer",
                               opacity: isDeleting ? 0.5 : 1,
                             }}
@@ -778,7 +778,7 @@ export default function CredentialsTable({
                             style={{ height: "auto", maxHeight: "96px" }}
                           >
                             {display === "-" ? (
-                              <span style={{ color: "#b0b8c1" }}>-</span>
+                              <span style={{ color: "var(--muted-foreground)" }}>-</span>
                             ) : (
                               fmt
                             )}
@@ -790,7 +790,7 @@ export default function CredentialsTable({
                       if (!canEdit) {
                         return (
                           <td key={String(col.accessor)} title={display}>
-                            <div style={{ padding: "4px 6px", fontSize: "12px" }}>{display === "-" ? <span style={{ color: "#b0b8c1" }}>-</span> : display}</div>
+                            <div style={{ padding: "4px 6px", fontSize: "12px" }}>{display === "-" ? <span style={{ color: "var(--muted-foreground)" }}>-</span> : display}</div>
                           </td>
                         );
                       }
@@ -814,7 +814,7 @@ export default function CredentialsTable({
                                 flex: 1,
                                 padding: "6px 8px",
                                 borderRadius: "6px",
-                                border: "1px solid #0a2540",
+                                border: "1px solid var(--brand-ink)",
                                 fontSize: "12px",
                               }}
                             />
@@ -826,8 +826,8 @@ export default function CredentialsTable({
                               style={{
                                 padding: "4px",
                                 borderRadius: "4px",
-                                background: "#0a2540",
-                                color: "white",
+                                background: "var(--brand)",
+                                color: "var(--brand-foreground)",
                                 border: "none",
                                 opacity: isSaving ? 0.5 : 1,
                               }}
@@ -840,7 +840,7 @@ export default function CredentialsTable({
                               style={{
                                 padding: "4px",
                                 borderRadius: "4px",
-                                background: "#e5e7eb",
+                                background: "var(--border)",
                                 border: "none",
                               }}
                             >
@@ -855,7 +855,7 @@ export default function CredentialsTable({
                         return (
                           <td key={String(col.accessor)} title={display}>
                             <div style={{ whiteSpace: "normal", overflowWrap: "anywhere", wordBreak: "break-word", lineHeight: "1.4", fontSize: "12px", padding: "4px 6px" }}>
-                              {display === "-" ? <span style={{ color: "#b0b8c1" }}>-</span> : display}
+                              {display === "-" ? <span style={{ color: "var(--muted-foreground)" }}>-</span> : display}
                             </div>
                           </td>
                         );
@@ -887,10 +887,10 @@ export default function CredentialsTable({
                                 fontSize: "12px",
                               }}
                             >
-                              {display === "-" ? <span style={{ color: "#b0b8c1" }}>-</span> : display}
+                              {display === "-" ? <span style={{ color: "var(--muted-foreground)" }}>-</span> : display}
                             </span>
                             <Pencil size={12} style={{ flexShrink: 0, opacity: 0.4, marginTop: "2px" }} />
-                            {isSaving ? <span style={{ fontSize: "10px", color: "#64748b" }}>...</span> : null}
+                            {isSaving ? <span style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>...</span> : null}
                           </div>
                         </td>
                       );
@@ -994,7 +994,7 @@ export default function CredentialsTable({
                             }}
                           >
                             {display === "-" ? (
-                              <span style={{ color: "#b0b8c1" }}>-</span>
+                              <span style={{ color: "var(--muted-foreground)" }}>-</span>
                             ) : (
                               display
                             )}
@@ -1002,7 +1002,7 @@ export default function CredentialsTable({
                           {canEdit && <Pencil size={12} style={{ flexShrink: 0, opacity: 0.4 }} />}
                           {isSaving ? (
                             <span
-                              style={{ fontSize: "10px", color: "#64748b" }}
+                              style={{ fontSize: "10px", color: "var(--muted-foreground)" }}
                             >
                               ...
                             </span>

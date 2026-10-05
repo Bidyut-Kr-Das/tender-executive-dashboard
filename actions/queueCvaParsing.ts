@@ -3,8 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { publishTenderParsingTask } from "@/lib/queue/publisher";
 import { describeTenderFile } from "@/lib/tenderFileDescriptor";
+import { requireUserAction } from "@/lib/dal";
 
 export async function queueAllCvaParsing(): Promise<{ queued: number }> {
+  await requireUserAction();
   const tenders = await prisma.tenderMerged.findMany({
     where: {
       tenderType: "GEM",

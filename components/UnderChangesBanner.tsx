@@ -37,13 +37,13 @@ export function UnderChangesBanner() {
           : "fixed top-0 left-0 right-0 z-[60] -translate-y-full opacity-0 transition-all duration-300 ease-in-out"
       }
     >
-      <div className="flex items-center justify-between gap-4 bg-amber-50 border-b border-amber-200 px-4 py-3 shadow-md">
-        <p className="text-sm font-medium text-amber-900">
+      <div className="flex items-center justify-between gap-4 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/25 px-4 py-3 shadow-md">
+        <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
           Currently under major changes. For any error contact AI Team.
         </p>
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 rounded-md p-1 text-amber-600 hover:bg-amber-100 hover:text-amber-800 transition-colors"
+          className="flex-shrink-0 rounded-md p-1 text-amber-600 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/10 hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
           aria-label="Dismiss"
         >
           <X size={16} />

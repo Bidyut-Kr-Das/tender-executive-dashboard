@@ -162,7 +162,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           >
             <SelectTrigger
               size="sm"
-              className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white [&_svg]:text-white/70"
+              className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-brand-foreground/80 border-white/20 hover:bg-white/20 hover:text-brand-foreground [&_svg]:text-brand-foreground/70"
             >
               <SelectValue placeholder="All People" />
             </SelectTrigger>
@@ -190,12 +190,12 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     onClick={() => onAssociationFilterChange?.(isActive ? null : String(p.id))}
                     className={`w-full flex items-center justify-between py-2 px-2.5 rounded-lg transition-colors cursor-pointer border text-left ${
                       isActive
-                        ? "bg-blue-500/20 border-blue-400/50"
+                        ? "bg-blue-500/20 border-blue-400/50 dark:bg-info/15 dark:border-info/40"
                         : "bg-white/10 border-white/10 hover:bg-white/20"
                     }`}
                   >
-                    <span className="text-xs text-white/70 truncate pr-2">{p.name}</span>
-                    <span className="text-xs font-semibold text-white tabular-nums shrink-0">{p.count}</span>
+                    <span className="text-xs text-brand-foreground/70 truncate pr-2">{p.name}</span>
+                    <span className="text-xs font-semibold text-brand-foreground tabular-nums shrink-0">{p.count}</span>
                   </button>
                 );
               })}
@@ -204,7 +204,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => onAssociationFilterChange?.(null)}
-                className="mt-2 text-[10px] font-medium text-white/50 hover:text-white/80 cursor-pointer"
+                className="mt-2 text-[10px] font-medium text-brand-foreground/50 hover:text-brand-foreground/80 cursor-pointer"
               >
                 Clear assignment filter
               </button>

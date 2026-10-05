@@ -23,7 +23,7 @@ export function ExclusionFilter({
 }: ExclusionFilterProps) {
   return (
     <div className="flex items-center gap-1">
-      <span className="text-[10px] text-slate-400 mr-0.5">{label}</span>
+      <span className="text-[10px] text-muted-foreground mr-0.5">{label}</span>
       {options.map((opt) => (
         <Button
           key={opt.key}
@@ -32,7 +32,7 @@ export function ExclusionFilter({
           onClick={() => onChange(value === opt.key ? null : opt.key)}
           className={cn(
             "text-xs capitalize",
-            value === opt.key && "bg-blue-100 text-blue-800 hover:bg-blue-200",
+            value === opt.key && "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-400/20",
           )}
         >
           {opt.label}

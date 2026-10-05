@@ -26,13 +26,13 @@ export default function AdminPage() {
 
   return (
     <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-      <h1 style={{ color: "#0a2540", marginBottom: "24px" }}>Admin Panel</h1>
+      <h1 style={{ color: "var(--brand-ink)", marginBottom: "24px" }}>Admin Panel</h1>
 
       <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
         <Link href="/admin/mappings" style={{ textDecoration: "none", flex: "1", minWidth: "200px" }}>
           <div style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             padding: "20px",
             display: "flex",
@@ -43,17 +43,17 @@ export default function AdminPage() {
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
           >
-            <Columns size={24} style={{ color: "#0a2540" }} />
+            <Columns size={24} style={{ color: "var(--brand-ink)" }} />
             <div>
-              <div style={{ fontWeight: 600, color: "#0a2540", fontSize: "14px" }}>Column Mappings</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Map Excel headers to DB fields</div>
+              <div style={{ fontWeight: 600, color: "var(--brand-ink)", fontSize: "14px" }}>Column Mappings</div>
+              <div style={{ color: "var(--muted-foreground)", fontSize: "12px" }}>Map Excel headers to DB fields</div>
             </div>
           </div>
         </Link>
         <Link href="/admin/indices" style={{ textDecoration: "none", flex: "1", minWidth: "200px" }}>
           <div style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             padding: "20px",
             display: "flex",
@@ -64,17 +64,17 @@ export default function AdminPage() {
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
           >
-            <ListOrdered size={24} style={{ color: "#0a2540" }} />
+            <ListOrdered size={24} style={{ color: "var(--brand-ink)" }} />
             <div>
-              <div style={{ fontWeight: 600, color: "#0a2540", fontSize: "14px" }}>Column Order</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Reorder & configure columns</div>
+              <div style={{ fontWeight: 600, color: "var(--brand-ink)", fontSize: "14px" }}>Column Order</div>
+              <div style={{ color: "var(--muted-foreground)", fontSize: "12px" }}>Reorder & configure columns</div>
             </div>
           </div>
         </Link>
         <Link href="/admin/merging" style={{ textDecoration: "none", flex: "1", minWidth: "200px" }}>
           <div style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             padding: "20px",
             display: "flex",
@@ -85,17 +85,17 @@ export default function AdminPage() {
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
           >
-            <GitMerge size={24} style={{ color: "#0a2540" }} />
+            <GitMerge size={24} style={{ color: "var(--brand-ink)" }} />
             <div>
-              <div style={{ fontWeight: 600, color: "#0a2540", fontSize: "14px" }}>Column Merging</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Merge multiple fields into one</div>
+              <div style={{ fontWeight: 600, color: "var(--brand-ink)", fontSize: "14px" }}>Column Merging</div>
+              <div style={{ color: "var(--muted-foreground)", fontSize: "12px" }}>Merge multiple fields into one</div>
             </div>
           </div>
         </Link>
         <Link href="/admin/sop" style={{ textDecoration: "none", flex: "1", minWidth: "200px" }}>
           <div style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             padding: "20px",
             display: "flex",
@@ -106,17 +106,17 @@ export default function AdminPage() {
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
           >
-            <ClipboardList size={24} style={{ color: "#0a2540" }} />
+            <ClipboardList size={24} style={{ color: "var(--brand-ink)" }} />
             <div>
-              <div style={{ fontWeight: 600, color: "#0a2540", fontSize: "14px" }}>SOP Responsibilities</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Manage SOP columns & daily logs</div>
+              <div style={{ fontWeight: 600, color: "var(--brand-ink)", fontSize: "14px" }}>SOP Responsibilities</div>
+              <div style={{ color: "var(--muted-foreground)", fontSize: "12px" }}>Manage SOP columns & daily logs</div>
             </div>
           </div>
         </Link>
       </div>
-      <div style={{ background: "#fff", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "24px" }}>
-        <h2 style={{ margin: "0 0 16px", fontSize: "18px", color: "#333" }}>Data Synchronization</h2>
-        <p style={{ color: "#666", fontSize: "14px", marginBottom: "16px" }}>
+      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "24px" }}>
+        <h2 style={{ margin: "0 0 16px", fontSize: "18px", color: "var(--foreground)" }}>Data Synchronization</h2>
+        <p style={{ color: "var(--muted-foreground)", fontSize: "14px", marginBottom: "16px" }}>
           Trigger a full refresh from all data sources (Google Sheets, Smartsheet, Supply History).
           This will pull the latest data and update the database.
         </p>
@@ -126,8 +126,8 @@ export default function AdminPage() {
             disabled={syncing}
             style={{
               padding: "10px 24px",
-              background: syncing ? "#999" : "#0a2540",
-              color: "#fff",
+              background: syncing ? "var(--muted-foreground)" : "var(--brand)",
+              color: "var(--brand-foreground)",
               border: "none",
               borderRadius: "6px",
               cursor: syncing ? "not-allowed" : "pointer",
@@ -142,7 +142,7 @@ export default function AdminPage() {
           </button>
           )}
         {syncResult && (
-          <div style={{ marginTop: "16px", padding: "12px", background: syncResult.startsWith("Sync completed") ? "#e6f4ea" : "#fce8e6", borderRadius: "4px", fontSize: "14px" }}>
+          <div style={{ marginTop: "16px", padding: "12px", background: syncResult.startsWith("Sync completed") ? "var(--success-soft)" : "var(--danger-soft)", borderRadius: "4px", fontSize: "14px" }}>
             {syncResult}
           </div>
         )}

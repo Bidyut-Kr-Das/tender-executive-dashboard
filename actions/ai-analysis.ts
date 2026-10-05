@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getAiFeedbackContext } from "@/lib/ai-feedback";
 import { logActivity, withLog } from "@/lib/activity-logger";
 import { publishAiRelevanceTask } from "@/lib/queue/publisher";
+import { requireUserAction } from "@/lib/dal";
 
 const model = openai("gpt-5-mini");
 
@@ -135,6 +136,7 @@ async function publishAiAnalysisJobFn(params: {
   tenderBrief: string;
   itemCategory: string;
 }): Promise<boolean> {
+  await requireUserAction();
   return publishAiRelevanceTask({
     payloadType: "analysis",
     referenceNo: params.referenceNo,
@@ -160,6 +162,7 @@ export async function saveAiRelevance(params: {
   valid: boolean;
   reason: string;
 }) {
+  await requireUserAction();
   const data = {
     aiRelevanceValid: params.valid,
     aiRelevanceReason: params.reason,

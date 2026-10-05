@@ -32,7 +32,7 @@ export function FlowEdges({
       width={layout.width}
       height={layout.height}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
-      className="pointer-events-none absolute left-0 top-0 overflow-visible"
+      className="pointer-events-none absolute left-0 top-0 overflow-visible dark:opacity-75"
       aria-hidden="true"
     >
       {layout.edges.map((edge) => {

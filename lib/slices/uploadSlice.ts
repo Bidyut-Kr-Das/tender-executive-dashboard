@@ -55,7 +55,15 @@ const initialState: UploadState = {
 
 export const uploadFiles = createAsyncThunk(
   "upload/uploadFiles",
-  async (files: File[]) => {
+  async ({
+    files,
+    category,
+    subCategory,
+  }: {
+    files: File[];
+    category: string;
+    subCategory: string | null;
+  }) => {
     const accumulated: FileResult[] = [];
     const rejectedRows: RejectedRow[] = [];
 
@@ -67,6 +75,8 @@ export const uploadFiles = createAsyncThunk(
       try {
         const formData = new FormData();
         formData.append("files", file);
+        formData.append("category", category);
+        if (subCategory) formData.append("subCategory", subCategory);
 
         const res = await fetch("/api/upload", {
           method: "POST",

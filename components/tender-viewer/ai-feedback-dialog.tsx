@@ -61,16 +61,16 @@ export default function AiFeedbackDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
+        className="bg-card rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-800">
+          <h3 className="text-sm font-semibold text-foreground">
             Provide AI Feedback
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+            className="text-muted-foreground hover:text-foreground/80 text-lg leading-none"
           >
             ×
           </button>
@@ -78,26 +78,26 @@ export default function AiFeedbackDialog({
 
         <div className="space-y-3 text-sm">
           <div>
-            <span className="text-slate-500 text-[11px]">TENDER BRIEF</span>
-            <p className="text-slate-700 mt-0.5 text-[12px] leading-snug">
+            <span className="text-muted-foreground text-[11px]">TENDER BRIEF</span>
+            <p className="text-foreground/80 mt-0.5 text-[12px] leading-snug">
               {briefPreview}
             </p>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[11px]">AI SAID</span>
+            <span className="text-muted-foreground text-[11px]">AI SAID</span>
             <span
               className={`ml-2 inline-block px-2 py-0.5 rounded text-[11px] font-medium ${
                 isYes
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-rose-100 text-rose-800"
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  : "bg-rose-100 text-rose-800 dark:bg-rose-500/10 dark:text-rose-300"
               }`}
             >
               {isYes ? "YES" : "NO"}
             </span>
           </div>
 
-          <div className="text-slate-500">
+          <div className="text-muted-foreground">
             <span className=" text-[11px]">CORRECT ANSWER</span>
             <div className="flex gap-3 mt-1">
               <label className="flex items-center gap-1.5 cursor-pointer">
@@ -126,7 +126,7 @@ export default function AiFeedbackDialog({
           </div>
 
           <div>
-            <span className="text-slate-500 text-[11px]">
+            <span className="text-muted-foreground text-[11px]">
               WHY WAS THE AI WRONG?
             </span>
             <textarea
@@ -134,7 +134,7 @@ export default function AiFeedbackDialog({
               onChange={(e) => setFeedbackReason(e.target.value)}
               placeholder="Explain why the AI's answer was incorrect..."
               rows={4}
-              className="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-[13px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+              className="mt-1 w-full border border-border rounded-md px-3 py-2 text-[13px] text-foreground/80 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
             />
           </div>
         </div>
@@ -142,14 +142,14 @@ export default function AiFeedbackDialog({
         <div className="flex justify-end gap-2 mt-5">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-[13px] text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+            className="px-4 py-1.5 text-[13px] text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-accent transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving || !feedbackReason.trim()}
-            className="px-4 py-1.5 text-[13px] text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+            className="px-4 py-1.5 text-[13px] text-white bg-blue-600 rounded-md hover:bg-blue-700 dark:bg-blue-500/80 dark:text-blue-50 dark:hover:bg-blue-500/70 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           >
             {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             Save Feedback

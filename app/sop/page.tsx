@@ -63,30 +63,30 @@ export default function SopPage() {
   };
 
   if(loading){
-    return <div className="flex flex-1 flex-col p-6 gap-4" style={{paddingTop:"12px"}}><div className="flex items-center gap-2"><FileText className="size-5 text-[#0a2540]"/><h1 className="text-xl font-bold text-[#0a2540]">SOP</h1></div><p className="text-sm text-gray-500">Loading SOP...</p></div>
+    return <div className="flex flex-1 flex-col p-6 gap-4" style={{paddingTop:"12px"}}><div className="flex items-center gap-2"><FileText className="size-5 text-brand-ink"/><h1 className="text-xl font-bold text-brand-ink">SOP</h1></div><p className="text-sm text-muted-foreground">Loading SOP...</p></div>
   }
 
   return (
     <div className="flex flex-1 flex-col p-6 gap-4 min-h-0" style={{paddingTop:"12px", height:"calc(100vh - 42px)", display:"flex"}}>
       <div className="flex items-center gap-2 shrink-0">
-        <FileText className="size-5 text-[#0a2540]"/><h1 className="text-xl font-bold text-[#0a2540]">SOP</h1>
-        <span className="text-xs text-gray-500">Roles & Responsibilities — Column Name | Description | Done From Where | Source | Manual? | Allocated | Daily Log (IST)</span>
+        <FileText className="size-5 text-brand-ink"/><h1 className="text-xl font-bold text-brand-ink">SOP</h1>
+        <span className="text-xs text-muted-foreground">Roles & Responsibilities — Column Name | Description | Done From Where | Source | Manual? | Allocated | Daily Log (IST)</span>
       </div>
 
       <div className="flex items-center gap-2 text-xs shrink-0">
-        <span className="flex items-center gap-1 text-gray-600"><Calendar size={14}/> IST Date:</span>
-        <input type="date" value={selectedDate} onChange={e=>setSelectedDate(e.target.value)} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#0a2540]" />
-        {!isAuthenticated && <span className="text-amber-600 ml-2">Sign in to tick daily logs</span>}
+        <span className="flex items-center gap-1 text-muted-foreground"><Calendar size={14}/> IST Date:</span>
+        <input type="date" value={selectedDate} onChange={e=>setSelectedDate(e.target.value)} className="border border-border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand-ink" />
+        {!isAuthenticated && <span className="text-amber-600 dark:text-amber-300 ml-2">Sign in to tick daily logs</span>}
       </div>
 
       {sopRows.length===0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shrink-0"><p className="text-sm text-gray-500">No SOP responsibilities configured.</p><p className="text-xs text-gray-400 mt-1">Ask admin to seed via Admin→SOP or run scripts/seed-sop.ts</p></div>
+        <div className="rounded-lg border border-border bg-card p-12 text-center shrink-0"><p className="text-sm text-muted-foreground">No SOP responsibilities configured.</p><p className="text-xs text-muted-foreground mt-1">Ask admin to seed via Admin→SOP or run scripts/seed-sop.ts</p></div>
       ) : (
         <div className="flex flex-1 min-h-0">
           <SopTable rows={sopRows} dailyLogs={logs} selectedDate={selectedDate} onToggle={handleToggle} isAuthenticated={isAuthenticated} togglingId={toggling} />
         </div>
       )}
-      <p className="text-[11px] text-gray-400 text-center shrink-0">Table: Headers sticky (vertical) + Column Name/Description sticky (horizontal) — resizer, dropdown filters.</p>
+      <p className="text-[11px] text-muted-foreground text-center shrink-0">Table: Headers sticky (vertical) + Column Name/Description sticky (horizontal) — resizer, dropdown filters.</p>
     </div>
   );
 }

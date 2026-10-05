@@ -31,7 +31,7 @@ export function FlowNodeCard({
   const isEmpty = count === 0;
 
   const surface = active
-    ? "bg-blue-500/20 border-blue-400/50"
+    ? "bg-blue-500/20 border-blue-400/50 dark:bg-info/15 dark:border-info/40"
     : "bg-white/10 border-white/10 hover:bg-white/20 hover:border-white/20";
 
   return (
@@ -48,7 +48,7 @@ export function FlowNodeCard({
       className={[
         "absolute flex rounded-lg border text-left transition-colors duration-150",
         "cursor-pointer focus-visible:outline-none focus-visible:ring-2",
-        "focus-visible:ring-blue-400 focus-visible:ring-offset-0",
+        "focus-visible:ring-blue-400 dark:focus-visible:ring-info focus-visible:ring-offset-0",
         surface,
         isEmpty && !active ? "opacity-55" : "",
         mode === "rail"
@@ -58,12 +58,12 @@ export function FlowNodeCard({
     >
       {mode === "rail" ? (
         <>
-          <span className="min-w-0 flex-1 truncate text-[11px] font-medium leading-tight text-white/75">
+          <span className="min-w-0 flex-1 truncate text-[11px] font-medium leading-tight text-brand-foreground/75">
             {node.label}
           </span>
           <span className="flex shrink-0 items-baseline gap-1.5">
             {share !== null && (
-              <span className="text-[9px] font-medium tabular-nums text-white/35">
+              <span className="text-[9px] font-medium tabular-nums text-brand-foreground/35">
                 {share}%
               </span>
             )}
@@ -76,7 +76,7 @@ export function FlowNodeCard({
         </>
       ) : (
         <>
-          <span className="truncate text-[9.5px] font-semibold uppercase leading-tight tracking-wider text-white/55">
+          <span className="truncate text-[9.5px] font-semibold uppercase leading-tight tracking-wider text-brand-foreground/55">
             {node.label}
           </span>
           <span className="mt-1 flex items-baseline gap-1.5">
@@ -86,7 +86,7 @@ export function FlowNodeCard({
               {count}
             </span>
             {share !== null && (
-              <span className="text-[9px] font-medium tabular-nums text-white/35">
+              <span className="text-[9px] font-medium tabular-nums text-brand-foreground/35">
                 {share}%
               </span>
             )}

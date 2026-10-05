@@ -121,9 +121,9 @@ export default function ActivityPage() {
     <div className="flex flex-1 flex-col p-6 gap-4" style={{ paddingTop: "12px" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <History className="size-5 text-[#0a2540]" />
-          <h1 className="text-xl font-bold text-[#0a2540]">Activity Log</h1>
-          <span className="text-sm text-gray-500">
+          <History className="size-5 text-brand-ink" />
+          <h1 className="text-xl font-bold text-brand-ink">Activity Log</h1>
+          <span className="text-sm text-muted-foreground">
             {total > 0 ? `${total} record${total !== 1 ? "s" : ""}` : ""}
           </span>
         </div>
@@ -135,7 +135,7 @@ export default function ActivityPage() {
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search by user, email or reference no..."
             className="pl-8 h-8"
@@ -145,13 +145,13 @@ export default function ActivityPage() {
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-gray-500 mr-1">Table:</span>
+          <span className="text-xs text-muted-foreground mr-1">Table:</span>
           <button
             onClick={() => handleTableFilter("")}
             className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
               tableFilter === ""
-                ? "bg-[#0a2540] text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-brand text-brand-foreground"
+                : "bg-muted text-muted-foreground hover:bg-accent"
             }`}
           >
             All
@@ -162,8 +162,8 @@ export default function ActivityPage() {
               onClick={() => handleTableFilter(t)}
               className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 tableFilter === t
-                  ? "bg-[#0a2540] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-brand text-brand-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-accent"
               }`}
             >
               {t}
@@ -172,7 +172,7 @@ export default function ActivityPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto rounded-lg border border-gray-200">
+      <div className="flex-1 overflow-auto rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -187,13 +187,13 @@ export default function ActivityPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-gray-400 py-12">
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : logs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-400 py-12">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                   <History className="size-8 mx-auto mb-2 opacity-40" />
                   No activity records found
                 </TableCell>
@@ -201,14 +201,14 @@ export default function ActivityPage() {
             ) : (
               logs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell className="text-xs text-gray-600 whitespace-nowrap">
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {formatDateTime(log.createdAt)}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       {log.userName || "Unknown"}
                     </div>
-                    <div className="text-xs text-gray-500 truncate max-w-40">
+                    <div className="text-xs text-muted-foreground truncate max-w-40">
                       {log.userEmail}
                     </div>
                   </TableCell>
@@ -221,17 +221,17 @@ export default function ActivityPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs font-medium text-gray-700">
+                    <span className="text-xs font-medium text-foreground/80">
                       {log.tableName}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs text-gray-600 truncate max-w-40 block">
+                    <span className="text-xs text-muted-foreground truncate max-w-40 block">
                       {log.referenceNo || ""}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs text-gray-600 line-clamp-2">
+                    <span className="text-xs text-muted-foreground line-clamp-2">
                       {log.details || ""}
                     </span>
                   </TableCell>
@@ -244,7 +244,7 @@ export default function ActivityPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             Page {page} of {totalPages}
           </span>
           <div className="flex items-center gap-1">

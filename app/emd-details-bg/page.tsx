@@ -565,8 +565,8 @@ export default function EmdDetailsBgPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "#0a2540", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
-        <div style={{ width: "40px", height: "40px", border: "4px solid #e1e6eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+      <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "var(--brand-ink)", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
+        <div style={{ width: "40px", height: "40px", border: "4px solid var(--border)", borderTopColor: "var(--status-sub-text)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
         <span style={{ fontSize: "16px", letterSpacing: "0.5px" }}>Loading EMD Details BG...</span>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -576,8 +576,8 @@ export default function EmdDetailsBgPage() {
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "400px", gap: "12px" }}>
-        <p style={{ color: "#c5221f", fontWeight: 600 }}>Failed to load EMD Details BG: {error.message}</p>
-        <button onClick={refresh} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "#0a2540", color: "white", borderRadius: "6px", fontWeight: 600 }}>
+        <p style={{ color: "var(--status-lost-text)", fontWeight: 600 }}>Failed to load EMD Details BG: {error.message}</p>
+        <button onClick={refresh} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "var(--brand)", color: "var(--brand-foreground)", borderRadius: "6px", fontWeight: 600 }}>
           <RefreshCw size={14} /> Retry
         </button>
       </div>
@@ -726,7 +726,7 @@ export default function EmdDetailsBgPage() {
                   <tbody>
                     {paginatedRecords.length === 0 ? (
                       <tr>
-                        <td colSpan={BG_COLUMNS.length} style={{ textAlign: "center", padding: "40px", color: "rgba(0,0,0,0.4)" }}>
+                        <td colSpan={BG_COLUMNS.length} style={{ textAlign: "center", padding: "40px", color: "var(--muted-foreground)" }}>
                           No matching records found.
                         </td>
                       </tr>
@@ -738,12 +738,12 @@ export default function EmdDetailsBgPage() {
                               const isSending = sendingId === row.id;
                               const hasReason = !!row.reason;
                               return (
-                                <td key={String(col.accessor)} className="col-center" style={{ background: "#fff" }}>
+                                <td key={String(col.accessor)} className="col-center" style={{ background: "var(--card)" }}>
                                   <button
                                     onClick={() => handleSendEmail(row)}
                                     disabled={!hasReason || isSending}
                                     title={!hasReason ? "Select Tender Conclusion Reason first" : "Send email"}
-                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px", background: hasReason ? "#0a2540" : "#cbd5e1", color: "white", borderRadius: "6px", fontWeight: 600, fontSize: "12px", border: "none", cursor: hasReason ? "pointer" : "not-allowed", opacity: isSending ? 0.7 : 1 }}
+                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px", background: hasReason ? "var(--brand)" : "var(--border)", color: "var(--brand-foreground)", borderRadius: "6px", fontWeight: 600, fontSize: "12px", border: "none", cursor: hasReason ? "pointer" : "not-allowed", opacity: isSending ? 0.7 : 1 }}
                                   >
                                     {isSending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {isSending ? "Sending..." : "Send Email"}
                                   </button>
@@ -753,13 +753,13 @@ export default function EmdDetailsBgPage() {
                             if (col.accessor === "reason") {
                               const isUpdating = updatingId === row.id;
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                   <select
                                     value={row.reason ?? ""}
                                     onChange={(e) => handleReasonChange(row.id, e.target.value)}
                                     disabled={isUpdating}
                                     onClick={(e) => e.stopPropagation()}
-                                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #dadce0", fontSize: "12px", background: isUpdating ? "#f1f3f4" : "white" }}
+                                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--input)", fontSize: "12px", background: isUpdating ? "var(--muted)" : "var(--card)" }}
                                   >
                                     <option value="">Select reason...</option>
                                     {TENDER_REASON_OPTIONS.map((opt) => (
@@ -774,7 +774,7 @@ export default function EmdDetailsBgPage() {
                               const isEditing = editingContactEmailId === row.id;
                               if (isEditing) {
                                 return (
-                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                     <div className="flex items-start gap-1" onClick={(e) => e.stopPropagation()}>
                                       <textarea
                                         autoFocus
@@ -782,31 +782,31 @@ export default function EmdDetailsBgPage() {
                                         onChange={(e) => setDraftContactEmail(e.target.value)}
                                         placeholder="email1@company.com, email2@company.com"
                                         rows={2}
-                                        style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: `1px solid ${draftContactEmail && !isValidEmail(draftContactEmail) ? "#ef4444" : "#dadce0"}`, fontSize: "12px", resize: "vertical", minHeight: "56px" }}
+                                        style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: `1px solid ${draftContactEmail && !isValidEmail(draftContactEmail) ? "var(--danger)" : "var(--input)"}`, fontSize: "12px", resize: "vertical", minHeight: "56px" }}
                                       />
                                       <div className="flex flex-col gap-1">
-                                        <button onClick={() => handleContactEmailSave(row.id)} disabled={isUpdating || (draftContactEmail.trim() !== "" && !isValidEmail(draftContactEmail))} title="Save" style={{ padding: "6px", borderRadius: "4px", background: "#0a2540", color: "white", border: "none" }}><Check size={12} /></button>
-                                        <button onClick={handleContactEmailCancel} disabled={isUpdating} title="Cancel" style={{ padding: "6px", borderRadius: "4px", background: "#e5e7eb", border: "none" }}><X size={12} /></button>
+                                        <button onClick={() => handleContactEmailSave(row.id)} disabled={isUpdating || (draftContactEmail.trim() !== "" && !isValidEmail(draftContactEmail))} title="Save" style={{ padding: "6px", borderRadius: "4px", background: "var(--brand)", color: "var(--brand-foreground)", border: "none" }}><Check size={12} /></button>
+                                        <button onClick={handleContactEmailCancel} disabled={isUpdating} title="Cancel" style={{ padding: "6px", borderRadius: "4px", background: "var(--border)", border: "none" }}><X size={12} /></button>
                                       </div>
                                     </div>
-                                    {draftContactEmail && !isValidEmail(draftContactEmail) && <div style={{ fontSize: "10px", color: "#dc2626", marginTop: "4px" }}>Invalid: {invalidEmails(draftContactEmail).join(", ")}</div>}
+                                    {draftContactEmail && !isValidEmail(draftContactEmail) && <div style={{ fontSize: "10px", color: "var(--danger)", marginTop: "4px" }}>Invalid: {invalidEmails(draftContactEmail).join(", ")}</div>}
                                   </td>
                                 );
                               }
                               const display = row.contactEmailId ? String(row.contactEmailId) : "";
                               const isInvalid = display !== "" && !isValidEmail(display);
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                   <div
                                     onClick={() => {
                                       setEditingContactEmailId(row.id);
                                       setDraftContactEmail(display);
                                     }}
                                     title={display || "Click to add email (comma separated)"}
-                                    style={{ padding: "6px 8px", borderRadius: "6px", border: isInvalid ? "1px solid #ef4444" : "1px solid transparent", background: isUpdating ? "#f1f3f4" : isInvalid ? "#fef2f2" : "transparent", cursor: "pointer", fontSize: "12px", minHeight: "28px", display: "flex", alignItems: "center" }}
+                                    style={{ padding: "6px 8px", borderRadius: "6px", border: isInvalid ? "1px solid var(--danger)" : "1px solid transparent", background: isUpdating ? "var(--muted)" : isInvalid ? "var(--danger-soft)" : "transparent", cursor: "pointer", fontSize: "12px", minHeight: "28px", display: "flex", alignItems: "center" }}
                                   >
                                     {isUpdating ? <Loader2 size={12} className="animate-spin mr-1" /> : null}
-                                    {display ? <span style={{ color: isInvalid ? "#dc2626" : undefined, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span> : <span style={{ color: "#9ca3af" }}>— Add email</span>}
+                                    {display ? <span style={{ color: isInvalid ? "var(--danger)" : undefined, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span> : <span style={{ color: "var(--muted-foreground)" }}>— Add email</span>}
                                   </div>
                                 </td>
                               );
@@ -816,7 +816,7 @@ export default function EmdDetailsBgPage() {
                               const isEditing = editingContactNoId === row.id;
                               if (isEditing) {
                                 return (
-                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                     <div className="flex items-start gap-1" onClick={(e) => e.stopPropagation()}>
                                       <textarea
                                         autoFocus
@@ -824,11 +824,11 @@ export default function EmdDetailsBgPage() {
                                         onChange={(e) => setDraftContactNo(e.target.value)}
                                         placeholder="e.g. 9876543210, 9123456789"
                                         rows={2}
-                                        style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: "1px solid #dadce0", fontSize: "12px", resize: "vertical", minHeight: "56px" }}
+                                        style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--input)", fontSize: "12px", resize: "vertical", minHeight: "56px" }}
                                       />
                                       <div className="flex flex-col gap-1">
-                                        <button onClick={() => handleContactNoSave(row.id)} disabled={isUpdating} title="Save" style={{ padding: "6px", borderRadius: "4px", background: "#0a2540", color: "white", border: "none" }}><Check size={12} /></button>
-                                        <button onClick={handleContactNoCancel} disabled={isUpdating} title="Cancel" style={{ padding: "6px", borderRadius: "4px", background: "#e5e7eb", border: "none" }}><X size={12} /></button>
+                                        <button onClick={() => handleContactNoSave(row.id)} disabled={isUpdating} title="Save" style={{ padding: "6px", borderRadius: "4px", background: "var(--brand)", color: "var(--brand-foreground)", border: "none" }}><Check size={12} /></button>
+                                        <button onClick={handleContactNoCancel} disabled={isUpdating} title="Cancel" style={{ padding: "6px", borderRadius: "4px", background: "var(--border)", border: "none" }}><X size={12} /></button>
                                       </div>
                                     </div>
                                   </td>
@@ -836,17 +836,17 @@ export default function EmdDetailsBgPage() {
                               }
                               const display2 = row.contactNo ? String(row.contactNo) : "";
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                   <div
                                     onClick={() => {
                                       setEditingContactNoId(row.id);
                                       setDraftContactNo(display2);
                                     }}
                                     title={display2 || "Click to add (comma separated)"}
-                                    style={{ padding: "6px 8px", borderRadius: "6px", border: "1px solid transparent", background: isUpdating ? "#f1f3f4" : "transparent", cursor: "pointer", fontSize: "12px", minHeight: "28px", display: "flex", alignItems: "center" }}
+                                    style={{ padding: "6px 8px", borderRadius: "6px", border: "1px solid transparent", background: isUpdating ? "var(--muted)" : "transparent", cursor: "pointer", fontSize: "12px", minHeight: "28px", display: "flex", alignItems: "center" }}
                                   >
                                     {isUpdating ? <Loader2 size={12} className="animate-spin mr-1" /> : null}
-                                    {display2 ? <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display2}</span> : <span style={{ color: "#9ca3af" }}>— Add no</span>}
+                                    {display2 ? <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display2}</span> : <span style={{ color: "var(--muted-foreground)" }}>— Add no</span>}
                                   </div>
                                 </td>
                               );
@@ -854,13 +854,13 @@ export default function EmdDetailsBgPage() {
                             if (col.accessor === "status") {
                               const isUpdating = updatingStatusId === row.id;
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                   <select
                                     value={row.status ?? ""}
                                     onChange={(e) => handleStatusChange(row.id, e.target.value)}
                                     disabled={isUpdating}
                                     onClick={(e) => e.stopPropagation()}
-                                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #dadce0", fontSize: "12px", background: isUpdating ? "#f1f3f4" : "white" }}
+                                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--input)", fontSize: "12px", background: isUpdating ? "var(--muted)" : "var(--card)" }}
                                   >
                                     <option value="">Select status...</option>
                                     {EMD_STATUS_OPTIONS.map((opt) => (
@@ -879,11 +879,11 @@ export default function EmdDetailsBgPage() {
                                 <td
                                   key={String(col.accessor)}
                                   className={`${col.sticky ? "sticky-col" : ""}`}
-                                  style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}
+                                  style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}
                                   title={v ? String(v) : display}
                                 >
                                   <div className="cell-scroll-wrap" style={{ height: "auto", maxHeight: "96px" }}>
-                                    {isBlank ? <span style={{ color: "#b0b8c1" }}>-</span> : display}
+                                    {isBlank ? <span style={{ color: "var(--muted-foreground)" }}>-</span> : display}
                                   </div>
                                 </td>
                               );
@@ -894,18 +894,18 @@ export default function EmdDetailsBgPage() {
                                 <td
                                   key={String(col.accessor)}
                                   className={`${col.sticky ? "sticky-col" : ""}`}
-                                  style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}
+                                  style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}
                                 >
                                   {hasDraft ? (
                                     <button
                                       onClick={() => handleViewDraft(row)}
-                                      className="inline-flex items-center gap-1 px-2 py-1 border border-gray-200 rounded text-xs font-medium hover:bg-gray-50"
+                                      className="inline-flex items-center gap-1 px-2 py-1 border border-border rounded text-xs font-medium hover:bg-accent"
                                       title="View email draft"
                                     >
                                       <Eye size={12} /> View
                                     </button>
                                   ) : (
-                                    <span style={{ color: "#b0b8c1" }}>-</span>
+                                    <span style={{ color: "var(--muted-foreground)" }}>-</span>
                                   )}
                                 </td>
                               );
@@ -917,12 +917,12 @@ export default function EmdDetailsBgPage() {
                               <td
                                 key={String(col.accessor)}
                                 className={`${alignClass} ${col.sticky ? "sticky-col" : ""}`}
-                                style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}
+                                style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}
                                 title={display}
                               >
                                 <div className="cell-scroll-wrap" style={{ height: "auto", maxHeight: "96px" }}>
                                   {display === "-" ? (
-                                    <span style={{ color: "#b0b8c1" }}>{display}</span>
+                                    <span style={{ color: "var(--muted-foreground)" }}>{display}</span>
                                   ) : (
                                     display
                                   )}

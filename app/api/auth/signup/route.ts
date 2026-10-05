@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { NextResponse } from "next/server"
+import { requireAdminApi } from "@/lib/dal"
 
 export async function POST(req: Request) {
+  // Only admins create accounts; open signup would hand out edit rights.
+  const forbidden = await requireAdminApi()
+  if (forbidden) return forbidden
+
   try {
     const { name, email, password } = await req.json()
 

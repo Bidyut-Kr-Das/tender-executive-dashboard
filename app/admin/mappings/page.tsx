@@ -136,10 +136,10 @@ export default function ColumnMappingsPage() {
   if (loading) {
     return (
       <div style={{ padding: "24px" }}>
-        <h1 style={{ color: "#0a2540", marginBottom: "24px" }}>
+        <h1 style={{ color: "var(--brand-ink)", marginBottom: "24px" }}>
           Column Mappings
         </h1>
-        <p style={{ color: "#999" }}>Loading mappings...</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Loading mappings...</p>
       </div>
     );
   }
@@ -154,15 +154,15 @@ export default function ColumnMappingsPage() {
           marginBottom: "24px",
         }}
       >
-        <h1 style={{ color: "#0a2540", margin: 0, fontSize: "22px" }}>
+        <h1 style={{ color: "var(--brand-ink)", margin: 0, fontSize: "22px" }}>
           Column Mappings
         </h1>
         <button
           onClick={() => openAddDialog()}
           style={{
             padding: "8px 16px",
-            background: "#0a2540",
-            color: "#fff",
+            background: "var(--brand)",
+            color: "var(--brand-foreground)",
             border: "none",
             borderRadius: "6px",
             cursor: "pointer",
@@ -190,7 +190,7 @@ export default function ColumnMappingsPage() {
             left: "12px",
             top: "50%",
             transform: "translateY(-50%)",
-            color: "#999",
+            color: "var(--muted-foreground)",
           }}
         />
         <input
@@ -200,10 +200,10 @@ export default function ColumnMappingsPage() {
           style={{
             width: "100%",
             padding: "8px 12px 8px 36px",
-            border: "1px solid #e0e0e0",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             fontSize: "14px",
-            color: "#333",
+            color: "var(--foreground)",
             outline: "none",
             boxSizing: "border-box",
           }}
@@ -213,12 +213,12 @@ export default function ColumnMappingsPage() {
       {groups.length === 0 ? (
         <div
           style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             padding: "40px",
             textAlign: "center",
-            color: "#999",
+            color: "var(--muted-foreground)",
             fontSize: "14px",
           }}
         >
@@ -230,8 +230,8 @@ export default function ColumnMappingsPage() {
             <div
               key={group.dbField}
               style={{
-                background: "#fff",
-                border: "1px solid #e0e0e0",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: "8px",
                 padding: "16px 20px",
               }}
@@ -250,20 +250,20 @@ export default function ColumnMappingsPage() {
                       fontFamily: "monospace",
                       fontSize: "15px",
                       fontWeight: 600,
-                      color: "#0a2540",
+                      color: "var(--brand-ink)",
                     }}
                   >
                     {group.dbField}
                   </span>
                   {group.displayName && (
                     <>
-                      <span style={{ color: "#ccc", fontSize: "13px" }}>
+                      <span style={{ color: "var(--muted-foreground)", fontSize: "13px" }}>
                         &rarr;
                       </span>
                       <span
                         style={{
                           fontSize: "13px",
-                          color: "#666",
+                          color: "var(--muted-foreground)",
                           fontStyle: "italic",
                         }}
                       >
@@ -291,12 +291,12 @@ export default function ColumnMappingsPage() {
                       alignItems: "center",
                       gap: "6px",
                       padding: "4px 10px",
-                      background: "#f0f4f8",
-                      border: "1px solid #dde3ea",
+                      background: "var(--muted)",
+                      border: "1px solid var(--border)",
                       borderRadius: "16px",
                       fontSize: "13px",
                       fontFamily: "monospace",
-                      color: "#333",
+                      color: "var(--foreground)",
                       cursor: "pointer",
                       transition: "background 0.15s",
                     }}
@@ -311,11 +311,11 @@ export default function ColumnMappingsPage() {
                     title="Click to edit"
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.background =
-                        "#e2e8f0";
+                        "var(--border)";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLElement).style.background =
-                        "#f0f4f8";
+                        "var(--muted)";
                     }}
                   >
                     <span>{h.excelHeader}</span>
@@ -330,7 +330,7 @@ export default function ColumnMappingsPage() {
                         background: "none",
                         border: "none",
                         cursor: "pointer",
-                        color: "#999",
+                        color: "var(--muted-foreground)",
                         display: "inline-flex",
                         alignItems: "center",
                         lineHeight: 1,
@@ -348,23 +348,23 @@ export default function ColumnMappingsPage() {
                     gap: "4px",
                     padding: "4px 10px",
                     background: "none",
-                    border: "1px dashed #ccc",
+                    border: "1px dashed var(--border)",
                     borderRadius: "16px",
                     cursor: "pointer",
-                    color: "#888",
+                    color: "var(--muted-foreground)",
                     fontSize: "12px",
                     fontFamily: "monospace",
                     transition: "all 0.15s",
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = "#0a2540";
-                    el.style.color = "#0a2540";
+                    el.style.borderColor = "var(--brand-ink)";
+                    el.style.color = "var(--brand-ink)";
                   }}
                   onMouseLeave={(e) => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = "#ccc";
-                    el.style.color = "#888";
+                    el.style.borderColor = "var(--border)";
+                    el.style.color = "var(--muted-foreground)";
                   }}
                 >
                   <Plus size={12} /> Add Header
@@ -379,7 +379,7 @@ export default function ColumnMappingsPage() {
         style={{
           marginTop: "12px",
           fontSize: "12px",
-          color: "#999",
+          color: "var(--muted-foreground)",
           textAlign: "center",
         }}
       >

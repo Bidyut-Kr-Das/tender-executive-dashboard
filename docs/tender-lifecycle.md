@@ -422,6 +422,25 @@ All v2 workers call back with this body. Parsed and validated by `createWebhookH
 
 Validation errors return `400`. An unknown `referenceNo` returns `404`.
 
+### Result sync webhook
+
+`POST /api/webhook/result` (`app/api/webhook/result/route.ts`) receives scraped results from TenderTiger and Tender247. It uses the same envelope, but `data.referenceNo` is not required: each row in `data.result.rows[]` carries its own `referenceNo`.
+
+- Success event: `result.synced_success`. `result.synced_failed` and any event with `data.error` are logged only.
+- `data.type`: `TENDER_TIGER_RESULT` or `TENDER247_RESULT`, else `400`.
+- Rows match `TenderMerged.referenceNo`. Unknown references are returned in `notFound` and do not fail the batch.
+- Mapping (`buildResultUpdate`, `lib/result-sync.ts`). Empty or null values never overwrite stored data.
+
+| Row field | TenderMerged column | Rule |
+|---|---|---|
+| `reverseAuction` | `reverseAuctionApplicable` | When boolean |
+| `l1` | `nameOfRank1` | |
+| `contractValue` | `valueOfRank1` | |
+| `isLaser` | `ourRank`, `ourValue` | When `true`: `ourRank = "1"`, `ourValue = contractValue` |
+| `competitors` | `competitors` | Split on `,`, appended to the stored `" - "` list without duplicates |
+| `currentStatus` | `currentStatus` | |
+| `contractAmount`, `tenderStage` | — | Not stored |
+
 ## 9. Conventions
 
 - Wrap every webhook and server action in `withLog` (`lib/activity-logger.ts`). Webhooks log the actor as

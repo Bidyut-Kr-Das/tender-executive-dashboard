@@ -119,7 +119,7 @@ const ColumnMultiselectDropdown: React.FC<ColumnMultiselectDropdownProps> = ({
       {show && (
         <div className="multiselect-dropdown-panel" style={{ left: 0, right: "auto", minWidth: "260px", maxWidth: "none" }}>
           <div className="multiselect-search-wrap">
-            <Search size={12} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }} />
+            <Search size={12} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)", pointerEvents: "none" }} />
             <input
               type="text"
               className="multiselect-search-input"
@@ -1107,19 +1107,19 @@ const SupplyHistoryDashboard: React.FC = () => {
           </div>
           <div className="supply-stat-card">
             <div className="supply-stat-label">Total Invoice Amt</div>
-            <div className="supply-stat-value" style={{ color: "#38ef7d" }}>
+            <div className="supply-stat-value text-[#38ef7d]! dark:text-[#6ee7b7]!">
               ₹{totalAmt.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
             </div>
           </div>
           <div className="supply-stat-card">
             <div className="supply-stat-label">Total Invoice Qty</div>
-            <div className="supply-stat-value" style={{ color: "#69b2ff" }}>
+            <div className="supply-stat-value text-[#69b2ff]! dark:text-[#76b0eb]!">
               {totalQty.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
             </div>
           </div>
           <div className="supply-stat-card">
             <div className="supply-stat-label">With Bill No</div>
-            <div className="supply-stat-value" style={{ color: "#ff6b6b" }}>
+            <div className="supply-stat-value text-[#ff6b6b]! dark:text-[#e66e6d]!">
               {withBillNo.toLocaleString()}
             </div>
           </div>
@@ -1754,7 +1754,7 @@ const SupplyHistoryDashboard: React.FC = () => {
                           style={{
                             textAlign: "center",
                             padding: "48px 20px",
-                            color: "rgba(0,0,0,0.4)",
+                            color: "var(--muted-foreground)",
                             fontSize: "13px",
                             fontWeight: 500,
                           }}
@@ -1795,17 +1795,17 @@ const SupplyHistoryDashboard: React.FC = () => {
                                     autoFocus
                                     disabled={isSaving}
                                     placeholder="Item Schedule"
-                                    style={{ fontSize: "12px", padding: "2px 6px", border: "1px solid #dadce0", borderRadius: 4, width: 140 }}
+                                    style={{ fontSize: "12px", padding: "2px 6px", border: "1px solid var(--input)", borderRadius: 4, width: 140 }}
                                   />
-                                  <button onClick={handleEditSave} disabled={isSaving} title="Save" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"#1a73e8", color:"#fff", border:"none", cursor:"pointer" }}><Check size={12} /></button>
-                                  <button onClick={handleEditCancel} disabled={isSaving} title="Cancel" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"#e8eaed", color:"#5f6368", border:"none", cursor:"pointer" }}><X size={12} /></button>
+                                  <button onClick={handleEditSave} disabled={isSaving} title="Save" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"var(--info)", color:"var(--info-foreground)", border:"none", cursor:"pointer" }}><Check size={12} /></button>
+                                  <button onClick={handleEditCancel} disabled={isSaving} title="Cancel" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"var(--border)", color:"var(--muted-foreground)", border:"none", cursor:"pointer" }}><X size={12} /></button>
                                 </div>
                               );
                             }
                             return (
                               <div style={{ display:"flex", alignItems:"flex-start", gap:6, justifyContent:"space-between" }}>
                                 <span title={row.itemSchedule ?? undefined} className="supply-cell-text">{row.itemSchedule ?? <span className="supply-null-cell">—</span>}</span>
-                                <button onClick={()=>handleEditStart(row, "itemSchedule")} title="Edit Item Schedule" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:20, height:20, borderRadius:"50%", background:"#f1f3f4", border:"1px solid #dadce0", cursor:"pointer", flexShrink:0, marginTop:2 }}><Pencil size={10} /></button>
+                                <button onClick={()=>handleEditStart(row, "itemSchedule")} title="Edit Item Schedule" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:20, height:20, borderRadius:"50%", background:"var(--muted)", border:"1px solid var(--input)", cursor:"pointer", flexShrink:0, marginTop:2 }}><Pencil size={10} /></button>
                               </div>
                             );
                           })()}
@@ -1868,17 +1868,17 @@ const SupplyHistoryDashboard: React.FC = () => {
                                     disabled={isSaving}
                                     placeholder="a@x.com, b@y.com"
                                     title="Separate multiple emails with comma"
-                                    style={{ fontSize: "12px", padding: "2px 6px", border: "1px solid #dadce0", borderRadius: 4, width: 160 }}
+                                    style={{ fontSize: "12px", padding: "2px 6px", border: "1px solid var(--input)", borderRadius: 4, width: 160 }}
                                   />
-                                  <button onClick={handleEditSave} disabled={isSaving} title="Save" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"#1a73e8", color:"#fff", border:"none", cursor:"pointer" }}><Check size={12} /></button>
-                                  <button onClick={handleEditCancel} disabled={isSaving} title="Cancel" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"#e8eaed", color:"#5f6368", border:"none", cursor:"pointer" }}><X size={12} /></button>
+                                  <button onClick={handleEditSave} disabled={isSaving} title="Save" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"var(--info)", color:"var(--info-foreground)", border:"none", cursor:"pointer" }}><Check size={12} /></button>
+                                  <button onClick={handleEditCancel} disabled={isSaving} title="Cancel" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"var(--border)", color:"var(--muted-foreground)", border:"none", cursor:"pointer" }}><X size={12} /></button>
                                 </div>
                               );
                             }
                             return (
                               <div style={{ display:"flex", alignItems:"flex-start", gap:6, justifyContent:"space-between" }}>
                                 <span title={row.email ?? undefined} className="supply-cell-text">{row.email ?? <span className="supply-null-cell">—</span>}</span>
-                                <button onClick={()=>handleEditStart(row, "email")} title="Edit Email" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:20, height:20, borderRadius:"50%", background:"#f1f3f4", border:"1px solid #dadce0", cursor:"pointer", flexShrink:0, marginTop:2 }}><Pencil size={10} /></button>
+                                <button onClick={()=>handleEditStart(row, "email")} title="Edit Email" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:20, height:20, borderRadius:"50%", background:"var(--muted)", border:"1px solid var(--input)", cursor:"pointer", flexShrink:0, marginTop:2 }}><Pencil size={10} /></button>
                               </div>
                             );
                           })()}
@@ -1899,17 +1899,17 @@ const SupplyHistoryDashboard: React.FC = () => {
                                     autoFocus
                                     disabled={isSaving}
                                     placeholder="Contact No"
-                                    style={{ fontSize: "12px", padding: "2px 6px", border: "1px solid #dadce0", borderRadius: 4, width: 120 }}
+                                    style={{ fontSize: "12px", padding: "2px 6px", border: "1px solid var(--input)", borderRadius: 4, width: 120 }}
                                   />
-                                  <button onClick={handleEditSave} disabled={isSaving} title="Save" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"#1a73e8", color:"#fff", border:"none", cursor:"pointer" }}><Check size={12} /></button>
-                                  <button onClick={handleEditCancel} disabled={isSaving} title="Cancel" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"#e8eaed", color:"#5f6368", border:"none", cursor:"pointer" }}><X size={12} /></button>
+                                  <button onClick={handleEditSave} disabled={isSaving} title="Save" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"var(--info)", color:"var(--info-foreground)", border:"none", cursor:"pointer" }}><Check size={12} /></button>
+                                  <button onClick={handleEditCancel} disabled={isSaving} title="Cancel" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:22, height:22, borderRadius:"50%", background:"var(--border)", color:"var(--muted-foreground)", border:"none", cursor:"pointer" }}><X size={12} /></button>
                                 </div>
                               );
                             }
                             return (
                               <div style={{ display:"flex", alignItems:"flex-start", gap:6, justifyContent:"space-between" }}>
                                 <span title={row.contactNo ?? undefined} className="supply-cell-text">{row.contactNo ?? <span className="supply-null-cell">—</span>}</span>
-                                <button onClick={()=>handleEditStart(row, "contactNo")} title="Edit Contact No" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:20, height:20, borderRadius:"50%", background:"#f1f3f4", border:"1px solid #dadce0", cursor:"pointer", flexShrink:0, marginTop:2 }}><Pencil size={10} /></button>
+                                <button onClick={()=>handleEditStart(row, "contactNo")} title="Edit Contact No" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:20, height:20, borderRadius:"50%", background:"var(--muted)", border:"1px solid var(--input)", cursor:"pointer", flexShrink:0, marginTop:2 }}><Pencil size={10} /></button>
                               </div>
                             );
                           })()}
@@ -1954,7 +1954,7 @@ const SupplyHistoryDashboard: React.FC = () => {
                             }
                             if (state.status === "emailSent") {
                               return (
-                                <span className="supply-generating" style={{ color: "#16a34a", fontWeight: 600 }}>
+                                <span className="supply-generating" style={{ color: "var(--success)", fontWeight: 600 }}>
                                   <Send size={12} /> Sent!
                                 </span>
                               );
@@ -2034,7 +2034,7 @@ const SupplyHistoryDashboard: React.FC = () => {
                   <button className="supply-page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
                   {pageNumbers().map((p, i) =>
                     p === "..." ? (
-                      <span key={`e${i}`} style={{ padding: "0 4px", color: "#5f6368", fontSize: 12 }}>…</span>
+                      <span key={`e${i}`} style={{ padding: "0 4px", color: "var(--muted-foreground)", fontSize: 12 }}>…</span>
                     ) : (
                       <button key={p} className={`supply-page-btn${page === p ? " active" : ""}`} onClick={() => setPage(p as number)}>{p}</button>
                     )
@@ -2048,16 +2048,16 @@ const SupplyHistoryDashboard: React.FC = () => {
 
         <footer className="supply-status-bar">
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#137333" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#34a853", display: "inline-block", animation: "blink 1.5s infinite" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--status-won-text)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--success)", display: "inline-block", animation: "blink 1.5s infinite" }} />
               <span>SHEET LIVE</span>
             </div>
           </div>
-          <div style={{ color: "#0a2540", textTransform: "uppercase", fontWeight: 700 }}>
+          <div style={{ color: "var(--brand-ink)", textTransform: "uppercase", fontWeight: 700 }}>
             LASERPOWER SUPPLY PIPELINE
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <span style={{ backgroundColor: "#e1e6eb", color: "#0a2540", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+            <span style={{ backgroundColor: "var(--border)", color: "var(--brand-ink)", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
               LASERPOWER ERP V2.1 PRO
             </span>
           </div>

@@ -5,7 +5,7 @@ import { NavBar } from "@/components/NavBar";
 import StoreProvider from "@/lib/store-provider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { DataLoader } from "@/components/DataLoader";
-import { Toaster } from "sonner";
+import { ThemedToaster, themeInitScript } from "@/components/ThemeToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,9 +31,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
@@ -65,7 +67,7 @@ export default function RootLayout({
             }}
           >
             <StoreProvider><DataLoader>{children}</DataLoader></StoreProvider>
-            <Toaster richColors />
+            <ThemedToaster />
           </div>
         </SessionProviderWrapper>
       </body>

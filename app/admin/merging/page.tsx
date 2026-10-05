@@ -114,10 +114,10 @@ export default function ColumnMergingPage() {
   if (loading) {
     return (
       <div style={{ padding: "24px" }}>
-        <h1 style={{ color: "#0a2540", marginBottom: "24px" }}>
+        <h1 style={{ color: "var(--brand-ink)", marginBottom: "24px" }}>
           Column Merging
         </h1>
-        <p style={{ color: "#999" }}>Loading merged columns...</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Loading merged columns...</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function ColumnMergingPage() {
           marginBottom: "16px",
         }}
       >
-        <h1 style={{ color: "#0a2540", margin: 0, fontSize: "22px" }}>
+        <h1 style={{ color: "var(--brand-ink)", margin: 0, fontSize: "22px" }}>
           Column Merging
         </h1>
         <button
@@ -142,8 +142,8 @@ export default function ColumnMergingPage() {
           }}
           style={{
             padding: "8px 16px",
-            background: "#0a2540",
-            color: "#fff",
+            background: "var(--brand)",
+            color: "var(--brand-foreground)",
             border: "none",
             borderRadius: "6px",
             cursor: "pointer",
@@ -161,12 +161,12 @@ export default function ColumnMergingPage() {
       {columnGroups.length === 0 ? (
         <div
           style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             padding: "32px",
             textAlign: "center",
-            color: "#999",
+            color: "var(--muted-foreground)",
             fontSize: "14px",
           }}
         >
@@ -179,8 +179,8 @@ export default function ColumnMergingPage() {
             <div
               key={group.id}
               style={{
-                background: "#fff",
-                border: "1px solid #e0e0e0",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: "8px",
                 padding: "14px 18px",
                 display: "flex",
@@ -201,12 +201,12 @@ export default function ColumnMergingPage() {
                     style={{
                       fontSize: "14px",
                       fontWeight: 600,
-                      color: "#0a2540",
+                      color: "var(--brand-ink)",
                     }}
                   >
                     {group.label}
                   </span>
-                  <span style={{ color: "#bbb", fontSize: "12px" }}>
+                  <span style={{ color: "var(--muted-foreground)", fontSize: "12px" }}>
                     (separator: &quot;{group.separator}&quot;)
                   </span>
                 </div>
@@ -216,12 +216,12 @@ export default function ColumnMergingPage() {
                       key={f}
                       style={{
                         padding: "2px 8px",
-                        background: "#f0f4f8",
-                        border: "1px solid #dde3ea",
+                        background: "var(--muted)",
+                        border: "1px solid var(--border)",
                         borderRadius: "12px",
                         fontSize: "12px",
                         fontFamily: "monospace",
-                        color: "#555",
+                        color: "var(--foreground)",
                       }}
                     >
                       {f}
@@ -239,10 +239,10 @@ export default function ColumnMergingPage() {
                   style={{
                     padding: "6px 10px",
                     background: "none",
-                    border: "1px solid #e0e0e0",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px",
                     cursor: "pointer",
-                    color: "#666",
+                    color: "var(--muted-foreground)",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "4px",
@@ -257,10 +257,10 @@ export default function ColumnMergingPage() {
                   style={{
                     padding: "6px 10px",
                     background: "none",
-                    border: "1px solid #e0e0e0",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px",
                     cursor: "pointer",
-                    color: "#d32f2f",
+                    color: "var(--danger)",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "4px",

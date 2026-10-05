@@ -7,6 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { addFiles, removeFile, uploadFiles, uploadResultFiles } from "@/lib/slices/uploadSlice";
 import { clearState } from "@/lib/slices/filesSlice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  TENDER_CATEGORIES,
+  EPC_SUBCATEGORIES,
+  isValidCategorySelection,
+} from "@/lib/tender-categories";
 
 function UploadIcon() {
   return (
@@ -81,7 +93,11 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
   const rejectedRows = useAppSelector((s) => s.upload.rejectedRows);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [category, setCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
   const dragCounter = useRef(0);
+  const isEpc = category === TENDER_CATEGORIES.EPC;
+  const selectionValid = isValidCategorySelection(category, subCategory);
 
   useEffect(() => {
     if (parsing || rejectedRows.length === 0) return;
@@ -174,9 +190,15 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
   );
 
   const handleParse = useCallback(async () => {
-    if (!pendingFiles.length) return;
-    dispatch(uploadFiles(pendingFiles));
-  }, [dispatch, pendingFiles]);
+    if (!pendingFiles.length || !selectionValid) return;
+    dispatch(
+      uploadFiles({
+        files: pendingFiles,
+        category,
+        subCategory: isEpc ? subCategory : null,
+      }),
+    );
+  }, [dispatch, pendingFiles, selectionValid, category, subCategory, isEpc]);
 
   const handleResultParse = useCallback(async () => {
     if (!pendingFiles.length) return;
@@ -227,7 +249,7 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
             className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed h-200 rounded-sm p-4 cursor-pointer transition-all ${
               isDragOver
                 ? "border-primary bg-primary/10 scale-[1.02]"
-                : "border-slate-200 hover:border-primary/30 hover:bg-primary/5"
+                : "border-border hover:border-primary/30 hover:bg-primary/5"
             }`}
             onClick={handleUploadClick}
             onDragEnter={handleDragEnter}
@@ -256,14 +278,14 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
             </div>
             <p
               className={`text-xs text-center transition-colors ${
-                isDragOver ? "text-primary font-medium" : "text-slate-500"
+                isDragOver ? "text-primary font-medium" : "text-muted-foreground"
               }`}
             >
               {isDragOver
                 ? "Drop files here"
                 : "Click to browse or drag files here"}
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">
+            <p className="text-[10px] text-muted-foreground mt-0.5">
               .xlsx and .xls files supported
             </p>
           </div>
@@ -276,16 +298,16 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
                 <Badge
                   key={file.name + file.size}
                   variant="secondary"
-                  className="inline-flex items-center gap-1.5 py-1.5 pr-1 pl-2.5 text-xs font-normal max-w-full rounded-sm bg-slate-100 text-slate-700 border border-slate-200"
+                  className="inline-flex items-center gap-1.5 py-1.5 pr-1 pl-2.5 text-xs font-normal max-w-full rounded-sm bg-muted text-foreground/80 border border-border"
                 >
                   <span className="truncate">{file.name}</span>
-                  <span className="shrink-0 text-[10px] text-slate-400">
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
                     {formatFileSize(file.size)}
                   </span>
                   <button
                     type="button"
                     onClick={() => dispatch(removeFile(i))}
-                    className="flex font-bold shrink-0 items-center justify-center rounded-sm p-0.5 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-0.5"
+                    className="flex font-bold shrink-0 items-center justify-center rounded-sm p-0.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:text-red-300 dark:hover:bg-red-500/10 transition-colors ml-0.5"
                     aria-label={`Remove ${file.name}`}
                   >
                     <XIcon  />
@@ -294,11 +316,51 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
               ))}
             </div>
 
+            {mode === "parse" && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value={category || null}
+                  onValueChange={(v) => {
+                    setCategory(v ?? "");
+                    setSubCategory("");
+                  }}
+                  disabled={parsing}
+                >
+                  <SelectTrigger size="sm" className="w-44 rounded-sm text-xs">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(TENDER_CATEGORIES).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={subCategory || null}
+                  onValueChange={(v) => setSubCategory(v ?? "")}
+                  disabled={parsing || !isEpc}
+                >
+                  <SelectTrigger size="sm" className="w-52 rounded-sm text-xs">
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EPC_SUBCATEGORIES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {mode === "parse" ? (
               <Button
                 size="sm"
                 onClick={handleParse}
-                disabled={parsing}
+                disabled={parsing || !selectionValid}
                 className="bg-primary text-primary-foreground hover:bg-primary/80 rounded-sm h-8 px-4 text-xs font-medium transition-all shadow-sm"
               >
                 {parsing ? (
@@ -315,7 +377,7 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
                 size="sm"
                 onClick={handleResultParse}
                 disabled={parsing}
-                className="bg-emerald-600 text-white hover:bg-emerald-700 rounded-sm h-8 px-4 text-xs font-medium transition-all shadow-sm"
+                className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500/80 dark:text-emerald-50 dark:hover:bg-emerald-500/70 rounded-sm h-8 px-4 text-xs font-medium transition-all shadow-sm"
               >
                 {parsing ? (
                   <>

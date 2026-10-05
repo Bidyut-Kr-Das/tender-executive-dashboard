@@ -163,19 +163,19 @@ export default function TenderSidebar({
 
   return (
     <>
-      <aside className="w-65 min-w-65 bg-linear-to-b from-[#0a2540] to-[#0d2f4f] flex flex-col overflow-y-auto shrink-0">
+      <aside className="w-65 min-w-65 bg-linear-to-b from-[#0a2540] to-[#0d2f4f] dark:from-card dark:to-card dark:border-r dark:border-border flex flex-col overflow-y-auto shrink-0">
         <div className="px-5 py-4.5 pb-3.5 flex items-center gap-2 border-b border-white/10">
           <div className="flex items-center justify-center w-6 h-6 rounded-sm bg-white/10">
             <FileText size={14} className="text-white/80" />
           </div>
-          <span className="text-xs font-bold text-white tracking-wider uppercase">
+          <span className="text-xs font-bold text-white dark:text-foreground tracking-wider uppercase">
             Tender Dashboard
           </span>
         </div>
 
         <div className="flex-1 p-4 space-y-5 overflow-y-auto">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-2.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-2.5">
               Upload Tenders
             </div>
             <button
@@ -195,7 +195,7 @@ export default function TenderSidebar({
           </div>
 
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-2.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-2.5">
               Uploaded At
             </div>
             <Popover>
@@ -203,7 +203,7 @@ export default function TenderSidebar({
                 render={
                   <Button
                     variant="outline"
-                    className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white"
+                    className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white dark:hover:text-foreground"
                   >
                     <CalendarIcon size={14} />
                     {selectedRange?.from ? (
@@ -248,7 +248,7 @@ export default function TenderSidebar({
           </div>
 
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-2.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-2.5">
               Assigned To
             </div>
             <Select
@@ -257,7 +257,7 @@ export default function TenderSidebar({
             >
               <SelectTrigger
                 size="sm"
-                className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white [&_svg]:text-white/70"
+                className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs font-normal rounded-md bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:text-white dark:hover:text-foreground [&_svg]:text-white/70"
               >
                 <SelectValue placeholder="All People" />
               </SelectTrigger>
@@ -279,14 +279,14 @@ export default function TenderSidebar({
                 onClick={() => handleAnalyticsCardClick("aiYes")}
                 className={`w-full rounded-lg p-3 text-left transition-colors cursor-pointer ${
                   analyticsFilter === "aiYes"
-                    ? "bg-blue-500/20 border border-blue-400/50"
+                    ? "bg-blue-500/20 border border-blue-400/50 dark:bg-[#76b0eb]/15 dark:border-[#76b0eb]/40"
                     : "bg-white/10 border border-transparent hover:bg-white/20"
                 }`}
               >
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-1">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-1">
                   AI Relevance Yes
                 </div>
-                <div className="text-xl font-bold text-lime-500 leading-tight">
+                <div className="text-xl font-bold text-lime-500 dark:text-[#7cc79a] leading-tight">
                   {analytics.aiYes}
                 </div>
               </button>
@@ -295,14 +295,14 @@ export default function TenderSidebar({
                 onClick={() => handleAnalyticsCardClick("aiYesUnallocated")}
                 className={`w-full rounded-lg p-3 text-left transition-colors cursor-pointer ${
                   analyticsFilter === "aiYesUnallocated"
-                    ? "bg-blue-500/20 border border-blue-400/50"
+                    ? "bg-blue-500/20 border border-blue-400/50 dark:bg-[#76b0eb]/15 dark:border-[#76b0eb]/40"
                     : "bg-white/10 border border-transparent hover:bg-white/20"
                 }`}
               >
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-1">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-1">
                   AI Relevance Yes (Unallocated)
                 </div>
-                <div className="text-xl font-bold text-rose-500 leading-tight">
+                <div className="text-xl font-bold text-rose-500 dark:text-[#e66e6d] leading-tight">
                   {analytics.aiYesUnallocated}
                 </div>
               </button>
@@ -311,14 +311,14 @@ export default function TenderSidebar({
                 onClick={() => handleAnalyticsCardClick("apmYesAllocated")}
                 className={`w-full rounded-lg p-3 text-left transition-colors cursor-pointer ${
                   analyticsFilter === "apmYesAllocated"
-                    ? "bg-blue-500/20 border border-blue-400/50"
+                    ? "bg-blue-500/20 border border-blue-400/50 dark:bg-[#76b0eb]/15 dark:border-[#76b0eb]/40"
                     : "bg-white/10 border border-transparent hover:bg-white/20"
                 }`}
               >
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-1">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-1">
                   APM Yes (Allocated)
                 </div>
-                <div className="text-xl font-bold text-yellow-500 leading-tight">
+                <div className="text-xl font-bold text-yellow-500 dark:text-[#76b0eb] leading-tight">
                   {analytics.apmYesAllocated}
                 </div>
               </button>
@@ -327,20 +327,20 @@ export default function TenderSidebar({
                 onClick={() => handleAnalyticsCardClick("apmYesUnallocated")}
                 className={`w-full rounded-lg p-3 text-left transition-colors cursor-pointer ${
                   analyticsFilter === "apmYesUnallocated"
-                    ? "bg-blue-500/20 border border-blue-400/50"
+                    ? "bg-blue-500/20 border border-blue-400/50 dark:bg-[#76b0eb]/15 dark:border-[#76b0eb]/40"
                     : "bg-white/10 border border-transparent hover:bg-white/20"
                 }`}
               >
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-1">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-1">
                   APM Yes (Unallocated)
                 </div>
-                <div className="text-xl font-bold text-blue-500 leading-tight">
+                <div className="text-xl font-bold text-blue-500 dark:text-[#76b0eb] leading-tight">
                   {analytics.apmYesUnallocated}
                 </div>
               </button>
               {analytics.personCounts.length > 0 && (
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-white mb-2.5">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-white dark:text-foreground mb-2.5">
                     Assigned Tenders by Person
                   </div>
                   <div className="space-y-1.5">
@@ -357,12 +357,12 @@ export default function TenderSidebar({
                           }
                           className={`w-full flex items-center justify-between py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer ${
                             isActive
-                              ? "bg-blue-500/20 border border-blue-400/50"
+                              ? "bg-blue-500/20 border border-blue-400/50 dark:bg-[#76b0eb]/15 dark:border-[#76b0eb]/40"
                               : "bg-white/10 border border-transparent hover:bg-white/20"
                           }`}
                         >
                           <span className="text-xs text-white/70">{p.name}</span>
-                          <span className="text-xs font-semibold text-white">
+                          <span className="text-xs font-semibold text-white dark:text-foreground">
                             {p.count}
                           </span>
                         </button>
@@ -382,16 +382,16 @@ export default function TenderSidebar({
           onClick={closeDialog}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6"
+            className="bg-card rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-800">
+              <h3 className="text-sm font-semibold text-foreground">
                 {uploadDialogMode === "parse" ? "Upload Tenders" : "Upload Result"}
               </h3>
               <button
                 onClick={closeDialog}
-                className="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer"
+                className="text-muted-foreground hover:text-foreground/80 text-lg leading-none cursor-pointer"
               >
                 ×
               </button>

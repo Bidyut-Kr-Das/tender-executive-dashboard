@@ -1180,7 +1180,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
               options={mergedOptions}
               placeholder={col.filter.placeholder}
               searchable={col.filter.searchable}
-              triggerClassName="!w-full !justify-between !bg-white !text-foreground !border-input"
+              triggerClassName="!w-full !justify-between !bg-card !text-foreground !border-input"
               onSearchChange={
                 col.filter?.searchable
                   ? (text) => {
@@ -1288,7 +1288,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
         if (parts.length === 0) return "-";
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: "4px", ...(alignCenter ? { alignItems: "center" } : {}) }}>
-            {parts.map((part, i) => <div key={i} style={{ background: "#f1f3f4", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid #dadce0", width: "fit-content", color: "#202124" }}>{part}</div>)}
+            {parts.map((part, i) => <div key={i} style={{ background: "var(--muted)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid var(--border)", width: "fit-content", color: "var(--foreground)" }}>{part}</div>)}
           </div>
         );
       };
@@ -1548,10 +1548,10 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
                         {col.provenance.map((badge) => {
                           const badgeClass =
                             badge === "PRE"
-                              ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50"
+                              ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25 dark:hover:bg-blue-500/10"
                               : badge === "POST"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                                : "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100";
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/25 dark:hover:bg-emerald-500/10"
+                                : "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/25 dark:hover:bg-rose-500/10";
                           return (
                             <Badge
                               key={badge}
@@ -1621,7 +1621,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
                   style={{
                     textAlign: "center",
                     padding: "40px",
-                    color: "rgba(0,0,0,0.4)",
+                    color: "var(--muted-foreground)",
                   }}
                 >
                   No matching records found.
@@ -1775,7 +1775,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
 
           {totalPages > 5 && activePage < totalPages - 2 && (
             <>
-              <span style={{ padding: "0 4px", color: "rgba(0,0,0,0.4)" }}>
+              <span style={{ padding: "0 4px", color: "var(--muted-foreground)" }}>
                 ...
               </span>
               <button

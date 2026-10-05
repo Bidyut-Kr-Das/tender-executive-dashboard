@@ -179,20 +179,20 @@ export default function ConflictDetailsDialog({
   if (rows.length === 0) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-6">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="bg-card rounded-lg shadow-xl w-full max-w-md p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-800">
+            <h3 className="text-sm font-semibold text-foreground">
               Conflicts — Docket #{docketNo}
             </h3>
             <button
               onClick={onClose}
               aria-label="Close"
-              className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
+              className="text-muted-foreground hover:text-foreground/80 p-1 rounded hover:bg-accent transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-sm text-slate-400">No tenders found in this docket.</p>
+          <p className="text-sm text-muted-foreground">No tenders found in this docket.</p>
         </div>
       </div>
     );
@@ -201,38 +201,38 @@ export default function ConflictDetailsDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-6">
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-6xl flex flex-col overflow-hidden"
+        className="bg-card rounded-lg shadow-xl w-full max-w-6xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-2 min-w-0">
-            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-            <h3 className="text-sm font-semibold text-slate-800 truncate">
+            <AlertTriangle className="w-5 h-5 text-amber-500 dark:text-amber-300 shrink-0" />
+            <h3 className="text-sm font-semibold text-foreground truncate">
               Conflicts — Docket #{docketNo}
             </h3>
-            <span className="text-xs text-slate-400 shrink-0">
+            <span className="text-xs text-muted-foreground shrink-0">
               ({rows.length} tenders)
             </span>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
+            className="text-muted-foreground hover:text-foreground/80 p-1 rounded hover:bg-accent transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {conflicts.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-16 text-sm text-slate-400">
+          <div className="flex-1 flex items-center justify-center py-16 text-sm text-muted-foreground">
             No field conflicts found in this docket.
           </div>
         ) : (
           <div className="overflow-auto flex-1">
             <table className="w-full border-collapse text-sm">
-              <thead className="sticky top-0 z-10 bg-slate-50">
+              <thead className="sticky top-0 z-10 bg-muted">
                 <tr>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 border-b border-slate-200 w-40">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b border-border w-40">
                     Field
                   </th>
                   {labels.map((label, idx) => {
@@ -240,13 +240,13 @@ export default function ConflictDetailsDialog({
                     return (
                       <th
                         key={`${label}-${idx}`}
-                        className={`text-left px-4 py-2.5 text-xs font-semibold text-slate-600 border-b border-slate-200 ${
-                          isTarget ? "bg-blue-50" : ""
+                        className={`text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground border-b border-border ${
+                          isTarget ? "bg-blue-50 dark:bg-blue-500/10" : ""
                         }`}
                       >
                         <div className="flex items-center gap-1.5">
                           {isTarget && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-blue-600 text-white">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-blue-600 dark:bg-blue-500/80 text-white dark:text-foreground">
                               Target
                             </span>
                           )}
@@ -255,7 +255,7 @@ export default function ConflictDetailsDialog({
                       </th>
                     );
                   })}
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 border-b border-slate-200 w-56">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b border-border w-56">
                     Merged Value
                   </th>
                 </tr>
@@ -268,13 +268,13 @@ export default function ConflictDetailsDialog({
                   return (
                     <tr
                       key={field}
-                      className="border-b border-slate-100 align-top"
+                      className="border-b border-border align-top"
                     >
-                      <td className="px-4 py-2.5 text-[13px] font-medium text-slate-700">
+                      <td className="px-4 py-2.5 text-[13px] font-medium text-foreground/80">
                         <div className="flex items-center gap-1.5">
                           <span>{field}</span>
                           {isSingle && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                               single
                             </span>
                           )}
@@ -288,11 +288,11 @@ export default function ConflictDetailsDialog({
                           <td
                             key={`${field}-${idx}`}
                             className={`px-4 py-2.5 text-[13px] ${
-                              isTarget ? "bg-blue-50" : ""
+                              isTarget ? "bg-blue-50 dark:bg-blue-500/10" : ""
                             }`}
                           >
                             {isEmpty ? (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-muted-foreground">—</span>
                             ) : (
                               <div className="flex items-start gap-2">
                                 <button
@@ -305,8 +305,8 @@ export default function ConflictDetailsDialog({
                                   }
                                   className={`shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${
                                     isSelected
-                                      ? "bg-blue-600 border-blue-600 text-white"
-                                      : "bg-white border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-400"
+                                      ? "bg-blue-600 dark:bg-blue-500/80 border-blue-600 dark:border-blue-500/70 text-white dark:text-foreground"
+                                      : "bg-card border-border text-muted-foreground hover:border-blue-400 hover:text-blue-400"
                                   }`}
                                 >
                                   {isSelected ? (
@@ -318,8 +318,8 @@ export default function ConflictDetailsDialog({
                                 <span
                                   className={`whitespace-pre-wrap break-words ${
                                     isSelected
-                                      ? "text-blue-900 font-medium"
-                                      : "bg-amber-50 text-amber-900 font-medium"
+                                      ? "text-blue-900 dark:text-blue-200 font-medium"
+                                      : "bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-200 font-medium"
                                   }`}
                                 >
                                   {entry.value}
@@ -329,13 +329,13 @@ export default function ConflictDetailsDialog({
                           </td>
                         );
                       })}
-                      <td className="px-4 py-2.5 text-[13px] whitespace-pre-wrap break-words text-slate-700">
+                      <td className="px-4 py-2.5 text-[13px] whitespace-pre-wrap break-words text-foreground/80">
                         {mergedValue !== "" ? (
-                          <span className="inline-block bg-blue-50 text-blue-900 font-medium px-2 py-0.5 rounded">
+                          <span className="inline-block bg-blue-50 dark:bg-blue-500/10 text-blue-900 dark:text-blue-200 font-medium px-2 py-0.5 rounded">
                             {mergedValue}
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                     </tr>
@@ -346,20 +346,20 @@ export default function ConflictDetailsDialog({
           </div>
         )}
 
-        <div className="px-6 py-3 border-t border-slate-200 flex items-center justify-between gap-4 bg-slate-50">
-          <div className="text-xs text-slate-500 min-w-0">
+        <div className="px-6 py-3 border-t border-border flex items-center justify-between gap-4 bg-muted">
+          <div className="text-xs text-muted-foreground min-w-0">
             {conflicts.length} conflicting field
             {conflicts.length === 1 ? "" : "s"}
-            <span className="text-slate-300 mx-2">|</span>
+            <span className="text-muted-foreground/60 mx-2">|</span>
             {totalUpdates > 0 ? (
               <span>
                 Will write {totalUpdates} field
                 {totalUpdates === 1 ? "" : "s"} to{" "}
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-foreground/80">
                   {targetRow ? rowLabel(targetRow) : "-"}
                 </span>
                 {autoFillUpdates.length > 0 && (
-                  <span className="text-slate-400">
+                  <span className="text-muted-foreground">
                     {" "}
                     ({autoFillUpdates.length} auto-fill)
                   </span>
@@ -373,14 +373,14 @@ export default function ConflictDetailsDialog({
             <button
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-1.5 text-[13px] text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-white transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 text-[13px] text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-card transition-colors disabled:opacity-50"
             >
               Close
             </button>
             <button
               onClick={handleMerge}
               disabled={!canMerge}
-              className="px-4 py-1.5 text-[13px] text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+              className="px-4 py-1.5 text-[13px] text-white dark:text-foreground bg-blue-600 dark:bg-blue-500/80 rounded-md hover:bg-blue-700 dark:hover:bg-blue-500/85 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
             >
               {saving ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

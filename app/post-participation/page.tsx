@@ -74,8 +74,8 @@ export default function PostParticipation() {
         </header>
         <main className="dashboard-body">
           {table.loading ? (
-            <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "#0a2540", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
-              <div style={{ width: "40px", height: "40px", border: "4px solid #e1e6eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+            <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "var(--brand-ink)", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
+              <div style={{ width: "40px", height: "40px", border: "4px solid var(--border)", borderTopColor: "var(--status-sub-text)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
               <span style={{ fontSize: "16px", letterSpacing: "0.5px" }}>Loading tender data...</span>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -88,8 +88,8 @@ export default function PostParticipation() {
         </main>
         <footer className="dashboard-status-bar">
           <div className="status-left">
-            <div className="sync-live-tag" style={{ color: "#137333" }}>
-              <span className="sync-pulse-dot" style={{ backgroundColor: "#34a853" }}></span>
+            <div className="sync-live-tag" style={{ color: "var(--status-won-text)" }}>
+              <span className="sync-pulse-dot" style={{ backgroundColor: "var(--success)" }}></span>
               <span>DATABASE LIVE (SYNC: ACTIVE)</span>
             </div>
           </div>

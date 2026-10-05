@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 import * as XLSX from "xlsx";
+import { requireUserAction } from "@/lib/dal";
 
 const CACHE_DIR = path.resolve(process.cwd(), "cache");
 
@@ -22,6 +23,7 @@ export interface ParsedExcelOutput {
 }
 
 export async function parseAttachmentExcel(attachmentUrl: string): Promise<ParsedExcelOutput> {
+  await requireUserAction();
   const cacheKey = crypto.createHash("md5").update(attachmentUrl).digest("hex");
   const localPath = path.join(CACHE_DIR, `${cacheKey}.xlsx`);
 

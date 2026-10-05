@@ -22,14 +22,14 @@ export default function LoginForm() {
   const signupSuccess = searchParams.get("signup") === "success"
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+    <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
       <div className="mb-6 text-center">
-        <h1 className="text-xl font-bold text-[#0a2540]">LASERPOWER</h1>
-        <p className="mt-1 text-sm text-gray-500">Executive Dashboard</p>
+        <h1 className="text-xl font-bold text-brand-ink">LASERPOWER</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Executive Dashboard</p>
       </div>
 
       {signupSuccess && (
-        <div className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300">
           Account created successfully. Please sign in.
         </div>
       )}
@@ -37,7 +37,7 @@ export default function LoginForm() {
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="redirectTo" value={callbackUrl} />
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground/80">
             Email
           </label>
           <input
@@ -45,13 +45,13 @@ export default function LoginForm() {
             name="email"
             type="email"
             required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#0a2540] focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+            className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-brand-ink focus:outline-none focus:ring-1 focus:ring-brand-ink"
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-foreground/80">
             Password
           </label>
           <input
@@ -59,13 +59,13 @@ export default function LoginForm() {
             name="password"
             type="password"
             required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#0a2540] focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+            className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-brand-ink focus:outline-none focus:ring-1 focus:ring-brand-ink"
             placeholder="Enter your password"
           />
         </div>
 
         {isError && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-lg bg-red-50 dark:bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">
             {state}
           </div>
         )}
@@ -73,7 +73,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={pending}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0a2540] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0d2d4f] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? (
             "Signing in..."
@@ -86,9 +86,9 @@ export default function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/signup" className="font-semibold text-[#0a2540] hover:underline">
+        <Link href="/auth/signup" className="font-semibold text-brand-ink hover:underline">
           Sign Up
         </Link>
       </p>
