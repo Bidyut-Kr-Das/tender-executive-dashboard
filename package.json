@@ -9,7 +9,7 @@
     "start": "next start --port 3126",
     "start-prod": "node .next/standalone/server.js",
     "prisma:generate": "prisma generate",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit", 
     "postbuild": "cp -R public .next/standalone && cp -R .next/static .next/standalone/.next"
   },
   "dependencies": {
