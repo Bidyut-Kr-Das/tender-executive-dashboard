@@ -27,3 +27,33 @@ export function isValidCategorySelection(
   if (category === TENDER_CATEGORIES.MANUFACTURING && !subCategory) return true;
   return options.includes(subCategory as string);
 }
+
+// User-selected EPC subcategory cannot be trusted, so derive it per tender from
+// the brief and organization. Any matching rule overrides the selection; when no
+// rule matches, the user's selection is kept as fallback.
+export function resolveEpcSubCategory(
+  tenderBrief: unknown,
+  organization: unknown,
+  fallback: string,
+): string {
+  const brief = String(tenderBrief ?? "").toLowerCase();
+  const org = String(organization ?? "").toLowerCase();
+
+  // Ground rules (always win).
+  if (org.includes("railway")) return "Railways";
+  if (brief.includes("pijf")) return "Railways";
+
+  // Power Transmission.
+  if (brief.includes("opgw") && !brief.includes("supply")) {
+    return "Power Transmission";
+  }
+  if (brief.includes("transmission")) return "Power Transmission";
+
+  // Power Distribution.
+  if (brief.includes("distribution")) return "Power Distribution";
+  if (brief.includes("under") && brief.includes("ground")) {
+    return "Power Distribution";
+  }
+
+  return fallback;
+}

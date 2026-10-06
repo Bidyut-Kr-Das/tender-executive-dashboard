@@ -2,14 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { publishTenderTask } from "@/lib/queue/publisher";
+import { TENDER_CATEGORIES } from "@/lib/tender-categories";
+
+// Incoming snake_case category -> stored EPC subcategory. Unknown/missing is ignored.
+const SUBCATEGORY_BY_CATEGORY: Record<string, string> = {
+  power_transmission: "Power Transmission",
+  power_distribution: "Power Distribution",
+  railway: "Railways",
+  water_distribution: "Water Distribution",
+  solar: "Solar",
+};
 
 interface UpdateAiRelevanceInput {
   referenceNo: string;
   valid: boolean;
   reason: string;
+  subCategory: string | null;
 }
 
-async function updateAiRelevance({ referenceNo, valid, reason }: UpdateAiRelevanceInput) {
+async function updateAiRelevance({
+  referenceNo,
+  valid,
+  reason,
+  subCategory,
+}: UpdateAiRelevanceInput) {
   const existing = await prisma.tenderMerged.findUnique({
     where: { referenceNo },
     select: { id: true, tenderType: true },
@@ -22,7 +38,13 @@ async function updateAiRelevance({ referenceNo, valid, reason }: UpdateAiRelevan
 
   await prisma.tenderMerged.update({
     where: { id: existing.id },
-    data: { aiRelevanceValid: valid, aiRelevanceReason: reason },
+    data: {
+      aiRelevanceValid: valid,
+      aiRelevanceReason: reason,
+      ...(subCategory
+        ? { category: TENDER_CATEGORIES.EPC, subCategory }
+        : {}),
+    },
   });
 
   // Only publish download job for valid tenders; publish failure must not
@@ -84,6 +106,11 @@ export async function POST(req: NextRequest) {
       typeof data.company === "string" ? data.company.trim().toLowerCase() : "";
     const valid = analysis.valid;
     const reason = typeof analysis.reason === "string" ? analysis.reason.trim() : "";
+    const incomingCategory =
+      typeof analysis.category === "string"
+        ? analysis.category.trim().toLowerCase()
+        : "";
+    const subCategory = SUBCATEGORY_BY_CATEGORY[incomingCategory] ?? null;
 
     if (!referenceNo) {
       return NextResponse.json({ error: "referenceNo is required" }, { status: 400 });
@@ -101,7 +128,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "reason is required" }, { status: 400 });
     }
 
-    const result = await updateAiRelevanceWithLog({ referenceNo, valid, reason });
+    const result = await updateAiRelevanceWithLog({ referenceNo, valid, reason, subCategory });
     return NextResponse.json(result);
   } catch (err) {
     const status = (err as Error & { status?: number }).status ?? 500;

@@ -17,7 +17,11 @@ import { sendTenderWebhook } from "@/lib/webhook";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { format } from "date-fns";
 import { withLog } from "@/lib/activity-logger";
-import { isValidCategorySelection } from "@/lib/tender-categories";
+import {
+  isValidCategorySelection,
+  resolveEpcSubCategory,
+  TENDER_CATEGORIES,
+} from "@/lib/tender-categories";
 
 const SHEET_CONCURRENCY = 3;
 const INSERT_BATCH_SIZE = 50;
@@ -264,7 +268,18 @@ function parseSheetData(
       customColumnMap,
       associations,
     );
-    Object.assign(createData, categoryFields);
+    const rowCategoryFields: CategoryFields =
+      categoryFields.category === TENDER_CATEGORIES.EPC
+        ? {
+            category: categoryFields.category,
+            subCategory: resolveEpcSubCategory(
+              tenderBrief,
+              createData.organization,
+              categoryFields.subCategory ?? "",
+            ),
+          }
+        : categoryFields;
+    Object.assign(createData, rowCategoryFields);
     console.log(
       `[UPLOAD] Deadline for ${r}:`,
       createData.deadline ? format(createData.deadline as Date, "do MMM yyyy") : "null",
