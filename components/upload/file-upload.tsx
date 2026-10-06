@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import {
   TENDER_CATEGORIES,
-  EPC_SUBCATEGORIES,
+  TENDER_SUBCATEGORIES,
+  type TenderCategory,
   isValidCategorySelection,
 } from "@/lib/tender-categories";
 
@@ -96,7 +97,8 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
   const [category, setCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
   const dragCounter = useRef(0);
-  const isEpc = category === TENDER_CATEGORIES.EPC;
+  const subCategoryOptions =
+    TENDER_SUBCATEGORIES[category as TenderCategory] ?? [];
   const selectionValid = isValidCategorySelection(category, subCategory);
 
   useEffect(() => {
@@ -195,10 +197,10 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
       uploadFiles({
         files: pendingFiles,
         category,
-        subCategory: isEpc ? subCategory : null,
+        subCategory: subCategory || null,
       }),
     );
-  }, [dispatch, pendingFiles, selectionValid, category, subCategory, isEpc]);
+  }, [dispatch, pendingFiles, selectionValid, category, subCategory]);
 
   const handleResultParse = useCallback(async () => {
     if (!pendingFiles.length) return;
@@ -340,13 +342,13 @@ export default function FileUpload({ mode = "parse" }: FileUploadProps) {
                 <Select
                   value={subCategory || null}
                   onValueChange={(v) => setSubCategory(v ?? "")}
-                  disabled={parsing || !isEpc}
+                  disabled={parsing || subCategoryOptions.length === 0}
                 >
                   <SelectTrigger size="sm" className="w-52 rounded-sm text-xs">
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent>
-                    {EPC_SUBCATEGORIES.map((s) => (
+                    {subCategoryOptions.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>

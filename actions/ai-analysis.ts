@@ -131,18 +131,37 @@ export async function analyzeTenderValidity(
   }
 }
 
+// "Power Distribution" -> "power_distribution", "Cables & Conductors" -> "cables_conductors"
+function toSnakeCase(label: string | null | undefined): string | null {
+  if (!label) return null;
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+
+// Amounts are stored as free text (e.g. "6,50,00,000"); strip separators before parsing.
+function parseAmount(raw: string | null | undefined): number | null {
+  if (!raw) return null;
+  const match = raw.replace(/,/g, "").match(/\d+(\.\d+)?/);
+  return match ? Number(match[0]) : null;
+}
+
 async function publishAiAnalysisJobFn(params: {
   referenceNo: string;
   tenderBrief: string;
   itemCategory: string;
 }): Promise<boolean> {
   await requireUserAction();
+  const tender = await prisma.tenderMerged.findUnique({
+    where: { referenceNo: params.referenceNo },
+    select: { subCategory: true, value: true, estimatedBidValue: true },
+  });
   return publishAiRelevanceTask({
     payloadType: "analysis",
     referenceNo: params.referenceNo,
     company: "laser",
     tenderbrief: params.tenderBrief,
     itemcategory: params.itemCategory,
+    category: toSnakeCase(tender?.subCategory),
+    tenderAmount: parseAmount(tender?.value ?? tender?.estimatedBidValue),
   });
 }
 
