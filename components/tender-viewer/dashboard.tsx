@@ -925,6 +925,14 @@ export default function Dashboard() {
                 { value: "__blank__", label: "Blank" },
               ],
             },
+            extraFilters: [
+              {
+                accessor: "subCategory",
+                type: "select" as const,
+                placeholder: "Sub Category",
+                options: [{ value: "__blank__", label: "Blank" }],
+              },
+            ],
           };
         }
 

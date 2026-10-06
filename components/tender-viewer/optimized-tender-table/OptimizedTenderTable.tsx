@@ -157,6 +157,8 @@ export interface ColumnDef<T> {
     | "decision"
     | "custom";
   filter?: ColumnFilterConfig;
+  /** Extra dropdowns rendered in this column's header, each keyed by its own accessor. */
+  extraFilters?: Array<ColumnFilterConfig & { accessor: string }>;
   sortable?: boolean;
   resizable?: boolean;
   searchable?: boolean;
@@ -1008,11 +1010,11 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
   );
 
   const renderFilter = useCallback(
-    (col: ColumnDef<T>) => {
-      const accessorStr = String(col.accessor);
+    (config: ColumnFilterConfig, accessor: string) => {
+      const accessorStr = accessor;
       const filterState = columnFilters[accessorStr];
 
-      if (!col.filter) return null;
+      if (!config) return null;
 
       if (accessorStr === "deadline") {
         return (
@@ -1106,7 +1108,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
         );
       }
 
-      switch (col.filter.type) {
+      switch (config.type) {
         case "dateRange":
           return (
             <DateRangeColumnFilter
@@ -1128,7 +1130,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
             />
           );
         case "select": {
-          const configuredOptions = col.filter.options ?? [];
+          const configuredOptions = config.options ?? [];
           const facetOptions = server ? server.getFacetOptions(accessorStr) : null;
           const computedOptions = server
             ? (facetOptions ?? [])
@@ -1165,7 +1167,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
               }
               value={filterState?.select ?? EMPTY_SELECT_VALUES}
               onChange={(values) => {
-                if (col.filter?.searchable) {
+                if (config?.searchable) {
                   startTransition(() => {
                     dispatch(
                       clearColumnFilterAction({
@@ -1178,11 +1180,11 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
                 updateColumnFilter(accessorStr, "select", values);
               }}
               options={mergedOptions}
-              placeholder={col.filter.placeholder}
-              searchable={col.filter.searchable}
+              placeholder={config.placeholder}
+              searchable={config.searchable}
               triggerClassName="!w-full !justify-between !bg-card !text-foreground !border-input"
               onSearchChange={
-                col.filter?.searchable
+                config?.searchable
                   ? (text) => {
                       startTransition(() => {
                         dispatch(
@@ -1220,7 +1222,7 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
             <TextColumnFilter
               value={filterState?.text ?? ""}
               onChange={(v) => updateColumnFilter(accessorStr, "text", v)}
-              placeholder={col.filter.placeholder}
+              placeholder={config.placeholder}
             />
           );
         case "boolean":
@@ -1565,7 +1567,19 @@ function OptimizedTenderTableInner<T extends Record<string, unknown>>({
                     )}
                     {(() => {
                       try {
-                        return renderFilter(col);
+                        return (
+                          <>
+                            {renderFilter(
+                              col.filter as ColumnFilterConfig,
+                              String(col.accessor),
+                            )}
+                            {col.extraFilters?.map((extra) => (
+                              <div key={extra.accessor} className="mt-1">
+                                {renderFilter(extra, extra.accessor)}
+                              </div>
+                            ))}
+                          </>
+                        );
                       } catch (e) {
                         console.error("renderFilter error for", col.header, e);
                         return null;
