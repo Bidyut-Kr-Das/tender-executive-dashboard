@@ -20,7 +20,12 @@ type EventHandler = (evt: WebhookEvent) => Promise<Record<string, unknown>>;
 
 // Builds a POST handler for workers that report back with the shared event envelope.
 // Without onEvent the event is only logged.
-export function createWebhookHandler(source: string, onEvent?: EventHandler) {
+// requireReferenceNo=false is for batch events whose rows carry their own referenceNo.
+export function createWebhookHandler(
+  source: string,
+  onEvent?: EventHandler,
+  { requireReferenceNo = true }: { requireReferenceNo?: boolean } = {},
+) {
   async function receiveEvent(evt: WebhookEvent) {
     const handled = onEvent ? await onEvent(evt) : {};
     return { success: true, id: evt.id, event: evt.event, referenceNo: evt.data.referenceNo, ...handled };
@@ -29,7 +34,7 @@ export function createWebhookHandler(source: string, onEvent?: EventHandler) {
   const receiveEventWithLog = withLog(receiveEvent, (result, evt) => ({
     action: "UPDATE" as const,
     tableName: "TenderMerged",
-    referenceNo: evt.data.referenceNo,
+    referenceNo: evt.data.referenceNo || undefined,
     details: `${source} webhook ${evt.event} (${evt.data.type}) id=${evt.id}${
       evt.data.error ? ` error=${JSON.stringify(evt.data.error)}` : ""
     }${onEvent ? ` result=${JSON.stringify(result)}` : ""}`,
@@ -57,7 +62,7 @@ export function createWebhookHandler(source: string, onEvent?: EventHandler) {
         return NextResponse.json({ error: "data.type is required" }, { status: 400 });
       }
       const referenceNo = typeof data.referenceNo === "string" ? data.referenceNo.trim() : "";
-      if (!referenceNo) {
+      if (!referenceNo && requireReferenceNo) {
         return NextResponse.json({ error: "data.referenceNo is required" }, { status: 400 });
       }
 

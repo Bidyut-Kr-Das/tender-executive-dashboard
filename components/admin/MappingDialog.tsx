@@ -94,16 +94,16 @@ export default function MappingDialog({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
+        className="bg-card rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-800">
+          <h3 className="text-sm font-semibold text-foreground">
             {isEditing ? "Edit Mapping" : "Add Mapping"}
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+            className="text-muted-foreground hover:text-foreground/80 text-lg leading-none"
           >
             <X size={16} />
           </button>
@@ -111,7 +111,7 @@ export default function MappingDialog({
 
         <div className="space-y-4 text-sm">
           <div>
-            <label className="text-slate-500 text-[11px] block mb-1">
+            <label className="text-muted-foreground text-[11px] block mb-1">
               DB FIELD
             </label>
             <Select
@@ -120,7 +120,7 @@ export default function MappingDialog({
               disabled={isEditing || !!preSelectedDbField}
             >
               <SelectTrigger
-                className="w-full border border-slate-200 rounded-md px-3 py-2 text-[13px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:bg-slate-50 disabled:text-slate-500 data-placeholder:text-slate-400"
+                className="w-full border border-border rounded-md px-3 py-2 text-[13px] text-foreground/80 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-400/50 disabled:bg-muted disabled:text-muted-foreground data-placeholder:text-muted-foreground"
               >
                 <SelectValue placeholder="Select a field..." />
               </SelectTrigger>
@@ -135,46 +135,46 @@ export default function MappingDialog({
           </div>
 
           <div>
-            <label className="text-slate-500 text-[11px] block mb-1">
+            <label className="text-muted-foreground text-[11px] block mb-1">
               EXCEL HEADER
             </label>
             <input
               value={excelHeader}
               onChange={(e) => setExcelHeader(e.target.value)}
               placeholder="e.g. portalId"
-              className="w-full border border-slate-200 rounded-md px-3 py-2 text-[13px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full border border-border rounded-md px-3 py-2 text-[13px] text-foreground/80 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-400/50"
             />
           </div>
 
           <div>
-            <label className="text-slate-500 text-[11px] block mb-1">
+            <label className="text-muted-foreground text-[11px] block mb-1">
               DISPLAY NAME{" "}
-              <span className="text-slate-300 font-normal">(optional)</span>
+              <span className="text-muted-foreground/60 font-normal">(optional)</span>
             </label>
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="UI column header override"
-              className="w-full border border-slate-200 rounded-md px-3 py-2 text-[13px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full border border-border rounded-md px-3 py-2 text-[13px] text-foreground/80 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-400/50"
             />
           </div>
 
           {error && (
-            <p className="text-red-500 text-[12px]">{error}</p>
+            <p className="text-red-500 dark:text-red-300 text-[12px]">{error}</p>
           )}
         </div>
 
         <div className="flex justify-end gap-2 mt-5">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-[13px] text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+            className="px-4 py-1.5 text-[13px] text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-accent transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-1.5 text-[13px] text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+            className="px-4 py-1.5 text-[13px] text-white dark:text-foreground bg-blue-600 dark:bg-blue-500/80 rounded-md hover:bg-blue-700 dark:hover:bg-blue-500/85 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           >
             {saving ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

@@ -416,7 +416,7 @@ export function ParticipationCards({
       label: "Participated",
       count: counts.participated,
       icon: CheckCircle2,
-      iconClass: "text-emerald-600",
+      iconClass: "text-emerald-600 dark:text-emerald-300",
     },
   ];
 
@@ -432,7 +432,7 @@ export function ParticipationCards({
         type="date"
         className={
           isDark
-            ? "w-full rounded-md border border-white/20 bg-white/10 px-2 py-1.5 text-xs text-white [color-scheme:dark] focus:border-white/40 focus:outline-none"
+            ? "w-full rounded-md border border-white/20 bg-white/10 px-2 py-1.5 text-xs text-white dark:text-foreground [color-scheme:dark] focus:border-white/40 focus:outline-none"
             : "date-filter-input w-full"
         }
         style={isDark ? undefined : { flex: "none" }}
@@ -444,7 +444,7 @@ export function ParticipationCards({
         type="date"
         className={
           isDark
-            ? "w-full rounded-md border border-white/20 bg-white/10 px-2 py-1.5 text-xs text-white [color-scheme:dark] focus:border-white/40 focus:outline-none"
+            ? "w-full rounded-md border border-white/20 bg-white/10 px-2 py-1.5 text-xs text-white dark:text-foreground [color-scheme:dark] focus:border-white/40 focus:outline-none"
             : "date-filter-input w-full"
         }
         style={isDark ? undefined : { flex: "none" }}
@@ -457,7 +457,7 @@ export function ParticipationCards({
           type="button"
           className={
             isDark
-              ? "flex items-center justify-center text-white/60 hover:text-white cursor-pointer"
+              ? "flex items-center justify-center text-white/60 hover:text-white dark:hover:text-foreground cursor-pointer"
               : "date-filter-clear-btn"
           }
           title="Clear date filter"
@@ -484,7 +484,7 @@ export function ParticipationCards({
               onClearAssociation?.();
             }}
             className={`text-[10px] font-medium cursor-pointer ${
-              isDark ? "text-white/50 hover:text-white/80" : "text-slate-400 hover:text-slate-600"
+              isDark ? "text-white/50 hover:text-white/80" : "text-muted-foreground hover:text-foreground/80"
             }`}
           >
             Clear all ({participationFilters.length})
@@ -511,13 +511,13 @@ export function ParticipationCards({
                 isDark
                   ? `flex w-full flex-col rounded-lg border px-3 py-2.5 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
                       active
-                        ? "bg-blue-500/20 border-blue-400/50"
+                        ? "bg-blue-500/20 border-blue-400/50 dark:bg-[#76b0eb]/15 dark:border-[#76b0eb]/40"
                         : "bg-white/10 border-white/20 hover:bg-white/20"
                     }`
                   : `flex w-full flex-col rounded-sm border px-4 py-3 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
                       active
-                        ? "bg-blue-50 border-blue-300 shadow-sm"
-                        : "bg-white border-slate-200 hover:border-slate-300"
+                        ? "bg-blue-50 border-blue-300 shadow-sm dark:bg-blue-500/10 dark:border-blue-500/25"
+                        : "bg-card border-border hover:border-muted-foreground/40"
                     }`
               }
             >
@@ -532,7 +532,7 @@ export function ParticipationCards({
                     className={
                       isDark
                         ? "text-xs font-medium text-white/80 truncate"
-                        : "text-xs font-medium text-slate-600 truncate"
+                        : "text-xs font-medium text-muted-foreground truncate"
                     }
                   >
                     {card.label}
@@ -541,8 +541,8 @@ export function ParticipationCards({
                 <span
                   className={
                     isDark
-                      ? "text-xl font-bold text-white tabular-nums"
-                      : "text-xl font-bold text-slate-800 tabular-nums"
+                      ? "text-xl font-bold text-white dark:text-foreground tabular-nums"
+                      : "text-xl font-bold text-foreground tabular-nums"
                   }
                 >
                   {card.count}

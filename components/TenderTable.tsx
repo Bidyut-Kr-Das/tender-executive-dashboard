@@ -745,12 +745,12 @@ const RaDateInput: React.FC<{
         style={{
           fontSize: "11px",
           padding: "2px 4px",
-          border: "1px solid #dadce0",
+          border: "1px solid var(--border)",
           borderRadius: "4px",
           width: "100%",
           maxWidth: 112,
-          background: "#fff",
-          color: "#202124",
+          background: "var(--card)",
+          color: "var(--foreground)",
         }}
       />
       <button
@@ -3214,10 +3214,10 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     top: "calc(100% + 4px)",
                     zIndex: 50,
                     width: 280,
-                    background: "#fff",
+                    background: "var(--popover)",
                     borderRadius: 6,
                     boxShadow: "0 4px 12px rgba(10,37,64,0.15)",
-                    border: "1px solid #e1e6eb",
+                    border: "1px solid var(--border)",
                     padding: 8,
                     maxHeight: 400,
                     display: "flex",
@@ -3229,11 +3229,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     style={{
                       fontSize: 10,
                       fontWeight: 700,
-                      color: "rgba(0,0,0,0.5)",
+                      color: "var(--muted-foreground)",
                       padding: "4px 6px 8px",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
-                      borderBottom: "1px solid #e1e6eb",
+                      borderBottom: "1px solid var(--border)",
                       marginBottom: 4,
                       display: "flex",
                       alignItems: "center",
@@ -3245,20 +3245,20 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       style={{
                         fontSize: 10,
                         fontWeight: 600,
-                        color: "#0070f3",
+                        color: "var(--info)",
                         textTransform: "none",
                         letterSpacing: 0,
-                        background: "#e8f0fe",
+                        background: "var(--info-soft)",
                         padding: "2px 6px",
                         borderRadius: 10,
-                        border: "1px solid #d2e3fc",
+                        border: "1px solid var(--status-sub-border)",
                       }}
                     >
                       {baseVisibleColumns.filter((c) => columnVisibility[c.accessor] !== false).length}/{baseVisibleColumns.length}
                     </span>
                   </p>
                   <div style={{ position: "relative", display: "flex", alignItems: "center", marginBottom: 8 }}>
-                    <Search size={14} style={{ position: "absolute", left: 8, color: "#94a3b8", pointerEvents: "none" }} />
+                    <Search size={14} style={{ position: "absolute", left: 8, color: "var(--muted-foreground)", pointerEvents: "none" }} />
                     <input
                       type="text"
                       placeholder="Search columns..."
@@ -3268,7 +3268,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       style={{
                         width: "100%",
                         padding: "6px 28px",
-                        border: "1px solid #e1e6eb",
+                        border: "1px solid var(--border)",
                         borderRadius: 6,
                         fontSize: 12,
                         outline: "none",
@@ -3288,7 +3288,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                           height: 20,
                           border: "none",
                           background: "transparent",
-                          color: "#64748b",
+                          color: "var(--muted-foreground)",
                           cursor: "pointer",
                         }}
                         aria-label="Clear search"
@@ -3318,8 +3318,8 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         justifyContent: "center",
                         gap: 4,
                         padding: "6px 8px",
-                        background: "#fff",
-                        border: "1px solid #e1e6eb",
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: 6,
                         fontSize: 11,
                         fontWeight: 600,
@@ -3350,8 +3350,8 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         justifyContent: "center",
                         gap: 4,
                         padding: "6px 8px",
-                        background: "#fff",
-                        border: "1px solid #e1e6eb",
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: 6,
                         fontSize: 11,
                         fontWeight: 600,
@@ -3369,7 +3369,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             (c) => c.header.toLowerCase().includes(q) || String(c.accessor).toLowerCase().includes(q),
                           )
                         : baseVisibleColumns;
-                      if (filtered.length === 0) return <p style={{ textAlign: "center", padding: 16, color: "#94a3b8", fontSize: 12 }}>No columns found</p>;
+                      if (filtered.length === 0) return <p style={{ textAlign: "center", padding: 16, color: "var(--muted-foreground)", fontSize: 12 }}>No columns found</p>;
                       return filtered.map((col) => (
                         <label
                           key={col.accessor}
@@ -3381,7 +3381,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             borderRadius: 4,
                             cursor: "pointer",
                             fontSize: 12,
-                            color: "#0a2540",
+                            color: "var(--brand-ink)",
                           }}
                         >
                           <input
@@ -3393,7 +3393,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                 [col.accessor]: !(prev[col.accessor] ?? true),
                               }))
                             }
-                            style={{ width: 14, height: 14, accentColor: "#0070f3" }}
+                            style={{ width: 14, height: 14, accentColor: "var(--info)" }}
                           />
                           {col.header}
                         </label>
@@ -4065,7 +4065,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   style={{
                     textAlign: "center",
                     padding: "40px",
-                    color: "rgba(0,0,0,0.4)",
+                    color: "var(--muted-foreground)",
                   }}
                 >
                   No matching records found.
@@ -4118,7 +4118,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                 </span>
                                 {col.accessor === "docketNo" && rowIdx === 0 && group.records.length > 0 && (
                                   <button
-                                    className="flex-shrink-0 h-6 px-2 rounded flex items-center gap-1 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-medium transition-colors"
+                                    className="flex-shrink-0 h-6 px-2 rounded flex items-center gap-1 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/10 dark:hover:bg-blue-400/20 dark:text-blue-300 text-[11px] font-medium transition-colors"
                                     title={`View tender details (${group.records.length} record${group.records.length !== 1 ? "s" : ""})`}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -4148,14 +4148,14 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             <div className="relative group/cell h-full">
                               <div className="flex flex-col leading-tight" style={{ minHeight: 30 }}>
                                 <span className="text-xs font-medium">{office || "-"}</span>
-                                {consignees && <span className="text-[11px] text-slate-500">{consignees}</span>}
+                                {consignees && <span className="text-[11px] text-muted-foreground">{consignees}</span>}
                               </div>
                               <button
-                                className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer"
+                                className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer"
                                 title="Edit Office Name @ Consignees"
                                 onClick={(e) => { e.stopPropagation(); setOfficeDialogRecord(record); }}
                               >
-                                <Pencil className="w-4 h-4 text-white" />
+                                <Pencil className="w-4 h-4 text-white dark:text-blue-50" />
                               </button>
                             </div>
                           );
@@ -4178,7 +4178,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                         href={url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 underline hover:text-blue-800 text-xs"
+                                        className="text-blue-600 underline hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200 text-xs"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         {url}
@@ -4186,18 +4186,18 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                     ))}
                                   </div>
                                 ) : (
-                                  <span className="text-slate-300">-</span>
+                                  <span className="text-muted-foreground/50">-</span>
                                 )}
                               </div>
                               <button
-                                className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer"
+                                className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer"
                                 title="Edit Website"
                                 onClick={(e) => { e.stopPropagation(); setWebsiteDialogRecord(record); }}
                               >
                                 {isSaving ? (
-                                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                                  <Loader2 className="w-4 h-4 text-white dark:text-blue-50 animate-spin" />
                                 ) : (
-                                  <Pencil className="w-4 h-4 text-white" />
+                                  <Pencil className="w-4 h-4 text-white dark:text-blue-50" />
                                 )}
                               </button>
                             </div>
@@ -4278,7 +4278,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                         href={`/api/executive-files/view/${tt.testCertificateUrl}?auth=${encodeURIComponent("Bearer MOCK_TOKEN_LASERPOWER_SECURE_AUTH_SCOPE")}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ color: "#1a73e8", textDecoration: "underline" }}
+                                        style={{ color: "var(--status-sub-text)", textDecoration: "underline" }}
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         {tt.testCertificateNo}
@@ -4362,11 +4362,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                   const isSavingType = !!savingBom[`${costingId}-bomType`];
                                   const isSavingCode = !!savingBom[`${costingId}-bomCode`];
                                   return (
-                                    <div key={costingId} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 8px", display: "flex", flexDirection: "column", gap: 6 }}>
-                                      <div style={{ fontSize: 11, fontWeight: 600, color: "#1e293b", lineHeight: "1.3", wordBreak: "break-word" }}>{itemName || "-"}</div>
+                                    <div key={costingId} style={{ background: "var(--muted)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", display: "flex", flexDirection: "column", gap: 6 }}>
+                                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--foreground)", lineHeight: "1.3", wordBreak: "break-word" }}>{itemName || "-"}</div>
                                       <div style={{ display: "flex", gap: 6 }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                          <div style={{ fontSize: 9, color: "#64748b", marginBottom: 2, fontWeight: 600 }}>BOM Type</div>
+                                          <div style={{ fontSize: 9, color: "var(--muted-foreground)", marginBottom: 2, fontWeight: 600 }}>BOM Type</div>
                                           <Select
                                             value={displayBomType}
                                             disabled={isPlaceholder || utilityLoading || isSavingType}
@@ -4375,7 +4375,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                               handleCostingBomUpdate(costingId, "bomType", v ?? "", itemName, row.bomType ?? null, row.bomCode ?? null);
                                             }}
                                           >
-                                            <SelectTrigger size="sm" className="w-full h-7 text-[11px] bg-white">
+                                            <SelectTrigger size="sm" className="w-full h-7 text-[11px] bg-card">
                                               <SelectValue placeholder={utilityLoading ? "Loading..." : "Select type"} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -4386,10 +4386,10 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                               {typeOptions.length === 0 && !utilityLoading && <SelectItem value="__no_options" disabled>No options</SelectItem>}
                                             </SelectContent>
                                           </Select>
-                                          {isSavingType && <span style={{ fontSize: 9, color: "#64748b" }}>Saving...</span>}
+                                          {isSavingType && <span style={{ fontSize: 9, color: "var(--muted-foreground)" }}>Saving...</span>}
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                          <div style={{ fontSize: 9, color: "#64748b", marginBottom: 2, fontWeight: 600 }}>BOM Code</div>
+                                          <div style={{ fontSize: 9, color: "var(--muted-foreground)", marginBottom: 2, fontWeight: 600 }}>BOM Code</div>
                                           <Select
                                             value={displayBomCode}
                                             disabled={isPlaceholder || isSavingCode || (!displayBomType && uniqueBomIds.length === 0)}
@@ -4398,7 +4398,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                               handleCostingBomUpdate(costingId, "bomCode", v ?? "", itemName, row.bomType ?? null, row.bomCode ?? null);
                                             }}
                                           >
-                                            <SelectTrigger size="sm" className="w-full h-7 text-[11px] bg-white">
+                                            <SelectTrigger size="sm" className="w-full h-7 text-[11px] bg-card">
                                               <SelectValue placeholder={displayBomType ? "Select code" : "Select type first"} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -4409,10 +4409,10 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                               {uniqueBomIds.length === 0 && <SelectItem value="__no_options" disabled>{displayBomType ? "No codes for type" : "No codes"}</SelectItem>}
                                             </SelectContent>
                                           </Select>
-                                          {isSavingCode && <span style={{ fontSize: 9, color: "#64748b" }}>Saving...</span>}
+                                          {isSavingCode && <span style={{ fontSize: 9, color: "var(--muted-foreground)" }}>Saving...</span>}
                                         </div>
                                       </div>
-                                      {isPlaceholder && <span style={{ fontSize: 9, color: "#ef4444" }}>No CostingSheetDetails ID — cannot save</span>}
+                                      {isPlaceholder && <span style={{ fontSize: 9, color: "var(--danger)" }}>No CostingSheetDetails ID — cannot save</span>}
                                     </div>
                                   );
                                 })}
@@ -4445,7 +4445,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                           }
                           cellContent = parts.length > 0 ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                              {parts.map((part, i) => <div key={i} style={{ background: "#f1f3f4", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid #dadce0", width: "fit-content", color: "#202124" }}>{part}</div>)}
+                              {parts.map((part, i) => <div key={i} style={{ background: "var(--muted)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid var(--border)", width: "fit-content", color: "var(--foreground)" }}>{part}</div>)}
                             </div>
                           ) : (
                             <span>-</span>
@@ -4467,7 +4467,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                           schedules = Array.from(new Set(schedules.filter((s) => s.trim() !== "")));
                           cellContent = schedules.length > 0 ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                              {schedules.map((schedule, i) => <div key={i} style={{ background: "#f1f3f4", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid #dadce0", width: "fit-content", color: "#202124" }}>{schedule}</div>)}
+                              {schedules.map((schedule, i) => <div key={i} style={{ background: "var(--muted)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid var(--border)", width: "fit-content", color: "var(--foreground)" }}>{schedule}</div>)}
                             </div>
                           ) : (
                             <span>-</span>
@@ -4690,7 +4690,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                   <span
                                     style={{
                                       fontSize: 10,
-                                      color: "#5f6368",
+                                      color: "var(--muted-foreground)",
                                       width: 30,
                                       textAlign: "right",
                                     }}
@@ -4722,7 +4722,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                   <span
                                     style={{
                                       fontSize: 10,
-                                      color: "#5f6368",
+                                      color: "var(--muted-foreground)",
                                       width: 30,
                                       textAlign: "right",
                                     }}
@@ -4831,16 +4831,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                   {entries.length > 0 ? entries.map((e, i) => (
                                     <div key={i} className="flex gap-2">
                                       <span className="font-medium">{e.officer}</span>
-                                      {e.quantity && <span className="text-slate-500">qty: {e.quantity}</span>}
+                                      {e.quantity && <span className="text-muted-foreground">qty: {e.quantity}</span>}
                                     </div>
-                                  )) : <span className="text-slate-300">-</span>}
+                                  )) : <span className="text-muted-foreground/50">-</span>}
                                 </div>
                                 <button
-                                  className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 p-1 shadow-sm cursor-pointer"
+                                  className="opacity-0 group-hover/cell:opacity-100 transition-all absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-500/80 dark:hover:bg-blue-500 p-1 shadow-sm cursor-pointer"
                                   title="Edit Reporting Officers"
                                   onClick={(e) => { e.stopPropagation(); setReportingDialogRecord(record); }}
                                 >
-                                  <Pencil className="w-4 h-4 text-white" />
+                                  <Pencil className="w-4 h-4 text-white dark:text-blue-50" />
                                 </button>
                               </div>
                             );
@@ -5015,9 +5015,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                           cursor: isSaving ? "not-allowed" : "pointer",
                                           opacity: isSaving ? 0.5 : 1,
                                           display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                          backgroundColor: isSaving ? "#e2e8f0" : raIsYes ? "#22c55e" : "#ffffff",
-                                          color: isSaving ? "#94a3b8" : raIsYes ? "#ffffff" : "#94a3b8",
-                                          borderColor: isSaving ? "#cbd5e1" : raIsYes ? "#16a34a" : "#cbd5e1",
+                                          backgroundColor: isSaving ? "var(--muted)" : raIsYes ? "var(--success)" : "var(--card)",
+                                          color: isSaving ? "var(--muted-foreground)" : raIsYes ? "var(--card)" : "var(--muted-foreground)",
+                                          borderColor: isSaving ? "var(--input)" : raIsYes ? "var(--success)" : "var(--input)",
                                         }}
                                       >
                                         {isSaving ? "..." : "Y"}
@@ -5038,9 +5038,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                           cursor: isSaving ? "not-allowed" : "pointer",
                                           opacity: isSaving ? 0.5 : 1,
                                           display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                          backgroundColor: isSaving ? "#e2e8f0" : raIsNo ? "#ef4444" : "#ffffff",
-                                          color: isSaving ? "#94a3b8" : raIsNo ? "#ffffff" : "#94a3b8",
-                                          borderColor: isSaving ? "#cbd5e1" : raIsNo ? "#dc2626" : "#cbd5e1",
+                                          backgroundColor: isSaving ? "var(--muted)" : raIsNo ? "var(--danger)" : "var(--card)",
+                                          color: isSaving ? "var(--muted-foreground)" : raIsNo ? "var(--card)" : "var(--muted-foreground)",
+                                          borderColor: isSaving ? "var(--input)" : raIsNo ? "var(--danger)" : "var(--input)",
                                         }}
                                       >
                                         {isSaving ? "..." : "N"}
@@ -5122,9 +5122,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                         cursor: isUpdating ? "not-allowed" : "pointer",
                                         opacity: isUpdating ? 0.5 : 1,
                                         display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                        backgroundColor: isUpdating ? "#e2e8f0" : isYes ? "#22c55e" : "#ffffff",
-                                        color: isUpdating ? "#94a3b8" : isYes ? "#ffffff" : "#94a3b8",
-                                        borderColor: isUpdating ? "#cbd5e1" : isYes ? "#16a34a" : "#cbd5e1",
+                                        backgroundColor: isUpdating ? "var(--muted)" : isYes ? "var(--success)" : "var(--card)",
+                                        color: isUpdating ? "var(--muted-foreground)" : isYes ? "var(--card)" : "var(--muted-foreground)",
+                                        borderColor: isUpdating ? "var(--input)" : isYes ? "var(--success)" : "var(--input)",
                                       }}
                                     >
                                       {isUpdating ? "..." : "Y"}
@@ -5162,9 +5162,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                         cursor: isUpdating ? "not-allowed" : "pointer",
                                         opacity: isUpdating ? 0.5 : 1,
                                         display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                        backgroundColor: isUpdating ? "#e2e8f0" : isNo ? "#ef4444" : "#ffffff",
-                                        color: isUpdating ? "#94a3b8" : isNo ? "#ffffff" : "#94a3b8",
-                                        borderColor: isUpdating ? "#cbd5e1" : isNo ? "#dc2626" : "#cbd5e1",
+                                        backgroundColor: isUpdating ? "var(--muted)" : isNo ? "var(--danger)" : "var(--card)",
+                                        color: isUpdating ? "var(--muted-foreground)" : isNo ? "var(--card)" : "var(--muted-foreground)",
+                                        borderColor: isUpdating ? "var(--input)" : isNo ? "var(--danger)" : "var(--input)",
                                       }}
                                     >
                                       {isUpdating ? "..." : "N"}
@@ -5296,7 +5296,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               }
                               cellContent = parts.length > 0 ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-                                  {parts.map((part, i) => <div key={i} style={{ background: "#f1f3f4", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid #dadce0", width: "fit-content", color: "#202124" }}>{part}</div>)}
+                                  {parts.map((part, i) => <div key={i} style={{ background: "var(--muted)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid var(--border)", width: "fit-content", color: "var(--foreground)" }}>{part}</div>)}
                                 </div>
                               ) : "-";
                               cellClass = "col-center";
@@ -5348,9 +5348,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                       cursor: isUpdating ? "not-allowed" : "pointer",
                                       opacity: isUpdating ? 0.5 : 1,
                                       display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                      backgroundColor: isUpdating ? "#e2e8f0" : isYes ? "#22c55e" : "#ffffff",
-                                      color: isUpdating ? "#94a3b8" : isYes ? "#ffffff" : "#94a3b8",
-                                      borderColor: isUpdating ? "#cbd5e1" : isYes ? "#16a34a" : "#cbd5e1",
+                                      backgroundColor: isUpdating ? "var(--muted)" : isYes ? "var(--success)" : "var(--card)",
+                                      color: isUpdating ? "var(--muted-foreground)" : isYes ? "var(--card)" : "var(--muted-foreground)",
+                                      borderColor: isUpdating ? "var(--input)" : isYes ? "var(--success)" : "var(--input)",
                                     }}
                                   >
                                     {isUpdating ? "..." : "Y"}
@@ -5368,9 +5368,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                                       cursor: isUpdating ? "not-allowed" : "pointer",
                                       opacity: isUpdating ? 0.5 : 1,
                                       display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                      backgroundColor: isUpdating ? "#e2e8f0" : isNo ? "#ef4444" : "#ffffff",
-                                      color: isUpdating ? "#94a3b8" : isNo ? "#ffffff" : "#94a3b8",
-                                      borderColor: isUpdating ? "#cbd5e1" : isNo ? "#dc2626" : "#cbd5e1",
+                                      backgroundColor: isUpdating ? "var(--muted)" : isNo ? "var(--danger)" : "var(--card)",
+                                      color: isUpdating ? "var(--muted-foreground)" : isNo ? "var(--card)" : "var(--muted-foreground)",
+                                      borderColor: isUpdating ? "var(--input)" : isNo ? "var(--danger)" : "var(--input)",
                                     }}
                                   >
                                     {isUpdating ? "..." : "N"}
@@ -5507,7 +5507,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
 
           {totalPages > 5 && activePage < totalPages - 2 && (
             <>
-              <span style={{ padding: "0 4px", color: "rgba(0,0,0,0.4)" }}>
+              <span style={{ padding: "0 4px", color: "var(--muted-foreground)" }}>
                 ...
               </span>
               <button

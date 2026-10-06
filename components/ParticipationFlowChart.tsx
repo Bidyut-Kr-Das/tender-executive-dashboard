@@ -218,7 +218,7 @@ export function ParticipationFlowChart({
 
   return (
     <div ref={containerRef} className="space-y-5">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-brand-foreground/50">
         Participation Flow
       </div>
 

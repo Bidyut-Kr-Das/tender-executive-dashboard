@@ -125,8 +125,8 @@ export default function MergeConflictDashboard() {
             <span
               className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
                 count > 1
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-slate-100 text-slate-600"
+                  ? "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200"
+                  : "bg-muted text-muted-foreground"
               }`}
             >
               {count}
@@ -151,8 +151,8 @@ export default function MergeConflictDashboard() {
               <span
                 className={`inline-flex items-center justify-center min-w-7 h-7 px-1.5 rounded-full text-xs font-bold ${
                   count > 0
-                    ? "bg-red-100 text-red-700"
-                    : "bg-slate-100 text-slate-400"
+                    ? "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {count}
@@ -164,7 +164,7 @@ export default function MergeConflictDashboard() {
                   e.stopPropagation();
                   setSelectedDocket(docket);
                 }}
-                className="inline-flex items-center gap-1 px-2.5 h-7 rounded-md text-xs font-semibold border border-slate-300 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 h-7 rounded-md text-xs font-semibold border border-border text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 <Eye className="w-3.5 h-3.5" />
                 View
@@ -198,8 +198,8 @@ export default function MergeConflictDashboard() {
                 onClick={() => handleApprovedClick(docket, "YES")}
                 className={`w-7 h-7 rounded text-xs font-bold border-2 transition-colors cursor-pointer ${
                   isYes
-                    ? "bg-green-500 text-white border-green-600"
-                    : "bg-white text-slate-400 border-slate-300 hover:border-slate-400"
+                    ? "bg-green-500 dark:bg-green-500/80 text-white dark:text-foreground border-green-600 dark:border-green-500/60"
+                    : "bg-card text-muted-foreground border-border hover:border-ring"
                 }`}
               >
                 Y
@@ -209,8 +209,8 @@ export default function MergeConflictDashboard() {
                 onClick={() => handleApprovedClick(docket, "NO")}
                 className={`w-7 h-7 rounded text-xs font-bold border-2 transition-colors cursor-pointer ${
                   isNo
-                    ? "bg-red-500 text-white border-red-600"
-                    : "bg-white text-slate-400 border-slate-300 hover:border-slate-400"
+                    ? "bg-red-500 dark:bg-red-500/80 text-white dark:text-foreground border-red-600 dark:border-red-500/60"
+                    : "bg-card text-muted-foreground border-border hover:border-ring"
                 }`}
               >
                 N
@@ -225,7 +225,7 @@ export default function MergeConflictDashboard() {
 
   if (loadingTenders && !tenderData) {
     return (
-      <div className="flex items-center justify-center py-12 text-sm text-slate-400">
+      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
         Loading...
       </div>
     );
@@ -233,7 +233,7 @@ export default function MergeConflictDashboard() {
 
   if (!tenderData) {
     return (
-      <div className="flex items-center justify-center py-12 text-sm text-slate-400 bg-white rounded-sm border border-slate-200">
+      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground bg-card rounded-sm border border-border">
         No tender data found. Upload files from the Tenders page first.
       </div>
     );
@@ -241,7 +241,7 @@ export default function MergeConflictDashboard() {
 
   return (
     <>
-      <div className="flex flex-1 overflow-hidden bg-[#f4f6f8]">
+      <div className="flex flex-1 overflow-hidden bg-muted">
         <div className="flex flex-col flex-1 min-w-0">
           <main className="flex-1 overflow-auto p-6">
             <OptimizedTenderTable

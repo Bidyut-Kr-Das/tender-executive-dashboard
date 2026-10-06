@@ -578,15 +578,15 @@ export const TenderDashboardPage: React.FC = () => {
           </div>
           <div className="tender-stat-card">
             <div className="tender-stat-label">Tenders</div>
-            <div className="tender-stat-value" style={{ color: "#ff6b6b" }}>{tenderCount.toLocaleString()}</div>
+            <div className="tender-stat-value" style={{ color: "light-dark(#ff6b6b, #e66e6d)" }}>{tenderCount.toLocaleString()}</div>
           </div>
           <div className="tender-stat-card">
             <div className="tender-stat-label">Purchases</div>
-            <div className="tender-stat-value" style={{ color: "#38ef7d" }}>{purchaseCount.toLocaleString()}</div>
+            <div className="tender-stat-value" style={{ color: "light-dark(#38ef7d, #6ee7b7)" }}>{purchaseCount.toLocaleString()}</div>
           </div>
           <div className="tender-stat-card">
             <div className="tender-stat-label">With Quotation</div>
-            <div className="tender-stat-value" style={{ color: "#69b2ff" }}>{withQuotation.toLocaleString()}</div>
+            <div className="tender-stat-value" style={{ color: "light-dark(#69b2ff, #76b0eb)" }}>{withQuotation.toLocaleString()}</div>
           </div>
 
           {/* Filters */}
@@ -1086,7 +1086,7 @@ export const TenderDashboardPage: React.FC = () => {
                               style={{
                                 textAlign: "center",
                                 padding: "48px 20px",
-                                color: "rgba(0,0,0,0.4)",
+                                color: "color-mix(in srgb, var(--foreground) 40%, transparent)",
                                 fontSize: "13px",
                                 fontWeight: 500,
                               }}
@@ -1107,7 +1107,7 @@ export const TenderDashboardPage: React.FC = () => {
                               {row.partyName ?? <span className="smartsheet-null-cell">—</span>}
                             </td>
                             {/* Docket Number */}
-                            <td style={{ fontFamily: "monospace", fontWeight: 600, color: "#0a2540" }}>
+                            <td style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--brand-ink)" }}>
                               {row.docketNumber ?? <span className="smartsheet-null-cell">—</span>}
                             </td>
                             {/* Utility */}
@@ -1143,7 +1143,7 @@ export const TenderDashboardPage: React.FC = () => {
                                   return (
                                     <div className="tender-item-stack" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                                       {parts.map((part, pIdx) => (
-                                        <span className="tender-item-name-tag" key={pIdx} style={{ display: "inline-block", background: "#f1f3f4", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid #dadce0", width: "fit-content", color: "#202124" }}>
+                                        <span className="tender-item-name-tag" key={pIdx} style={{ display: "inline-block", background: "var(--muted)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid var(--input)", width: "fit-content", color: "var(--foreground)" }}>
                                           {part}
                                         </span>
                                       ))}
@@ -1162,7 +1162,7 @@ export const TenderDashboardPage: React.FC = () => {
                                   return (
                                     <div className="tender-qty-stack" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                                       {parts.map((part, pIdx) => (
-                                        <span className="tender-qty-item" key={pIdx} style={{ display: "inline-block", background: "#f1f3f4", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid #dadce0", width: "fit-content", color: "#202124" }}>
+                                        <span className="tender-qty-item" key={pIdx} style={{ display: "inline-block", background: "var(--muted)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", border: "1px solid var(--input)", width: "fit-content", color: "var(--foreground)" }}>
                                           {part}
                                         </span>
                                       ))}
@@ -1181,7 +1181,7 @@ export const TenderDashboardPage: React.FC = () => {
                                     window.open(row.attachmentUrl!, "_blank");
                                   }}
                                   title="View Costing Sheet"
-                                  style={{ padding: "4px 8px", background: "#e8f0fe", color: "#1a73e8", border: "1px solid #d2e3fc", borderRadius: "4px", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                                  style={{ padding: "4px 8px", background: "var(--status-sub-bg)", color: "var(--status-sub-text)", border: "1px solid var(--status-sub-border)", borderRadius: "4px", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
                                 >
                                   <Paperclip size={14} /> Costing
                                 </button>
@@ -1216,9 +1216,9 @@ export const TenderDashboardPage: React.FC = () => {
                                 return activeRates.length > 0 ? (
                                   <div className="raw-materials-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "2px", fontSize: "10px" }}>
                                     {activeRates.map(m => (
-                                      <div className="material-rate-tag" key={m.label} title={`${m.label}: ₹${m.price}/kg`} style={{ background: "#f1f3f4", padding: "2px 4px", borderRadius: "3px", border: "1px solid #dadce0" }}>
-                                        <span className="mat-lbl" style={{ fontWeight: 600, color: "#5f6368" }}>{m.label}:</span>
-                                        <span className="mat-val" style={{ marginLeft: "2px", color: "#202124" }}>₹{m.price}</span>
+                                      <div className="material-rate-tag" key={m.label} title={`${m.label}: ₹${m.price}/kg`} style={{ background: "var(--muted)", padding: "2px 4px", borderRadius: "3px", border: "1px solid var(--input)" }}>
+                                        <span className="mat-lbl" style={{ fontWeight: 600, color: "var(--muted-foreground)" }}>{m.label}:</span>
+                                        <span className="mat-val" style={{ marginLeft: "2px", color: "var(--foreground)" }}>₹{m.price}</span>
                                       </div>
                                     ))}
                                   </div>
@@ -1256,7 +1256,7 @@ export const TenderDashboardPage: React.FC = () => {
                       <button className="smartsheet-page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
                       {pageNumbers().map((p, i) =>
                         p === "..." ? (
-                          <span key={`e${i}`} style={{ padding: "0 4px", color: "#5f6368", fontSize: 12 }}>…</span>
+                          <span key={`e${i}`} style={{ padding: "0 4px", color: "var(--muted-foreground)", fontSize: 12 }}>…</span>
                         ) : (
                           <button key={p} className={`smartsheet-page-btn${page === p ? " active" : ""}`} onClick={() => setPage(p as number)}>{p}</button>
                         )
@@ -1272,16 +1272,16 @@ export const TenderDashboardPage: React.FC = () => {
         {/* Footer status bar */}
         <footer className="tender-status-bar">
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#137333" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#34a853", display: "inline-block", animation: "blink 1.5s infinite" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--status-won-text)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--success)", display: "inline-block", animation: "blink 1.5s infinite" }} />
               <span>SMARTSHEET LIVE</span>
             </div>
           </div>
-          <div style={{ color: "#0a2540", textTransform: "uppercase", fontWeight: 700 }}>
+          <div style={{ color: "var(--brand-ink)", textTransform: "uppercase", fontWeight: 700 }}>
             LASERPOWER TENDER SMARTSHEET PIPELINE
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <span style={{ backgroundColor: "#e1e6eb", color: "#0a2540", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+            <span style={{ backgroundColor: "var(--border)", color: "var(--brand-ink)", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
               LASERPOWER ERP V2.1 PRO
             </span>
           </div>

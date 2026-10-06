@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireApiKey } from "@/lib/dal";
 
 export const runtime = "nodejs";
 
-const EXTERNAL_API_KEY = process.env.EXTERNAL_API_KEY || "dhinchak";
-
-function isAuthorized(req: NextRequest): boolean {
-  const bearer =
-    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  const apiKey = req.headers.get("x-api-key") ?? "";
-  return bearer === EXTERNAL_API_KEY || apiKey === EXTERNAL_API_KEY;
-}
 
 const TENDER_MERGED_SELECT = {
   id: true,
@@ -121,9 +114,8 @@ async function lookupTenders(identifiers: string[]) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const forbidden = await requireApiKey(req);
+  if (forbidden) return forbidden;
 
   let body: unknown;
   try {

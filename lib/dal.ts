@@ -39,6 +39,17 @@ export const requireRole = cache(async (role: string) => {
   }
 })
 
+// For server actions: they bypass proxy page guards, so each mutating action must check itself.
+export async function requireUserAction() {
+  const session = await auth()
+
+  if (!session?.user) {
+    throw new Error("Unauthorized: Please sign in")
+  }
+
+  return session.user
+}
+
 export async function requireAdminApi() {
   const session = await auth()
 
@@ -54,15 +65,13 @@ export async function requireAdminApi() {
 }
 
 export async function requireApiKey(req: NextRequest) {
-  const key = process.env.EXTERNAL_API_KEY || "dhinchak"
+  const key = process.env.EXTERNAL_API_KEY
 
   const bearer =
     req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? ""
   const apiKey = req.headers.get("x-api-key") ?? ""
 
-  console.log("[requireApiKey]", JSON.stringify({ bearer, apiKey, key }))
-
-  if (bearer !== key && apiKey !== key) {
+  if (!key || (bearer !== key && apiKey !== key)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

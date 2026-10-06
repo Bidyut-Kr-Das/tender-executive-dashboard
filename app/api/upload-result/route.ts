@@ -10,9 +10,9 @@ import {
   buildMergedColumnMap,
 } from "@/lib/tender-columns";
 import { withLog } from "@/lib/activity-logger";
+import { COMPETITORS_SEPARATOR, mergeCompetitors } from "@/lib/result-sync";
 
 const SHEET_CONCURRENCY = 3;
-const COMPETITORS_SEPARATOR = " - ";
 
 const RESULT_FIELDS = [
   "ourRank",
@@ -210,22 +210,8 @@ async function processResultFile(file: File): Promise<FileResult & { updatedRefs
         const data: Record<string, unknown> = { ...item.updateData };
 
         if (item.competitors) {
-          const existingComp = (existing.competitors ?? "").toString().trim();
-          const seen = new Set(
-            existingComp
-              ? existingComp.split(COMPETITORS_SEPARATOR).map((s) => s.trim()).filter(Boolean)
-              : [],
-          );
-          const newParts = item.competitors
-            .split(COMPETITORS_SEPARATOR)
-            .map((s) => s.trim())
-            .filter(Boolean);
-          const toAdd = newParts.filter((p) => !seen.has(p));
-          if (toAdd.length) {
-            data.competitors = existingComp
-              ? `${existingComp}${COMPETITORS_SEPARATOR}${toAdd.join(COMPETITORS_SEPARATOR)}`
-              : toAdd.join(COMPETITORS_SEPARATOR);
-          }
+          const merged = mergeCompetitors(existing.competitors, item.competitors.split(COMPETITORS_SEPARATOR));
+          if (merged) data.competitors = merged;
         }
 
         if (Object.keys(data).length === 0) continue;

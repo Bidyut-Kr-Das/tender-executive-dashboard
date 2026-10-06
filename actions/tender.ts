@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendTenderWebhook } from "@/lib/webhook";
 import { withLog, logActivity } from "@/lib/activity-logger";
+import { requireUserAction } from "@/lib/dal";
 import {
   triggerEmdPaymentWebhook,
   resolveEmdAttachment,
@@ -24,6 +25,7 @@ export const updateTenderAssignmentsAction = withLog(
     tenderMergedId: number;
     associationIds: number[];
   }) => {
+    await requireUserAction();
     const existing = await prisma.tenderAssociation.findFirst({
       where: { tenderMergedId: params.tenderMergedId },
       select: { id: true },
@@ -98,6 +100,7 @@ export async function updateTenderUtilityMapping(params: {
   tenderMergedId: number;
   website: string;
 }) {
+  await requireUserAction();
   const website = params.website.toLowerCase().trim();
   try {
     const tender = await prisma.tenderMerged.update({
@@ -155,6 +158,7 @@ export const bulkAssignUtilityMappingAction = withLog(
     utilityMappingId: number;
     excludeTenderMergedId: number;
   }) => {
+    await requireUserAction();
     const website = params.website.toLowerCase().trim();
     try {
       await prisma.tenderMerged.updateMany({
@@ -194,6 +198,7 @@ export const updateTenderDecision = withLog(
     field: "app" | "aps" | "apm" | "participated" | "catalogueDone";
     value: "YES" | "NO" | "NOT_DECIDED" | "true" | "false";
   }) => {
+    await requireUserAction();
     let data: Record<string, unknown>;
     if (params.field === "participated") {
       data = {
@@ -249,6 +254,7 @@ export const updateTenderDecision = withLog(
 
 export const updateDocketNumber = withLog(
   async (params: { tenderMergedId: number; docketNo: string }) => {
+    await requireUserAction();
     console.log(`[action:updateDocketNumber] called with:`, params);
     const docketNo = params.docketNo.trim();
 
@@ -289,6 +295,7 @@ export const updateDocketNumber = withLog(
 
 export const updateBgNoUtrNo = withLog(
   async (params: { tenderMergedId: number; bgNoUtrNo: string }) => {
+    await requireUserAction();
     console.log(`[action:updateBgNoUtrNo] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -319,6 +326,7 @@ export const updateBgNoUtrNo = withLog(
 
 export const updateRemarks = withLog(
   async (params: { tenderMergedId: number; remarks: string }) => {
+    await requireUserAction();
     console.log(`[action:updateRemarks] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -349,6 +357,7 @@ export const updateRemarks = withLog(
 
 export const updateReason = withLog(
   async (params: { tenderMergedId: number; reason: string }) => {
+    await requireUserAction();
     console.log(`[action:updateReason] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -379,6 +388,7 @@ export const updateReason = withLog(
 
 export const updateLoiPoNoAndDate = withLog(
   async (params: { tenderMergedId: number; loiPoNoAndDate: string }) => {
+    await requireUserAction();
     console.log(`[action:updateLoiPoNoAndDate] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -409,6 +419,7 @@ export const updateLoiPoNoAndDate = withLog(
 
 export const updateCompetitors = withLog(
   async (params: { tenderMergedId: number; competitors: string }) => {
+    await requireUserAction();
     console.log(`[action:updateCompetitors] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -442,6 +453,7 @@ export const updateDiffPercentFromL1 = withLog(
     tenderMergedId: number;
     diffPercentFromL1: number | null;
   }) => {
+    await requireUserAction();
     console.log(`[action:updateDiffPercentFromL1] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -475,6 +487,7 @@ export const updateDiffPercentFromL2 = withLog(
     tenderMergedId: number;
     diffPercentFromL2: number | null;
   }) => {
+    await requireUserAction();
     console.log(`[action:updateDiffPercentFromL2] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -507,6 +520,7 @@ export async function updateBeneficiaryBankDetails(params: {
   tenderMergedId: number;
   beneficiaryBankDetails: string;
 }) {
+  await requireUserAction();
   await prisma.tenderMerged.update({
     where: { id: params.tenderMergedId },
     data: { beneficiaryBankDetails: params.beneficiaryBankDetails },
@@ -571,6 +585,7 @@ export async function updateTenderMergedStringField(params: {
   field: string;
   value: string;
 }): Promise<{ ok: boolean; error?: string; diffPercentFromL1?: number | null; diffPercentFromL2?: number | null; differenceBetweenRank1?: string | null; differenceBetweenRank2?: string | null }> {
+  await requireUserAction();
   const { tenderMergedId, field, value } = params;
 
   if (
@@ -827,6 +842,7 @@ export async function updateTenderMergedDateField(params: {
   field: string;
   value: string | null;
 }) {
+  await requireUserAction();
   await prisma.tenderMerged.update({
     where: { id: params.tenderMergedId },
     data: { [params.field]: params.value ? parseDate(params.value) : null },
@@ -844,6 +860,7 @@ export async function updateTenderMergedBooleanField(params: {
   field: string;
   value: boolean;
 }) {
+  await requireUserAction();
   await prisma.tenderMerged.update({
     where: { id: params.tenderMergedId },
     data: { [params.field]: params.value },
@@ -863,6 +880,7 @@ export const updateStatusAndAction = withLog(
     nextAction: string | null;
     reverseAuctionApplicable: boolean | null;
   }) => {
+    await requireUserAction();
     console.log(`[action:updateTenderStatusAndAction] called with:`, params);
     try {
       const updated = await prisma.tenderMerged.update({
@@ -907,6 +925,7 @@ const REASON_FOR_NOT_APM_OPTIONS = [
 
 export const updateReasonForNotAPM = withLog(
   async (params: { tenderMergedId: number; reasonForNotAPM: string }) => {
+    await requireUserAction();
     const raw = (params.reasonForNotAPM ?? "").trim();
     if (raw !== "" && !(REASON_FOR_NOT_APM_OPTIONS as readonly string[]).includes(raw)) {
       throw new Error(`Invalid reasonForNotAPM value: "${raw}"`);
@@ -929,6 +948,7 @@ export const updateReasonForNotAPM = withLog(
 
 export const triggerReverseAuctionMail = withLog(
   async (params: ReverseAuctionWebhookData) => {
+    await requireUserAction();
     console.log(
       `[action:triggerReverseAuctionMail] called for tender #${params.tenderMergedId}`,
     );

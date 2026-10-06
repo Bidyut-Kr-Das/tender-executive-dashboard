@@ -6,8 +6,8 @@
   align-items: center;
   gap: 0;
   padding: 0 24px;
-  background-color: #ffffff;
-  border-bottom: 2px solid #e1e6eb;
+  background-color: var(--card);
+  border-bottom: 2px solid var(--border);
   height: 42px;
   flex-shrink: 0;
 }
@@ -24,7 +24,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #5f6368;
+  color: var(--muted-foreground);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   cursor: pointer;
@@ -33,13 +33,13 @@
 }
 
 .tab-btn:hover {
-  color: #0a2540;
+  color: var(--brand-ink);
   border-bottom-color: #c8d0d8;
 }
 
 .tab-btn.active {
-  color: #0070f3;
-  border-bottom-color: #0070f3;
+  color: var(--info);
+  border-bottom-color: var(--info);
 }
 
 .tab-btn .tab-icon {
@@ -52,19 +52,19 @@
   display: flex;
   flex: 1;
   overflow: hidden;
-  background-color: #f4f6f8;
+  background-color: var(--muted);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Left Panel - stats/filter bar (same width as sidebar) */
 .tender-sidebar {
   width: 260px;
-  background-color: #0a2540;
-  color: #ffffff;
+  background-color: var(--brand);
+  color: var(--brand-foreground);
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-right: 1px solid #1e3d59;
+  border-right: 1px solid var(--brand-hover);
   flex-shrink: 0;
   box-sizing: border-box;
 }
@@ -75,7 +75,7 @@
   font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  border-bottom: 1px solid #1e3d59;
+  border-bottom: 1px solid var(--brand-hover);
 }
 
 .tender-sidebar-body {
@@ -136,7 +136,7 @@
   background-color: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px;
-  color: #fff;
+  color: var(--brand-foreground);
   font-size: 12px;
   font-family: inherit;
   box-sizing: border-box;
@@ -145,9 +145,9 @@
 
 .tender-filter-input:focus {
   outline: none;
-  background-color: #fff;
-  color: #0a2540;
-  border-color: #0070f3;
+  background-color: var(--card);
+  color: var(--brand-ink);
+  border-color: var(--info);
 }
 
 .tender-filter-input::placeholder {
@@ -160,7 +160,7 @@
   background-color: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px;
-  color: #fff;
+  color: var(--brand-foreground);
   font-size: 12px;
   font-family: inherit;
   box-sizing: border-box;
@@ -175,26 +175,26 @@
 
 .tender-filter-select:focus {
   outline: none;
-  background-color: #fff;
-  color: #0a2540;
-  border-color: #0070f3;
+  background-color: var(--card);
+  color: var(--brand-ink);
+  border-color: var(--info);
   background-image: url("data:image/svg+xml;utf8,<svg fill='%230a2540' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
 }
 
 .tender-filter-select option {
-  background-color: #0a2540;
-  color: #fff;
+  background-color: var(--brand);
+  color: var(--brand-foreground);
 }
 
 .tender-sidebar-footer {
   padding: 16px 20px;
-  border-top: 1px solid #1e3d59;
+  border-top: 1px solid var(--brand-hover);
 }
 
 .tender-refresh-sidebar-btn {
   width: 100%;
-  background: linear-gradient(135deg, #0070f3, #0056b3);
-  color: #fff;
+  background: linear-gradient(135deg, var(--info), #0056b3);
+  color: var(--info-foreground);
   border: none;
   border-radius: 4px;
   padding: 10px 16px;
@@ -233,8 +233,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e1e6eb;
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
   height: 54px;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(10,37,64,0.02);
@@ -249,26 +249,26 @@
 .tender-header-title {
   font-size: 16px;
   font-weight: 800;
-  color: #0a2540;
+  color: var(--brand-ink);
   letter-spacing: 0.5px;
   margin: 0;
 }
 
 .tender-header-title span {
-  color: #0070f3;
+  color: var(--info);
   font-weight: 500;
 }
 
 .tender-header-divider {
   width: 1px;
   height: 16px;
-  background-color: #e1e6eb;
+  background-color: var(--border);
 }
 
 .tender-header-subtitle {
   font-size: 11px;
   font-weight: 700;
-  color: #5f6368;
+  color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -296,13 +296,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  background-color: #ffffff;
-  border-top: 1px solid #e1e6eb;
+  background-color: var(--card);
+  border-top: 1px solid var(--border);
   height: 32px;
   flex-shrink: 0;
   font-size: 10px;
   font-weight: 600;
-  color: #5f6368;
+  color: var(--muted-foreground);
   letter-spacing: 0.2px;
 }
 
@@ -311,8 +311,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
-  border: 1px solid #e1e6eb;
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(10, 37, 64, 0.05);
   overflow: hidden;
@@ -325,8 +325,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  background-color: #0a2540;
-  color: #ffffff;
+  background-color: var(--brand);
+  color: var(--brand-foreground);
   gap: 16px;
   flex-shrink: 0;
 }
@@ -347,7 +347,7 @@
 }
 
 .smartsheet-record-badge {
-  background-color: #1e3d59;
+  background-color: var(--brand-hover);
   color: #38ef7d;
   padding: 3px 8px;
   border-radius: 20px;
@@ -367,7 +367,7 @@
   background-color: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--brand-foreground);
   font-size: 12px;
   font-family: inherit;
   transition: all 0.2s ease;
@@ -378,9 +378,9 @@
 
 .smartsheet-search-input:focus {
   outline: none;
-  background-color: #ffffff;
-  color: #0a2540;
-  border-color: #0070f3;
+  background-color: var(--card);
+  color: var(--brand-ink);
+  border-color: var(--info);
 }
 
 .smartsheet-search-icon {
@@ -410,14 +410,14 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: #f4f6f8;
-  color: #0a2540;
+  background-color: var(--muted);
+  color: var(--brand-ink);
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
   padding: 10px 12px;
-  border-bottom: 2px solid #e1e6eb;
-  border-right: 1px solid #e1e6eb;
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: left;
   white-space: nowrap;
   cursor: pointer;
@@ -435,13 +435,13 @@
 
 .smartsheet-sort-icon {
   font-size: 9px;
-  color: rgba(0,0,0,0.25);
+  color: color-mix(in srgb, var(--foreground) 25%, transparent);
 }
 
 .smartsheet-data-table td {
   padding: 9px 12px;
-  border-bottom: 1px solid #e1e6eb;
-  border-right: 1px solid #e1e6eb;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -451,8 +451,8 @@
 
 .smartsheet-data-table td:last-child { border-right: none; }
 
-.smartsheet-row { transition: background-color 0.12s ease; background-color: #fff; }
-.smartsheet-row:hover { background-color: #f8fafc; }
+.smartsheet-row { transition: background-color 0.12s ease; background-color: var(--card); }
+.smartsheet-row:hover { background-color: var(--accent); }
 
 .smartsheet-null-cell {
   color: #bcc5ce;
@@ -465,9 +465,9 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 10px;
-  background-color: #e8f0fe;
-  color: #1a73e8;
-  border: 1px solid #d2e3fc;
+  background-color: var(--status-sub-bg);
+  color: var(--status-sub-text);
+  border: 1px solid var(--status-sub-border);
   font-size: 11px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -485,9 +485,9 @@
   border: 1px solid transparent;
 }
 
-.purchase-type-badge.tender { background:#fce8e6; color:#c5221f; border-color:#fad2cf; }
-.purchase-type-badge.purchase { background:#e6f7ed; color:#137333; border-color:#c3e6cb; }
-.purchase-type-badge.budgetary { background:#fef7e0; color:#b06000; border-color:#ffe89e; }
+.purchase-type-badge.tender { background:var(--status-lost-bg); color:var(--status-lost-text); border-color:var(--status-lost-border); }
+.purchase-type-badge.purchase { background:var(--status-won-bg); color:var(--status-won-text); border-color:var(--status-won-border); }
+.purchase-type-badge.budgetary { background:var(--status-eval-bg); color:var(--status-eval-text); border-color:var(--status-eval-border); }
 .purchase-type-badge.laser { background:#f3e8fd; color:#7928ca; border-color:#e0c8fa; }
 
 /* ── Footer / Pagination ─────────────────────────────────────────────────── */
@@ -496,8 +496,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 9px 16px;
-  background-color: #f4f6f8;
-  border-top: 1px solid #e1e6eb;
+  background-color: var(--muted);
+  border-top: 1px solid var(--border);
   font-size: 12px;
   flex-shrink: 0;
 }
@@ -506,32 +506,32 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(0,0,0,0.55);
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
 }
 
 .smartsheet-rows-select {
   padding: 3px 7px;
   border-radius: 4px;
-  border: 1px solid #e1e6eb;
-  background-color: #fff;
-  color: #0a2540;
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--brand-ink);
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
 }
 
 .smartsheet-footer-center {
-  color: rgba(0,0,0,0.5);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
   font-weight: 500;
 }
 
 .smartsheet-pagination { display: flex; align-items: center; gap: 3px; }
 
 .smartsheet-page-btn {
-  background-color: #fff;
-  border: 1px solid #e1e6eb;
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: #0a2540;
+  color: var(--brand-ink);
   padding: 5px 9px;
   font-size: 11px;
   font-weight: 600;
@@ -542,8 +542,8 @@
   font-family: inherit;
 }
 
-.smartsheet-page-btn:hover:not(:disabled) { background-color: #e1e6eb; }
-.smartsheet-page-btn.active { background-color: #0070f3; border-color: #0070f3; color: #fff; }
+.smartsheet-page-btn:hover:not(:disabled) { background-color: var(--border); }
+.smartsheet-page-btn.active { background-color: var(--info); border-color: var(--info); color: var(--info-foreground); }
 .smartsheet-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ── States ──────────────────────────────────────────────────────────────── */
@@ -562,8 +562,8 @@
 .smartsheet-spinner {
   width: 38px;
   height: 38px;
-  border: 4px solid #e1e6eb;
-  border-top-color: #0070f3;
+  border: 4px solid var(--border);
+  border-top-color: var(--info);
   border-radius: 50%;
   animation: ss-spin 0.8s linear infinite;
 }
@@ -571,15 +571,15 @@
 @keyframes ss-spin { to { transform: rotate(360deg); } }
 
 .smartsheet-state-icon { font-size: 42px; }
-.smartsheet-state-title { font-size: 17px; font-weight: 700; color: #0a2540; margin: 0; }
-.smartsheet-state-sub { font-size: 13px; color: #5f6368; max-width: 460px; margin: 0; line-height: 1.5; }
-.smartsheet-error-title { font-size: 17px; font-weight: 700; color: #c5221f; margin: 0; }
+.smartsheet-state-title { font-size: 17px; font-weight: 700; color: var(--brand-ink); margin: 0; }
+.smartsheet-state-sub { font-size: 13px; color: var(--muted-foreground); max-width: 460px; margin: 0; line-height: 1.5; }
+.smartsheet-error-title { font-size: 17px; font-weight: 700; color: var(--status-lost-text); margin: 0; }
 .smartsheet-error-code {
   font-family: monospace;
   font-size: 12px;
-  background-color: #fdf6f6;
-  border: 1px solid #fcdcdc;
-  color: #c5221f;
+  background-color: var(--status-lost-bg);
+  border: 1px solid var(--status-lost-border);
+  color: var(--status-lost-text);
   padding: 8px 14px;
   border-radius: 4px;
   max-width: 540px;
@@ -588,8 +588,8 @@
 }
 
 .smartsheet-retry-btn {
-  background-color: #0070f3;
-  color: #fff;
+  background-color: var(--info);
+  color: var(--info-foreground);
   border: none;
   padding: 9px 20px;
   border-radius: 4px;
@@ -605,9 +605,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #f1f3f4;
-  color: #3c4043;
-  border: 1px solid #dadce0;
+  background-color: var(--muted);
+  color: var(--foreground);
+  border: 1px solid var(--input);
   border-radius: 4px;
   padding: 8px 12px;
   font-size: 11px;
@@ -620,9 +620,9 @@
 }
 
 .clear-filters-btn:hover {
-  background-color: #e8eaed;
-  color: #202124;
-  border-color: #bdc1c6;
+  background-color: var(--border);
+  color: var(--foreground);
+  border-color: var(--ring);
 }
 
 /* ── Column specific filters styling ── */
@@ -637,10 +637,10 @@
 .column-search-input {
   width: 100%;
   padding: 4px 6px;
-  background-color: #ffffff;
-  border: 1px solid #dcdcdc;
+  background-color: var(--card);
+  border: 1px solid var(--input);
   border-radius: 4px;
-  color: #0a2540;
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -651,11 +651,11 @@
 }
 
 .column-search-input:focus {
-  border-color: #0070f3;
+  border-color: var(--info);
 }
 
 .column-search-input::placeholder {
-  color: rgba(10, 37, 64, 0.35);
+  color: color-mix(in srgb, var(--brand-ink) 35%, transparent);
   font-weight: normal;
   text-transform: none;
 }
@@ -672,10 +672,10 @@
   flex: 1;
   min-width: 0;
   padding: 4px 6px;
-  background-color: #ffffff;
-  border: 1px solid #dcdcdc;
+  background-color: var(--card);
+  border: 1px solid var(--input);
   border-radius: 4px;
-  color: #0a2540;
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -685,12 +685,12 @@
 }
 
 .date-filter-input:focus {
-  border-color: #0070f3;
+  border-color: var(--info);
 }
 
 .date-filter-to {
   font-size: 10px;
-  color: rgba(10, 37, 64, 0.5);
+  color: color-mix(in srgb, var(--brand-ink) 50%, transparent);
   font-weight: 600;
   text-transform: lowercase;
 }
@@ -698,7 +698,7 @@
 .date-filter-clear-btn {
   background: none;
   border: none;
-  color: #0070f3;
+  color: var(--info);
   cursor: pointer;
   padding: 0 4px;
   font-size: 10px;
@@ -717,10 +717,10 @@
 .price-basis-filter-select {
   width: 100%;
   padding: 4px 6px;
-  background-color: #ffffff;
-  border: 1px solid #dcdcdc;
+  background-color: var(--card);
+  border: 1px solid var(--input);
   border-radius: 4px;
-  color: #0a2540;
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -732,7 +732,7 @@
 }
 
 .price-basis-filter-select:focus {
-  border-color: #0070f3;
+  border-color: var(--info);
 }
 
 .column-raw-materials-filter {
@@ -752,7 +752,7 @@
 .filter-row-label {
   font-size: 10px;
   font-weight: bold;
-  color: #0a2540;
+  color: var(--brand-ink);
   width: 20px;
 }
 
@@ -760,10 +760,10 @@
   flex: 1;
   min-width: 0;
   padding: 4px 6px;
-  background-color: #ffffff;
-  border: 1px solid #dcdcdc;
+  background-color: var(--card);
+  border: 1px solid var(--input);
   border-radius: 4px;
-  color: #0a2540;
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -773,12 +773,12 @@
 }
 
 .col-price-filter-input:focus {
-  border-color: #0070f3;
+  border-color: var(--info);
 }
 
 .filter-row-dash {
   font-size: 10px;
-  color: rgba(10, 37, 64, 0.4);
+  color: color-mix(in srgb, var(--brand-ink) 40%, transparent);
 }
 
 /* Custom Multi-select Dropdown */
@@ -790,10 +790,10 @@
 .multiselect-trigger-btn {
   width: 100%;
   padding: 4px 6px;
-  background-color: #ffffff;
-  border: 1px solid #dcdcdc;
+  background-color: var(--card);
+  border: 1px solid var(--input);
   border-radius: 4px;
-  color: #0a2540;
+  color: var(--brand-ink);
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
@@ -808,7 +808,7 @@
 }
 
 .multiselect-trigger-btn:focus {
-  border-color: #0070f3;
+  border-color: var(--info);
 }
 
 .multiselect-dropdown-panel {
@@ -816,8 +816,8 @@
   top: calc(100% + 4px);
   left: 0;
   width: 240px;
-  background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  background-color: var(--popover);
+  border: 1px solid var(--input);
   border-radius: 6px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   z-index: 10;
@@ -830,14 +830,14 @@
 .multiselect-actions {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 6px;
 }
 
 .multiselect-action-btn {
   background: none;
   border: none;
-  color: #0070f3;
+  color: var(--info);
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
@@ -847,7 +847,7 @@
 }
 
 .multiselect-action-btn:hover {
-  background-color: #f1f5f9;
+  background-color: var(--accent);
 }
 
 .multiselect-options-list {
@@ -863,7 +863,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #0a2540;
+  color: var(--brand-ink);
   cursor: pointer;
   padding: 4px;
   border-radius: 3px;
@@ -874,7 +874,7 @@
 }
 
 .multiselect-option-label:hover {
-  background-color: #f8fafc;
+  background-color: var(--accent);
 }
 
 .multiselect-option-label input[type="checkbox"] {
@@ -911,7 +911,7 @@
 }
 
 .col-resize-handle:hover {
-  background-color: rgba(26, 115, 232, 0.4);
+  background-color: color-mix(in srgb, var(--info) 40%, transparent);
 }
 
 .export-excel-btn {
@@ -938,3 +938,23 @@
 }
 
 
+/* ── Dark mode overrides ─────────────────────────────────────────────────── */
+.dark .tab-btn:hover { border-bottom-color: var(--input); }
+.dark .tender-stat-label,
+.dark .tender-stat-sub,
+.dark .tender-filter-label { color: var(--muted-foreground); }
+.dark .tender-stat-value,
+.dark .smartsheet-record-badge { color: #6ee7b7; }
+.dark .tender-filter-select:focus {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23d9b77e' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+}
+.dark .tender-refresh-sidebar-btn { background: var(--info); box-shadow: none; }
+.dark .tender-top-header,
+.dark .smartsheet-table-container { box-shadow: none; }
+.dark .multiselect-dropdown-panel { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35); }
+.dark .smartsheet-null-cell { color: color-mix(in srgb, var(--muted-foreground) 60%, transparent); }
+.dark .purchase-type-badge.laser { background: rgb(173 152 213 / 12%); color: #ad98d5; border-color: rgb(173 152 213 / 28%); }
+.dark .smartsheet-retry-btn:hover { background-color: color-mix(in srgb, var(--info) 85%, var(--foreground)); }
+.dark .date-filter-clear-btn:hover { color: var(--danger); }
+.dark .export-excel-btn { background-color: rgb(124 199 154 / 18%); color: var(--success); border-color: rgb(124 199 154 / 28%); }
+.dark .export-excel-btn:hover { background-color: rgb(124 199 154 / 26%); border-color: rgb(124 199 154 / 40%); }

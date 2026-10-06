@@ -764,6 +764,8 @@ model TenderMerged {
   website           String?
   locationCount     Int?
   size              String?
+  category          String?
+  subCategory       String?
 
   slNo               Int?
   tenderFor          String?

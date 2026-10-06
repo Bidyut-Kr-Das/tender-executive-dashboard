@@ -13,10 +13,10 @@ export interface EmdBgStats {
 }
 
 const STATUS_META: Record<EmdBgStatus, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> = {
-  RUNNING: { label: "Running", icon: ShieldCheck, color: "#137333", bg: "#e6f4ea", border: "#a8d5b5" },
-  EXPIRED: { label: "Expired", icon: Clock, color: "#b06000", bg: "#fef7e0", border: "#f5d76e" },
-  CLOSED: { label: "Closed", icon: BadgeCheck, color: "#1a73e8", bg: "#e8f0fe", border: "#a8c7fa" },
-  OTHER: { label: "Other", icon: AlertTriangle, color: "#5f6368", bg: "#f1f3f4", border: "#dadce0" },
+  RUNNING: { label: "Running", icon: ShieldCheck, color: "var(--status-won-text)", bg: "var(--status-won-bg)", border: "var(--status-won-border)" },
+  EXPIRED: { label: "Expired", icon: Clock, color: "var(--status-eval-text)", bg: "var(--status-eval-bg)", border: "var(--status-eval-border)" },
+  CLOSED: { label: "Closed", icon: BadgeCheck, color: "var(--status-sub-text)", bg: "var(--info-soft)", border: "var(--status-sub-border)" },
+  OTHER: { label: "Other", icon: AlertTriangle, color: "var(--muted-foreground)", bg: "var(--muted)", border: "var(--input)" },
 };
 
 function formatCurrency(n: number) {
@@ -45,8 +45,8 @@ export function EmdBgSidebar({ stats, selected, onSelect, totalRows, totalEmailC
         onClick={() => onSelect("ALL")}
         style={{
           textAlign: "left",
-          background: selected === "ALL" ? "#ffffff" : "rgba(255,255,255,0.06)",
-          border: selected === "ALL" ? "2px solid #0070f3" : "1px solid rgba(255,255,255,0.08)",
+          background: selected === "ALL" ? "var(--card)" : "rgba(255,255,255,0.06)",
+          border: selected === "ALL" ? "2px solid var(--info)" : "1px solid rgba(255,255,255,0.08)",
           borderRadius: "10px",
           padding: "14px",
           cursor: "pointer",
@@ -54,18 +54,18 @@ export function EmdBgSidebar({ stats, selected, onSelect, totalRows, totalEmailC
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: selected === "ALL" ? "#0a2540" : "rgba(255,255,255,0.7)" }}>All BGs</span>
-          <span style={{ fontSize: "11px", fontWeight: 700, background: selected === "ALL" ? "#e8f0fe" : "rgba(255,255,255,0.12)", color: selected === "ALL" ? "#0070f3" : "rgba(255,255,255,0.8)", padding: "2px 8px", borderRadius: "12px" }}>{totalRows}</span>
+          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: selected === "ALL" ? "var(--brand-ink)" : "rgba(255,255,255,0.7)" }}>All BGs</span>
+          <span style={{ fontSize: "11px", fontWeight: 700, background: selected === "ALL" ? "var(--info-soft)" : "rgba(255,255,255,0.12)", color: selected === "ALL" ? "var(--info)" : "rgba(255,255,255,0.8)", padding: "2px 8px", borderRadius: "12px" }}>{totalRows}</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: selected === "ALL" ? "#5f6368" : "rgba(255,255,255,0.6)" }}>
-            <Hash size={12} /> Records: <strong style={{ color: selected === "ALL" ? "#0a2540" : "#fff" }}>{totalRows}</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: selected === "ALL" ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}>
+            <Hash size={12} /> Records: <strong style={{ color: selected === "ALL" ? "var(--brand-ink)" : "var(--brand-foreground)" }}>{totalRows}</strong>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: selected === "ALL" ? "#5f6368" : "rgba(255,255,255,0.6)" }}>
-            <IndianRupee size={12} /> Total BG Amt: <strong style={{ color: selected === "ALL" ? "#0a2540" : "#fff" }}>{formatCurrency(allBgAmt)}</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: selected === "ALL" ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}>
+            <IndianRupee size={12} /> Total BG Amt: <strong style={{ color: selected === "ALL" ? "var(--brand-ink)" : "var(--brand-foreground)" }}>{formatCurrency(allBgAmt)}</strong>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: selected === "ALL" ? "#5f6368" : "rgba(255,255,255,0.6)" }}>
-            <Mail size={12} /> Email Available: <strong style={{ color: selected === "ALL" ? "#0a2540" : "#fff" }}>{allEmailRecords}</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: selected === "ALL" ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}>
+            <Mail size={12} /> Email Available: <strong style={{ color: selected === "ALL" ? "var(--brand-ink)" : "var(--brand-foreground)" }}>{allEmailRecords}</strong>
             <span style={{ opacity: 0.7 }}>({allEmailCustomers} customers)</span>
           </div>
         </div>
@@ -82,7 +82,7 @@ export function EmdBgSidebar({ stats, selected, onSelect, totalRows, totalEmailC
             onClick={() => onSelect(isSelected ? "ALL" : key)}
             style={{
               textAlign: "left",
-              background: isSelected ? "#ffffff" : "rgba(255,255,255,0.06)",
+              background: isSelected ? "var(--card)" : "rgba(255,255,255,0.06)",
               border: isSelected ? `2px solid ${meta.color}` : "1px solid rgba(255,255,255,0.08)",
               borderRadius: "10px",
               padding: "12px 14px",
@@ -94,26 +94,26 @@ export function EmdBgSidebar({ stats, selected, onSelect, totalRows, totalEmailC
               <span style={{ width: "28px", height: "28px", borderRadius: "8px", background: isSelected ? meta.bg : "rgba(255,255,255,0.10)", border: `1px solid ${isSelected ? meta.border : "rgba(255,255,255,0.12)"}`, display: "inline-flex", alignItems: "center", justifyContent: "center", color: isSelected ? meta.color : "rgba(255,255,255,0.85)" }}>
                 <Icon size={14} />
               </span>
-              <span style={{ fontSize: "12px", fontWeight: 800, letterSpacing: "0.4px", textTransform: "uppercase", color: isSelected ? "#0a2540" : "#ffffff" }}>{meta.label}</span>
+              <span style={{ fontSize: "12px", fontWeight: 800, letterSpacing: "0.4px", textTransform: "uppercase", color: isSelected ? "var(--brand-ink)" : "var(--brand-foreground)" }}>{meta.label}</span>
               <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 700, background: isSelected ? meta.bg : "rgba(255,255,255,0.12)", color: isSelected ? meta.color : "rgba(255,255,255,0.9)", border: `1px solid ${isSelected ? meta.border : "transparent"}`, padding: "2px 8px", borderRadius: "12px" }}>{s.count}</span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11px" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "#5f6368" : "rgba(255,255,255,0.6)" }}><Users size={12} /> Parties</span>
-                <strong style={{ color: isSelected ? "#0a2540" : "#fff", fontSize: "12px" }}>{s.partyCount}</strong>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}><Users size={12} /> Parties</span>
+                <strong style={{ color: isSelected ? "var(--brand-ink)" : "var(--brand-foreground)", fontSize: "12px" }}>{s.partyCount}</strong>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11px" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "#5f6368" : "rgba(255,255,255,0.6)" }}><IndianRupee size={12} /> Total BG</span>
-                <strong style={{ color: isSelected ? "#0a2540" : "#fff", fontSize: "12px" }}>{formatCurrency(s.totalBgAmt)}</strong>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}><IndianRupee size={12} /> Total BG</span>
+                <strong style={{ color: isSelected ? "var(--brand-ink)" : "var(--brand-foreground)", fontSize: "12px" }}>{formatCurrency(s.totalBgAmt)}</strong>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11px" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "#5f6368" : "rgba(255,255,255,0.6)" }}><Hash size={12} /> Records</span>
-                <strong style={{ color: isSelected ? "#0a2540" : "#fff", fontSize: "12px" }}>{s.count}</strong>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}><Hash size={12} /> Records</span>
+                <strong style={{ color: isSelected ? "var(--brand-ink)" : "var(--brand-foreground)", fontSize: "12px" }}>{s.count}</strong>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11px" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "#5f6368" : "rgba(255,255,255,0.6)" }}><Mail size={12} /> Email Available</span>
-                <strong style={{ color: isSelected ? "#0a2540" : "#fff", fontSize: "12px" }}>{s.emailAvailableCount} <span style={{ fontWeight: 400, opacity: 0.7, fontSize: "10px" }}>({s.emailAvailablePartyCount} cust)</span></strong>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: isSelected ? "var(--muted-foreground)" : "rgba(255,255,255,0.6)" }}><Mail size={12} /> Email Available</span>
+                <strong style={{ color: isSelected ? "var(--brand-ink)" : "var(--brand-foreground)", fontSize: "12px" }}>{s.emailAvailableCount} <span style={{ fontWeight: 400, opacity: 0.7, fontSize: "10px" }}>({s.emailAvailablePartyCount} cust)</span></strong>
               </div>
             </div>
           </button>

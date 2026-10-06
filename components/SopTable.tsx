@@ -194,7 +194,7 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
         <div className="toolbar-left">
           <h2 className="table-title">SOP Responsibilities</h2>
           <span className="record-count-badge">{processed.length} / {rows.length}</span>
-          <span className="text-xs text-white/80 hidden md:inline">IST: {selectedDate}</span>
+          <span className="text-xs text-brand-foreground/80 hidden md:inline">IST: {selectedDate}</span>
         </div>
         <div className="toolbar-right">
           <button className="export-btn" onClick={()=>setShowPicker(v=>!v)}><Columns3 size={14}/> Columns</button>
@@ -204,10 +204,10 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
       {showPicker && (
         <>
           <div style={{position:"fixed", inset:0, zIndex:40}} onClick={()=>setShowPicker(false)} />
-          <div style={{position:"absolute", right:16, marginTop:4, width:280, background:"#fff", border:"1px solid #cbd5e1", borderRadius:6, boxShadow:"0 10px 15px rgba(0,0,0,0.1)", zIndex:50, padding:12}}>
-            <div className="flex justify-between items-center mb-2"><span className="text-xs font-semibold">Columns {visibleColumns.length}/{columns.length}</span><button className="text-xs text-blue-600" onClick={()=>setShowPicker(false)}><X size={12}/></button></div>
-            <input value={pickerSearch} onChange={e=>setPickerSearch(e.target.value)} placeholder="Search..." className="w-full px-2 py-1 text-xs border border-gray-200 rounded mb-2" />
-            <div className="flex gap-2 mb-2"><button className="text-xs text-blue-600" onClick={()=>setColumnVisibility({})}>Select All</button><button className="text-xs text-blue-600" onClick={()=>{const m:Record<string,boolean>={}; columns.forEach(c=> m[String(c.accessor)]=false); // keep at least one
+          <div style={{position:"absolute", right:16, marginTop:4, width:280, background:"var(--popover)", border:"1px solid var(--border)", borderRadius:6, boxShadow:"0 10px 15px rgba(0,0,0,0.1)", zIndex:50, padding:12}}>
+            <div className="flex justify-between items-center mb-2"><span className="text-xs font-semibold">Columns {visibleColumns.length}/{columns.length}</span><button className="text-xs text-blue-600 dark:text-blue-300" onClick={()=>setShowPicker(false)}><X size={12}/></button></div>
+            <input value={pickerSearch} onChange={e=>setPickerSearch(e.target.value)} placeholder="Search..." className="w-full px-2 py-1 text-xs border border-border rounded mb-2" />
+            <div className="flex gap-2 mb-2"><button className="text-xs text-blue-600 dark:text-blue-300" onClick={()=>setColumnVisibility({})}>Select All</button><button className="text-xs text-blue-600 dark:text-blue-300" onClick={()=>{const m:Record<string,boolean>={}; columns.forEach(c=> m[String(c.accessor)]=false); // keep at least one
               const first=String(columns[0].accessor); delete m[first]; setColumnVisibility(m);}}>Clear</button></div>
             <div style={{maxHeight:300, overflowY:"auto", display:"flex", flexDirection:"column", gap:4}}>
               {columns.filter(c=> !pickerSearch || c.header.toLowerCase().includes(pickerSearch.toLowerCase())).map(c=>{
@@ -232,7 +232,7 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
                 // Header must be sticky top:0 and also sticky left for pinned cols; zIndex 4 for pinned header corner
                 const zIdx = openDropdown===key? 100 : isStickyCol? 4 : 3;
                 return (
-                  <th key={key} className={col.sticky?"sticky-col":undefined} style={{width:w, minWidth:w, position:"sticky", top:0, ...(col.sticky?{left: stickyOffsets[key], zIndex: zIdx}: {zIndex: zIdx}), backgroundColor:"var(--color-bg-light)"}}>
+                  <th key={key} className={col.sticky?"sticky-col":undefined} style={{width:w, minWidth:w, position:"sticky", top:0, ...(col.sticky?{left: stickyOffsets[key], zIndex: zIdx}: {zIndex: zIdx}), backgroundColor:"var(--muted)"}}>
                     <div className="header-content" onClick={()=>handleSort(key)}>
                       <span style={{overflow:"hidden", textOverflow:"ellipsis"}}>{col.header}</span>
                       <span className="sort-indicator">{isSorted ? (sortDirection==="asc"? <ChevronUp size={12}/> : <ChevronDown size={12}/>) : null}</span>
@@ -252,7 +252,7 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
                                   {uniqueCache.map(v=>(
                                     <label key={v} className="multiselect-option-label"><input type="checkbox" checked={!!multiFilters[key]?.includes(v)} onChange={()=>toggleFilter(key,v)} />{v}</label>
                                   ))}
-                                  {uniqueCache.length===0 && <div className="text-xs text-gray-400 p-2">No options</div>}
+                                  {uniqueCache.length===0 && <div className="text-xs text-muted-foreground p-2">No options</div>}
                                 </div>
                               </div>
                             )}
@@ -286,7 +286,7 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
           </thead>
           <tbody>
             {processed.length===0 ? (
-              <tr><td colSpan={visibleColumns.length} className="text-center py-8 text-sm text-gray-500">No SOP rows — try clearing filters or seed TenderMerged columns via Admin→SOP.</td></tr>
+              <tr><td colSpan={visibleColumns.length} className="text-center py-8 text-sm text-muted-foreground">No SOP rows — try clearing filters or seed TenderMerged columns via Admin→SOP.</td></tr>
             ) : processed.map(r=>{
               const log = dailyLogs.get(r.id);
               const isChecked = !!log?.isChecked;
@@ -297,21 +297,21 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
                     const w = columnWidths[key] ?? col.defaultWidth;
                     return (
                       <td key={key} className={col.sticky?"sticky-col":undefined} style={col.sticky?{left: stickyOffsets[key]}:{}}>
-                        {col.accessor==="columnName" && <span className="font-semibold text-[#0a2540]">{r.columnName}</span>}
+                        {col.accessor==="columnName" && <span className="font-semibold text-brand-ink">{r.columnName}</span>}
                         {col.accessor==="description" && <div className="cell-scroll-wrap" title={r.description||""}>{r.description||"-"}</div>}
                         {col.accessor==="doneFromWhere" && <div className="cell-scroll-wrap">{r.doneFromWhere||"-"}</div>}
                         {col.accessor==="source" && <span className={`status-badge ${r.source==="MANUAL"?"submitted": r.source==="AI"?"eval":""}`}>{r.source||"-"}</span>}
                         {col.accessor==="isManual" && <span>{r.isManual? "Yes":"No"}</span>}
                         {col.accessor==="allocatedTo" && <span>{r.allocatedTo||"-"}</span>}
-                        {col.accessor==="email" && (r.email? <a href={`mailto:${r.email}`} className="text-[#0a2540] underline text-xs">{r.email}</a> : <span>-</span>)}
+                        {col.accessor==="email" && (r.email? <a href={`mailto:${r.email}`} className="text-brand-ink underline text-xs">{r.email}</a> : <span>-</span>)}
                         {col.accessor==="dailyLogCheck" && (
                           <label className="inline-flex items-center justify-center w-full">
-                            <input type="checkbox" checked={isChecked} disabled={!isAuthenticated || togglingId===r.id || !r.dailyLogEnabled} onChange={()=>onToggle(r.id, isChecked)} className="h-4 w-4 rounded border-gray-300 text-[#0a2540] disabled:opacity-30" />
+                            <input type="checkbox" checked={isChecked} disabled={!isAuthenticated || togglingId===r.id || !r.dailyLogEnabled} onChange={()=>onToggle(r.id, isChecked)} className="h-4 w-4 rounded border-border text-brand-ink disabled:opacity-30" />
                           </label>
                         )}
                         {col.accessor==="dailyLogEnabled" && <span>{r.dailyLogEnabled? "Yes":"No"}</span>}
                         {col.accessor==="dateEnabled" && <span>{r.dateEnabled? "Yes":"No"}</span>}
-                        {col.accessor==="date" && <div className="text-xs text-gray-500">{log?.isChecked? <span>by <b>{log.checkedBy}</b></span> : <span className="text-gray-400">not done for {selectedDate}</span>}<div className="text-[11px]">{r.date? new Date(r.date).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata"}):""}</div></div>}
+                        {col.accessor==="date" && <div className="text-xs text-muted-foreground">{log?.isChecked? <span>by <b>{log.checkedBy}</b></span> : <span className="text-muted-foreground">not done for {selectedDate}</span>}<div className="text-[11px]">{r.date? new Date(r.date).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata"}):""}</div></div>}
                       </td>
                     )
                   })}
@@ -322,9 +322,9 @@ export function SopTable({ rows, dailyLogs, selectedDate, onToggle, isAuthentica
         </table>
       </div>
       <div className="tender-table-footer">
-        <div className="footer-left">{processed.length} of {rows.length} rows — IST {selectedDate} {!isAuthenticated && <span className="text-amber-600 ml-2">Sign in to tick</span>}</div>
+        <div className="footer-left">{processed.length} of {rows.length} rows — IST {selectedDate} {!isAuthenticated && <span className="text-amber-600 dark:text-amber-300 ml-2">Sign in to tick</span>}</div>
         <div className="footer-center text-xs">{visibleColumns.length} cols</div>
-        <div className="footer-right text-xs text-gray-400">Post-Tender parity: resizer, dropdown, search, sort, picker</div>
+        <div className="footer-right text-xs text-muted-foreground">Post-Tender parity: resizer, dropdown, search, sort, picker</div>
       </div>
     </div>
   )

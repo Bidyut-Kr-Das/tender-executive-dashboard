@@ -25,17 +25,17 @@ export default function ItemsPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-        <h1 className="text-lg font-semibold text-slate-800">Master Item List</h1>
-        {!loading && !error && <span className="text-sm text-slate-500">{rows.length} rows</span>}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <h1 className="text-lg font-semibold text-foreground">Master Item List</h1>
+        {!loading && !error && <span className="text-sm text-muted-foreground">{rows.length} rows</span>}
       </div>
       {loading && (
-        <div className="flex items-center justify-center py-12 text-sm text-slate-400 bg-white">
+        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground bg-card">
           <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading items...
         </div>
       )}
       {error && (
-        <div className="flex items-center justify-center py-12 text-sm text-red-600 bg-white">
+        <div className="flex items-center justify-center py-12 text-sm text-red-600 dark:text-red-300 bg-card">
           {error}
         </div>
       )}

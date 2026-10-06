@@ -347,13 +347,13 @@ export default function TenderDetailSheet({
           {records.map((rec, idx) => {
             const recId = String(rec.id ?? "")
             return (
-              <div key={recId} className="border rounded-lg p-4 bg-white/50">
+              <div key={recId} className="border rounded-lg p-4 bg-card/50">
                 <div className="flex items-center gap-3 mb-4 border-b pb-2">
-                  <span className="text-sm font-semibold text-slate-800">
+                  <span className="text-sm font-semibold text-foreground">
                     Tender {idx + 1}
                   </span>
                   {rec.tenderNoNitNo && (
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       — {rec.tenderNoNitNo}
                     </span>
                   )}
@@ -365,7 +365,7 @@ export default function TenderDetailSheet({
 
                   return (
                     <div key={section} className="mb-4">
-                      <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                         {section}
                       </h4>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -379,8 +379,8 @@ export default function TenderDetailSheet({
                             if (!displayVal || displayVal === "{}" || displayVal === "[]") return null
                             return (
                               <div key={field.key} className="col-span-2">
-                                <label className="block text-[11px] text-slate-500 mb-0.5">{field.label}</label>
-                                <div className="text-xs text-slate-700 bg-slate-50 rounded px-2 py-1 whitespace-pre-wrap max-h-24 overflow-y-auto">
+                                <label className="block text-[11px] text-muted-foreground mb-0.5">{field.label}</label>
+                                <div className="text-xs text-foreground bg-muted rounded px-2 py-1 whitespace-pre-wrap max-h-24 overflow-y-auto">
                                   {displayVal}
                                 </div>
                               </div>
@@ -390,9 +390,9 @@ export default function TenderDetailSheet({
                           if (field.kind === "textarea") {
                             return (
                               <div key={field.key} className="col-span-2">
-                                <label className="block text-[11px] text-slate-500 mb-0.5">
+                                <label className="block text-[11px] text-muted-foreground mb-0.5">
                                   {field.label}
-                                  {!editable && <span className="ml-1 text-slate-400">(readonly)</span>}
+                                  {!editable && <span className="ml-1 text-muted-foreground">(readonly)</span>}
                                 </label>
                                 <Textarea
                                   value={val}
@@ -409,9 +409,9 @@ export default function TenderDetailSheet({
                             const options = field.options ?? []
                             return (
                               <div key={field.key}>
-                                <label className="block text-[11px] text-slate-500 mb-0.5">
+                                <label className="block text-[11px] text-muted-foreground mb-0.5">
                                   {field.label}
-                                  {!editable && <span className="ml-1 text-slate-400">(readonly)</span>}
+                                  {!editable && <span className="ml-1 text-muted-foreground">(readonly)</span>}
                                 </label>
                                 <Select
                                   value={val}
@@ -435,9 +435,9 @@ export default function TenderDetailSheet({
 
                           return (
                             <div key={field.key}>
-                              <label className="block text-[11px] text-slate-500 mb-0.5">
+                              <label className="block text-[11px] text-muted-foreground mb-0.5">
                                 {field.label}
-                                {!editable && <span className="ml-1 text-slate-400">(readonly)</span>}
+                                {!editable && <span className="ml-1 text-muted-foreground">(readonly)</span>}
                               </label>
                               <Input
                                 type="text"
@@ -459,7 +459,7 @@ export default function TenderDetailSheet({
           })}
         </div>
 
-        <SheetFooter className="flex-shrink-0 border-t px-6 py-3 bg-slate-50 flex flex-row items-center justify-end gap-2">
+        <SheetFooter className="flex-shrink-0 border-t px-6 py-3 bg-muted flex flex-row items-center justify-end gap-2">
           <Button
             variant="outline"
             size="sm"

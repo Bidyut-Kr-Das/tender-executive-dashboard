@@ -97,16 +97,16 @@ export default function MergedColumnDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
+        className="bg-card rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-800">
+          <h3 className="text-sm font-semibold text-foreground">
             {isEditing ? "Edit Merged Column" : "Add Merged Column"}
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+            className="text-muted-foreground hover:text-foreground/80 text-lg leading-none"
           >
             <X size={16} />
           </button>
@@ -114,36 +114,36 @@ export default function MergedColumnDialog({
 
         <div className="space-y-4 text-sm">
           <div>
-            <label className="text-slate-500 text-[11px] block mb-1">
+            <label className="text-muted-foreground text-[11px] block mb-1">
               COLUMN LABEL
             </label>
             <input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="e.g. Organization@Department Name"
-              className="w-full border border-slate-200 rounded-md px-3 py-2 text-[13px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full border border-border rounded-md px-3 py-2 text-[13px] text-foreground/80 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-400/50"
             />
           </div>
 
           <div>
-            <label className="text-slate-500 text-[11px] block mb-1">
+            <label className="text-muted-foreground text-[11px] block mb-1">
               SEPARATOR
             </label>
             <input
               value={separator}
               onChange={(e) => setSeparator(e.target.value)}
               placeholder=" @ "
-              className="w-full border border-slate-200 rounded-md px-3 py-2 text-[13px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full border border-border rounded-md px-3 py-2 text-[13px] text-foreground/80 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-400/50"
             />
           </div>
 
           <div>
-            <label className="text-slate-500 text-[11px] block mb-1">
-              FIELDS TO MERGE <span className="text-slate-300 font-normal">(select at least 2)</span>
+            <label className="text-muted-foreground text-[11px] block mb-1">
+              FIELDS TO MERGE <span className="text-muted-foreground/60 font-normal">(select at least 2)</span>
             </label>
             <div
               style={{
-                border: "1px solid #e0e0e0",
+                border: "1px solid var(--border)",
                 borderRadius: "6px",
                 overflow: "hidden",
               }}
@@ -156,14 +156,14 @@ export default function MergedColumnDialog({
                     left: "10px",
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "#999",
+                    color: "var(--muted-foreground)",
                   }}
                 />
                 <input
                   value={fieldSearch}
                   onChange={(e) => setFieldSearch(e.target.value)}
                   placeholder="Search fields..."
-                  className="w-full border-0 border-b border-slate-200 pl-8 pr-3 py-2 text-[13px] text-slate-700 placeholder:text-slate-300 focus:outline-none"
+                  className="w-full border-0 border-b border-border pl-8 pr-3 py-2 text-[13px] text-foreground/80 placeholder:text-muted-foreground/60 focus:outline-none"
                 />
               </div>
               <div
@@ -179,7 +179,7 @@ export default function MergedColumnDialog({
                   )
                 : dbFieldOptions
               ).length === 0 ? (
-                <p style={{ padding: "12px 8px", textAlign: "center", color: "#999", fontSize: "12px" }}>
+                <p style={{ padding: "12px 8px", textAlign: "center", color: "var(--muted-foreground)", fontSize: "12px" }}>
                   No fields match your search.
                 </p>
               ) : (
@@ -201,7 +201,7 @@ export default function MergedColumnDialog({
                     fontSize: "13px",
                     fontFamily: "monospace",
                     background: selectedFields.has(field)
-                      ? "#f0f4f8"
+                      ? "var(--muted)"
                       : "transparent",
                   }}
                 >
@@ -219,20 +219,20 @@ export default function MergedColumnDialog({
             </div>
           </div>
 
-          {error && <p className="text-red-500 text-[12px]">{error}</p>}
+          {error && <p className="text-red-500 dark:text-red-300 text-[12px]">{error}</p>}
         </div>
 
         <div className="flex justify-end gap-2 mt-5">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-[13px] text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+            className="px-4 py-1.5 text-[13px] text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-accent transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-1.5 text-[13px] text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+            className="px-4 py-1.5 text-[13px] text-white dark:text-foreground bg-blue-600 dark:bg-blue-500/80 rounded-md hover:bg-blue-700 dark:hover:bg-blue-500/85 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           >
             {saving ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

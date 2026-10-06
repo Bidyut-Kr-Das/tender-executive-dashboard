@@ -50,28 +50,28 @@ export default function SignupForm() {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+    <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
       <div className="mb-6 text-center">
-        <h1 className="text-xl font-bold text-[#0a2540]">LASERPOWER</h1>
-        <p className="mt-1 text-sm text-gray-500">Create your account</p>
+        <h1 className="text-xl font-bold text-brand-ink">LASERPOWER</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Create your account</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="name" className="block text-sm font-medium text-foreground/80">
             Name
           </label>
           <input
             id="name"
             name="name"
             type="text"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#0a2540] focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+            className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-brand-ink focus:outline-none focus:ring-1 focus:ring-brand-ink"
             placeholder="Your name"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground/80">
             Email
           </label>
           <input
@@ -79,13 +79,13 @@ export default function SignupForm() {
             name="email"
             type="email"
             required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#0a2540] focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+            className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-brand-ink focus:outline-none focus:ring-1 focus:ring-brand-ink"
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-foreground/80">
             Password
           </label>
           <input
@@ -94,13 +94,13 @@ export default function SignupForm() {
             type="password"
             required
             minLength={6}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#0a2540] focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+            className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-brand-ink focus:outline-none focus:ring-1 focus:ring-brand-ink"
             placeholder="At least 6 characters"
           />
         </div>
 
         <div>
-          <label htmlFor="confirm" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="confirm" className="block text-sm font-medium text-foreground/80">
             Confirm Password
           </label>
           <input
@@ -108,13 +108,13 @@ export default function SignupForm() {
             name="confirm"
             type="password"
             required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#0a2540] focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+            className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-brand-ink focus:outline-none focus:ring-1 focus:ring-brand-ink"
             placeholder="Repeat your password"
           />
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-lg bg-red-50 dark:bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">
             {error}
           </div>
         )}
@@ -122,7 +122,7 @@ export default function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0a2540] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0d2d4f] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             "Creating account..."
@@ -135,9 +135,9 @@ export default function SignupForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/auth/login" className="font-semibold text-[#0a2540] hover:underline">
+        <Link href="/auth/login" className="font-semibold text-brand-ink hover:underline">
           Sign In
         </Link>
       </p>

@@ -112,12 +112,12 @@ export default function CredentialsPage() {
       </div>
       {showAdd && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }} onClick={() => setShowAdd(false)}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: "8px", padding: "24px", width: "720px", maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" }}>
-            <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "16px", color: "#0a2540" }}>Add Credential</h3>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--card)", borderRadius: "8px", padding: "24px", width: "720px", maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" }}>
+            <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "16px", color: "var(--brand-ink)" }}>Add Credential</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               {["category", "states", "websites", "password", "mobileNo", "profilePassword", "dscName", "dscPassword", "otherRef"].map((k) => (
                 <div key={k} style={{ display: "flex", flexDirection: "column", gap: "4px", gridColumn: k === "otherRef" || k === "websites" ? "span 2" : "span 1" }}>
-                  <label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", color: "#475569" }}>{k}</label>
+                  <label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", color: "var(--muted-foreground)" }}>{k}</label>
                   {k === "category" ? (
                     <Select value={addForm[k] || ""} onValueChange={(v: string | null) => setAddForm((p) => ({ ...p, [k]: v ?? "" }))}>
                       <SelectTrigger className="w-full">
@@ -145,7 +145,7 @@ export default function CredentialsPage() {
                       </SelectContent>
                     </Select>
                   ) : k === "otherRef" ? (
-                    <textarea value={addForm[k]} onChange={(e) => setAddForm((p) => ({ ...p, [k]: e.target.value }))} rows={2} placeholder={k} style={{ padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "12px" }} />
+                    <textarea value={addForm[k]} onChange={(e) => setAddForm((p) => ({ ...p, [k]: e.target.value }))} rows={2} placeholder={k} style={{ padding: "8px", border: "1px solid var(--input)", borderRadius: "6px", fontSize: "12px" }} />
                   ) : k.toLowerCase().includes("password") ? (
                     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
@@ -153,21 +153,21 @@ export default function CredentialsPage() {
                         onChange={(e) => setAddForm((p) => ({ ...p, [k]: e.target.value }))}
                         placeholder={k}
                         type={showPwd[k] ? "text" : "password"}
-                        style={{ flex: 1, padding: "8px 32px 8px 8px", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "12px", width: "100%" }}
+                        style={{ flex: 1, padding: "8px 32px 8px 8px", border: "1px solid var(--input)", borderRadius: "6px", fontSize: "12px", width: "100%" }}
                       />
-                      <button type="button" onClick={() => setShowPwd((p) => ({ ...p, [k]: !p[k] }))} style={{ position: "absolute", right: "6px", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer", color: "#64748b" }}>
+                      <button type="button" onClick={() => setShowPwd((p) => ({ ...p, [k]: !p[k] }))} style={{ position: "absolute", right: "6px", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)" }}>
                         {showPwd[k] ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                   ) : (
-                    <input value={addForm[k]} onChange={(e) => setAddForm((p) => ({ ...p, [k]: e.target.value }))} placeholder={k} type="text" style={{ padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "12px" }} />
+                    <input value={addForm[k]} onChange={(e) => setAddForm((p) => ({ ...p, [k]: e.target.value }))} placeholder={k} type="text" style={{ padding: "8px", border: "1px solid var(--input)", borderRadius: "6px", fontSize: "12px" }} />
                   )}
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "20px" }}>
-              <button onClick={() => setShowAdd(false)} disabled={creating} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff" }}>Cancel</button>
-              <button onClick={handleAdd} disabled={creating} style={{ padding: "8px 16px", borderRadius: "6px", border: "none", background: "#0a2540", color: "#fff", fontWeight: 600, opacity: creating ? 0.6 : 1 }}>{creating ? "Saving..." : "Save"}</button>
+              <button onClick={() => setShowAdd(false)} disabled={creating} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid var(--input)", background: "var(--card)" }}>Cancel</button>
+              <button onClick={handleAdd} disabled={creating} style={{ padding: "8px 16px", borderRadius: "6px", border: "none", background: "var(--brand)", color: "var(--brand-foreground)", fontWeight: 600, opacity: creating ? 0.6 : 1 }}>{creating ? "Saving..." : "Save"}</button>
             </div>
           </div>
         </div>

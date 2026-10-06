@@ -2,12 +2,12 @@
 
 .filter-sidebar-container {
   width: 260px;
-  background-color: #0a2540; /* Dark Navy matching mockup */
-  color: #ffffff;
+  background-color: var(--brand); /* Dark Navy matching mockup */
+  color: var(--brand-foreground);
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-right: 1px solid #1e3d59;
+  border-right: 1px solid var(--brand-hover);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   box-sizing: border-box;
   position: relative;
@@ -30,14 +30,19 @@
   background-color: rgba(0, 112, 243, 0.6);
 }
 
+.dark .sidebar-resize-handle:hover,
+.dark .sidebar-resize-handle:active {
+  background-color: rgb(118 176 235 / 50%);
+}
+
 .sidebar-header {
   padding: 16px 20px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  border-bottom: 1px solid #1e3d59;
-  color: #ffffff;
+  border-bottom: 1px solid var(--brand-hover);
+  color: var(--brand-foreground);
 }
 
 .sidebar-content {
@@ -64,6 +69,10 @@
   letter-spacing: 0.5px;
 }
 
+.dark .filter-label {
+  color: color-mix(in srgb, var(--brand-foreground) 60%, transparent);
+}
+
 /* Inputs & Select Elements */
 .filter-text-input {
   width: 100%;
@@ -71,7 +80,7 @@
   background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--brand-foreground);
   font-size: 13px;
   box-sizing: border-box;
   transition: all 0.2s ease;
@@ -79,9 +88,9 @@
 
 .filter-text-input:focus {
   outline: none;
-  background-color: #ffffff;
-  color: #0a2540;
-  border-color: #0070f3;
+  background-color: var(--card);
+  color: var(--brand-ink);
+  border-color: var(--info);
 }
 
 .filter-select {
@@ -90,7 +99,7 @@
   background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--brand-foreground);
   font-size: 13px;
   cursor: pointer;
   box-sizing: border-box;
@@ -102,17 +111,25 @@
   background-size: 18px;
 }
 
+.dark .filter-select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23ecd3a6' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+}
+
 .filter-select:focus {
   outline: none;
-  background-color: #ffffff;
-  color: #0a2540;
-  border-color: #0070f3;
+  background-color: var(--card);
+  color: var(--brand-ink);
+  border-color: var(--info);
   background-image: url("data:image/svg+xml;utf8,<svg fill='%230a2540' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
 }
 
+.dark .filter-select:focus {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23d9b77e' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+}
+
 .filter-select option {
-  background-color: #0a2540;
-  color: #ffffff;
+  background-color: var(--brand);
+  color: var(--brand-foreground);
 }
 
 /* Checkbox List Styles */
@@ -133,10 +150,14 @@
   user-select: none;
 }
 
+.dark .checkbox-label {
+  color: var(--brand-foreground);
+}
+
 .checkbox-input {
   width: 15px;
   height: 15px;
-  accent-color: #0070f3;
+  accent-color: var(--info);
   cursor: pointer;
 }
 
@@ -150,13 +171,13 @@
 /* Bottom Actions Section */
 .sidebar-footer {
   padding: 16px 20px;
-  border-top: 1px solid #1e3d59;
+  border-top: 1px solid var(--brand-hover);
 }
 
 .refresh-btn {
   width: 100%;
-  background: linear-gradient(135deg, #0070f3, #0056b3);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--info), #0056b3);
+  color: var(--info-foreground);
   border: none;
   border-radius: 4px;
   padding: 10px 16px;
@@ -169,10 +190,20 @@
   box-shadow: 0 4px 10px rgba(0, 112, 243, 0.2);
 }
 
+.dark .refresh-btn {
+  background: var(--info);
+  color: var(--info-foreground);
+  box-shadow: none;
+}
+
 .refresh-btn:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(0, 112, 243, 0.3);
+}
+
+.dark .refresh-btn:hover {
+  box-shadow: none;
 }
 
 .refresh-btn:active {

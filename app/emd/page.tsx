@@ -1250,7 +1250,7 @@ export default function EmdMergedPage() {
                               <td
                                 key={String(col.accessor)}
                                 className="col-center"
-                                style={{ background: "#fff" }}
+                                style={{ background: "var(--card)" }}
                               >
                                 <button
                                   onClick={() => handleSendEmail(row)}
@@ -1266,9 +1266,9 @@ export default function EmdMergedPage() {
                                     gap: "6px",
                                     padding: "6px 12px",
                                     background: hasReason
-                                      ? "#0a2540"
-                                      : "#cbd5e1",
-                                    color: "white",
+                                      ? "var(--brand)"
+                                      : "var(--border)",
+                                    color: "var(--brand-foreground)",
                                     borderRadius: "6px",
                                     fontWeight: 600,
                                     fontSize: "12px",
@@ -1307,11 +1307,11 @@ export default function EmdMergedPage() {
                                     width: "100%",
                                     padding: "6px 8px",
                                     borderRadius: "6px",
-                                    border: "1px solid #dadce0",
+                                    border: "1px solid var(--input)",
                                     fontSize: "12px",
                                     background: isUpdating
-                                      ? "#f1f3f4"
-                                      : "white",
+                                      ? "var(--muted)"
+                                      : "var(--card)",
                                   }}
                                 >
                                   <option value="">Select reason...</option>
@@ -1386,11 +1386,11 @@ export default function EmdMergedPage() {
                                     width: "100%",
                                     padding: "6px 8px",
                                     borderRadius: "6px",
-                                    border: "1px solid #dadce0",
+                                    border: "1px solid var(--input)",
                                     fontSize: "12px",
                                     background: isUpdating
-                                      ? "#f1f3f4"
-                                      : "white",
+                                      ? "var(--muted)"
+                                      : "var(--card)",
                                   }}
                                 >
                                   <option value="">Select status...</option>
@@ -1491,12 +1491,12 @@ export default function EmdMergedPage() {
                                 {hasDraft ? (
                                   <button
                                     onClick={() => handleViewDraft(row)}
-                                    className="inline-flex items-center gap-1 px-2 py-1 border border-gray-200 rounded text-xs font-medium hover:bg-gray-50"
+                                    className="inline-flex items-center gap-1 px-2 py-1 border border-border rounded text-xs font-medium hover:bg-accent"
                                   >
                                     <Eye size={12} /> View
                                   </button>
                                 ) : (
-                                  <span style={{ color: "#b0b8c1" }}>-</span>
+                                  <span style={{ color: "var(--muted-foreground)" }}>-</span>
                                 )}
                               </td>
                             );
@@ -1515,7 +1515,7 @@ export default function EmdMergedPage() {
                                   style={{ height: "auto", maxHeight: "96px" }}
                                 >
                                   {disp === "-" ? (
-                                    <span style={{ color: "#b0b8c1" }}>-</span>
+                                    <span style={{ color: "var(--muted-foreground)" }}>-</span>
                                   ) : (
                                     disp
                                   )}
@@ -1537,7 +1537,7 @@ export default function EmdMergedPage() {
                                   style={{ height: "auto", maxHeight: "96px" }}
                                 >
                                   {disp === "-" ? (
-                                    <span style={{ color: "#b0b8c1" }}>-</span>
+                                    <span style={{ color: "var(--muted-foreground)" }}>-</span>
                                   ) : (
                                     disp
                                   )}
@@ -1567,7 +1567,7 @@ export default function EmdMergedPage() {
                                 style={{ height: "auto", maxHeight: "96px" }}
                               >
                                 {display === "-" ? (
-                                  <span style={{ color: "#b0b8c1" }}>
+                                  <span style={{ color: "var(--muted-foreground)" }}>
                                     {display}
                                   </span>
                                 ) : (

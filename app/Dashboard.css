@@ -5,7 +5,7 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: #f4f6f8; /* Light gray background */
+  background-color: var(--muted); /* Light gray background */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -30,8 +30,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e1e6eb;
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
   height: 54px;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(10, 37, 64, 0.02);
@@ -46,25 +46,25 @@
 .brand-logo-text {
   font-size: 16px;
   font-weight: 800;
-  color: #0a2540;
+  color: var(--brand-ink);
   letter-spacing: 0.5px;
 }
 
 .brand-logo-text span {
-  color: #0070f3;
+  color: var(--info);
   font-weight: 500;
 }
 
 .brand-divider {
   width: 1px;
   height: 16px;
-  background-color: #e1e6eb;
+  background-color: var(--border);
 }
 
 .brand-title {
   font-size: 11px;
   font-weight: 700;
-  color: #5f6368;
+  color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -79,8 +79,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #0a2540;
-  color: #ffffff;
+  background-color: var(--brand);
+  color: var(--brand-foreground);
   border: none;
   border-radius: 4px;
   padding: 8px 12px;
@@ -93,7 +93,7 @@
 }
 
 .erp-sync-btn:hover {
-  background-color: #1e3d59;
+  background-color: var(--brand-hover);
 }
 
 .ai-dashboard-btn {
@@ -115,10 +115,20 @@
   transition: all 0.2s ease;
 }
 
+.dark .ai-dashboard-btn {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: none;
+}
+
 .ai-dashboard-btn:hover {
   filter: brightness(1.1);
   box-shadow: 0 4px 12px rgba(121, 40, 202, 0.4);
   transform: translateY(-1px);
+}
+
+.dark .ai-dashboard-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .ai-dashboard-btn:active {
@@ -129,8 +139,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #0070f3;
-  color: #ffffff;
+  background-color: var(--info);
+  color: var(--info-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,6 +148,10 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 112, 243, 0.2);
+}
+
+.dark .user-profile-badge {
+  box-shadow: none;
 }
 
 /* Scrollable Dashboard Body */
@@ -157,13 +171,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  background-color: #ffffff;
-  border-top: 1px solid #e1e6eb;
+  background-color: var(--card);
+  border-top: 1px solid var(--border);
   height: 32px;
   flex-shrink: 0;
   font-size: 10px;
   font-weight: 600;
-  color: #5f6368;
+  color: var(--muted-foreground);
   letter-spacing: 0.2px;
 }
 
@@ -177,14 +191,14 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #137333;
+  color: var(--status-won-text);
 }
 
 .sync-pulse-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #34a853;
+  background-color: var(--success);
   animation: blink 1.5s infinite;
 }
 
@@ -195,7 +209,7 @@
 }
 
 .status-center {
-  color: #0a2540;
+  color: var(--brand-ink);
   text-transform: uppercase;
   font-weight: 700;
 }
@@ -207,19 +221,19 @@
 }
 
 .status-link {
-  color: #5f6368;
+  color: var(--muted-foreground);
   text-decoration: none;
   cursor: pointer;
 }
 
 .status-link:hover {
   text-decoration: underline;
-  color: #0a2540;
+  color: var(--brand-ink);
 }
 
 .version-badge {
-  background-color: #e1e6eb;
-  color: #0a2540;
+  background-color: var(--muted);
+  color: var(--brand-ink);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 700;
@@ -229,9 +243,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #f1f3f4;
-  color: #3c4043;
-  border: 1px solid #dadce0;
+  background-color: var(--muted);
+  color: var(--foreground);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 8px 12px;
   font-size: 11px;
@@ -243,7 +257,7 @@
 }
 
 .clear-filters-btn:hover {
-  background-color: #e8eaed;
-  color: #202124;
-  border-color: #bdc1c6;
+  background-color: var(--accent);
+  color: var(--foreground);
+  border-color: var(--border);
 }

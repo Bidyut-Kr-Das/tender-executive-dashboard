@@ -448,8 +448,8 @@ export default function EmdDetailsCashPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "#0a2540", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
-        <div style={{ width: "40px", height: "40px", border: "4px solid #e1e6eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+      <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "var(--brand-ink)", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
+        <div style={{ width: "40px", height: "40px", border: "4px solid var(--border)", borderTopColor: "var(--status-sub-text)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
         <span style={{ fontSize: "16px", letterSpacing: "0.5px" }}>Loading EMD Details Cash...</span>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -459,8 +459,8 @@ export default function EmdDetailsCashPage() {
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "400px", gap: "12px" }}>
-        <p style={{ color: "#c5221f", fontWeight: 600 }}>Failed to load EMD Details Cash: {error.message}</p>
-        <button onClick={refresh} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "#0a2540", color: "white", borderRadius: "6px", fontWeight: 600 }}>
+        <p style={{ color: "var(--status-lost-text)", fontWeight: 600 }}>Failed to load EMD Details Cash: {error.message}</p>
+        <button onClick={refresh} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "var(--brand)", color: "var(--brand-foreground)", borderRadius: "6px", fontWeight: 600 }}>
           <RefreshCw size={14} /> Retry
         </button>
       </div>
@@ -614,7 +614,7 @@ export default function EmdDetailsCashPage() {
                   <tbody>
                     {paginatedRecords.length === 0 ? (
                       <tr>
-                        <td colSpan={CASH_COLUMNS.length} style={{ textAlign: "center", padding: "40px", color: "rgba(0,0,0,0.4)" }}>
+                        <td colSpan={CASH_COLUMNS.length} style={{ textAlign: "center", padding: "40px", color: "var(--muted-foreground)" }}>
                           No matching records found.
                         </td>
                       </tr>
@@ -626,12 +626,12 @@ export default function EmdDetailsCashPage() {
                               const isSending = sendingId === row.id;
                               const hasReason = !!(row as any).reason;
                               return (
-                                <td key={String(col.accessor)} className="col-center" style={{ background: "#fff" }}>
+                                <td key={String(col.accessor)} className="col-center" style={{ background: "var(--card)" }}>
                                   <button
                                     onClick={() => handleSendEmail(row)}
                                     disabled={!hasReason || isSending}
                                     title={!hasReason ? "Select Tender Conclusion Reason first" : "Send email"}
-                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px", background: hasReason ? "#0a2540" : "#cbd5e1", color: "white", borderRadius: "6px", fontWeight: 600, fontSize: "12px", border: "none", cursor: hasReason ? "pointer" : "not-allowed", opacity: isSending ? 0.7 : 1 }}
+                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px", background: hasReason ? "var(--brand)" : "var(--border)", color: "var(--brand-foreground)", borderRadius: "6px", fontWeight: 600, fontSize: "12px", border: "none", cursor: hasReason ? "pointer" : "not-allowed", opacity: isSending ? 0.7 : 1 }}
                                   >
                                     {isSending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {isSending ? "Sending..." : "Send Email"}
                                   </button>
@@ -641,13 +641,13 @@ export default function EmdDetailsCashPage() {
                             if (col.accessor === "reason") {
                               const isUpdating = updatingId === row.id;
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                   <select
                                     value={(row.reason as string) ?? ""}
                                     onChange={(e) => handleReasonChange(row.id, e.target.value)}
                                     disabled={isUpdating}
                                     onClick={(e) => e.stopPropagation()}
-                                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #dadce0", fontSize: "12px", background: isUpdating ? "#f1f3f4" : "white" }}
+                                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--input)", fontSize: "12px", background: isUpdating ? "var(--muted)" : "var(--card)" }}
                                   >
                                     <option value="">Select reason...</option>
                                     {TENDER_REASON_OPTIONS.map((opt) => (
@@ -663,7 +663,7 @@ export default function EmdDetailsCashPage() {
                               const display = (row.contactEmailId as string) ?? "";
                               if (isEditing) {
                                 return (
-                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                     <div className="flex items-start gap-1" onClick={(e) => e.stopPropagation()}>
                                       <textarea
                                         autoFocus
@@ -671,25 +671,25 @@ export default function EmdDetailsCashPage() {
                                         onChange={(e) => setDraftContactEmail(e.target.value)}
                                         placeholder="email1@company.com, email2@company.com"
                                         rows={2}
-                                        style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: `1px solid ${draftContactEmail && !isValidEmail(draftContactEmail) ? "#ef4444" : "#dadce0"}`, fontSize: "12px", resize: "vertical", minHeight: "56px" }}
+                                        style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: `1px solid ${draftContactEmail && !isValidEmail(draftContactEmail) ? "var(--danger)" : "var(--input)"}`, fontSize: "12px", resize: "vertical", minHeight: "56px" }}
                                       />
                                       <div className="flex flex-col gap-1">
-                                        <button onClick={() => handleContactEmailSave(row.id)} disabled={isUpdating || (draftContactEmail.trim() !== "" && !isValidEmail(draftContactEmail))} title="Save" style={{ padding: "6px", borderRadius: "4px", background: "#0a2540", color: "white", border: "none", cursor: "pointer" }}><Check size={12} /></button>
-                                        <button onClick={handleContactEmailCancel} disabled={isUpdating} title="Cancel" style={{ padding: "6px", borderRadius: "4px", background: "#e5e7eb", border: "none", cursor: "pointer" }}><X size={12} /></button>
+                                        <button onClick={() => handleContactEmailSave(row.id)} disabled={isUpdating || (draftContactEmail.trim() !== "" && !isValidEmail(draftContactEmail))} title="Save" style={{ padding: "6px", borderRadius: "4px", background: "var(--brand)", color: "var(--brand-foreground)", border: "none", cursor: "pointer" }}><Check size={12} /></button>
+                                        <button onClick={handleContactEmailCancel} disabled={isUpdating} title="Cancel" style={{ padding: "6px", borderRadius: "4px", background: "var(--border)", border: "none", cursor: "pointer" }}><X size={12} /></button>
                                       </div>
                                     </div>
-                                    {draftContactEmail && !isValidEmail(draftContactEmail) && <div style={{ fontSize: "10px", color: "#dc2626", marginTop: "4px" }}>Invalid: {invalidEmails(draftContactEmail).join(", ")}</div>}
+                                    {draftContactEmail && !isValidEmail(draftContactEmail) && <div style={{ fontSize: "10px", color: "var(--danger)", marginTop: "4px" }}>Invalid: {invalidEmails(draftContactEmail).join(", ")}</div>}
                                   </td>
                                 );
                               }
                               const displayVal = display;
                               const isInvalid = displayVal !== "" && !isValidEmail(displayVal);
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
                                   <div
                                     onClick={(e) => { e.stopPropagation(); setEditingContactEmailId(row.id); setDraftContactEmail(displayVal); }}
                                     title={displayVal || "Click to add email"}
-                                    style={{ padding: "6px 8px", borderRadius: "6px", border: isInvalid ? "1px solid #ef4444" : "1px solid transparent", background: isUpdating ? "#f1f3f4" : isInvalid ? "#fef2f2" : "transparent", cursor: "pointer", fontSize: "12px", minHeight: "28px", display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: displayVal ? (isInvalid ? "#dc2626" : undefined) : "#9ca3af" }}
+                                    style={{ padding: "6px 8px", borderRadius: "6px", border: isInvalid ? "1px solid var(--danger)" : "1px solid transparent", background: isUpdating ? "var(--muted)" : isInvalid ? "var(--danger-soft)" : "transparent", cursor: "pointer", fontSize: "12px", minHeight: "28px", display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: displayVal ? (isInvalid ? "var(--danger)" : undefined) : "var(--muted-foreground)" }}
                                   >
                                     {isUpdating ? <Loader2 size={12} className="animate-spin mr-1" /> : null}
                                     {displayVal || "— Add email"}
@@ -701,16 +701,16 @@ export default function EmdDetailsCashPage() {
                               const v = (row as any)[col.accessor as keyof EmdDetailsCashRecord];
                               if (v == null || String(v).trim() === "") {
                                 return (
-                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}>
-                                    <span style={{ color: "#b0b8c1" }}>-</span>
+                                  <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}>
+                                    <span style={{ color: "var(--muted-foreground)" }}>-</span>
                                   </td>
                                 );
                               }
                               const s = formatDateTimeIST(v as string);
                               const display = s && s.trim() !== "" ? s : "-";
                               return (
-                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}} title={v ? String(v) : display}>
-                                  <div className="cell-scroll-wrap" style={{ height: "auto", maxHeight: "96px" }}>{display === "-" ? <span style={{ color: "#b0b8c1" }}>-</span> : display}</div>
+                                <td key={String(col.accessor)} className={`${col.sticky ? "sticky-col" : ""}`} style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}} title={v ? String(v) : display}>
+                                  <div className="cell-scroll-wrap" style={{ height: "auto", maxHeight: "96px" }}>{display === "-" ? <span style={{ color: "var(--muted-foreground)" }}>-</span> : display}</div>
                                 </td>
                               );
                             }
@@ -720,18 +720,18 @@ export default function EmdDetailsCashPage() {
                                 <td
                                   key={String(col.accessor)}
                                   className={`${col.sticky ? "sticky-col" : ""}`}
-                                  style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}
+                                  style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}
                                 >
                                   {hasDraft ? (
                                     <button
                                       onClick={() => handleViewDraft(row)}
-                                      className="inline-flex items-center gap-1 px-2 py-1 border border-gray-200 rounded text-xs font-medium hover:bg-gray-50"
+                                      className="inline-flex items-center gap-1 px-2 py-1 border border-border rounded text-xs font-medium hover:bg-accent"
                                       title="View email draft"
                                     >
                                       <Eye size={12} /> View
                                     </button>
                                   ) : (
-                                    <span style={{ color: "#b0b8c1" }}>-</span>
+                                    <span style={{ color: "var(--muted-foreground)" }}>-</span>
                                   )}
                                 </td>
                               );
@@ -743,11 +743,11 @@ export default function EmdDetailsCashPage() {
                               <td
                                 key={String(col.accessor)}
                                 className={`${alignClass} ${col.sticky ? "sticky-col" : ""}`}
-                                style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "#fff" } : {}}
+                                style={col.sticky ? { left: stickyLeftOffsets[String(col.accessor)], background: "var(--card)" } : {}}
                                 title={display}
                               >
                                 <div className="cell-scroll-wrap" style={{ height: "auto", maxHeight: "96px" }}>
-                                  {display === "-" ? <span style={{ color: "#b0b8c1" }}>{display}</span> : display}
+                                  {display === "-" ? <span style={{ color: "var(--muted-foreground)" }}>{display}</span> : display}
                                 </div>
                               </td>
                             );

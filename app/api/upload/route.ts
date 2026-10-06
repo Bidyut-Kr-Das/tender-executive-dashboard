@@ -16,6 +16,8 @@ import {
 import { sendTenderWebhook } from "@/lib/webhook";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { format } from "date-fns";
+import { withLog } from "@/lib/activity-logger";
+import { isValidCategorySelection } from "@/lib/tender-categories";
 
 const SHEET_CONCURRENCY = 3;
 const INSERT_BATCH_SIZE = 50;
@@ -59,6 +61,11 @@ interface PreparedTender {
   tenderType: "GEM" | "NON_GEM";
   createData: Record<string, unknown>;
   originalRow: Record<string, unknown>;
+}
+
+interface CategoryFields {
+  category: string;
+  subCategory: string | null;
 }
 
 interface ParsedSheet {
@@ -139,6 +146,7 @@ function parseSheetData(
   cableKeywords: string[],
   conductorsKeywords: string[],
   today: Date,
+  categoryFields: CategoryFields,
   customColumnMap?: Record<string, string>,
   associations?: { id: number; name: string; email: string }[],
 ): ParsedSheet {
@@ -256,6 +264,7 @@ function parseSheetData(
       customColumnMap,
       associations,
     );
+    Object.assign(createData, categoryFields);
     console.log(
       `[UPLOAD] Deadline for ${r}:`,
       createData.deadline ? format(createData.deadline as Date, "do MMM yyyy") : "null",
@@ -482,15 +491,27 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
+    const category = formData.get("category");
+    const subCategory = formData.get("subCategory") || null;
 
     if (!files.length) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
+    if (!isValidCategorySelection(category, subCategory)) {
+      return NextResponse.json(
+        { error: "Invalid category/subcategory" },
+        { status: 400 },
+      );
+    }
+    const categoryFields: CategoryFields = {
+      category: category as string,
+      subCategory: subCategory as string | null,
+    };
 
     const results: FileResult[] = [];
 
     for (const file of files) {
-      const fileResult = await processFile(file);
+      const fileResult = await processFileWithLog(file, categoryFields);
       results.push(fileResult);
     }
 
@@ -506,7 +527,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processFile(file: File): Promise<FileResult> {
+async function processFile(
+  file: File,
+  categoryFields: CategoryFields,
+): Promise<FileResult> {
   const fileResult: FileResult = {
     fileName: file.name,
     fileId: 0,
@@ -575,6 +599,7 @@ async function processFile(file: File): Promise<FileResult> {
         cableKeywords,
         conductorsKeywords,
         today,
+        categoryFields,
         mergedColumnMap,
         associations,
       );
@@ -619,3 +644,10 @@ async function processFile(file: File): Promise<FileResult> {
 
   return fileResult;
 }
+
+const processFileWithLog = withLog(processFile, (result, _file, categoryFields) => ({
+  action: "CREATE" as const,
+  tableName: "TenderMerged",
+  recordId: String(result.fileId),
+  details: `Uploaded ${result.fileName} (${categoryFields.category}${categoryFields.subCategory ? ` / ${categoryFields.subCategory}` : ""}): ${result.totalCount} tenders`,
+}));

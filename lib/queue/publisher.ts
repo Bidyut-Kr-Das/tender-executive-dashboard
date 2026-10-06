@@ -132,6 +132,8 @@ export type AiRelevancePayload = {
   company: "laser" | "gmd";
   tenderbrief: string;
   itemcategory: string;
+  category: string | null;
+  tenderAmount: number | null;
 };
 
 export async function publishAiRelevanceTask(

@@ -24,22 +24,22 @@ export default function FlowChartPreviewPage() {
   const mode = width >= FLOW_MODE_MIN_WIDTH ? "flow" : "rail";
 
   return (
-    <div className="flex-1 overflow-auto bg-[#f4f6f8] p-6">
+    <div className="flex-1 overflow-auto bg-muted p-6">
       <div className="mx-auto max-w-[1400px] space-y-5">
         <header className="space-y-1">
-          <h1 className="text-xl font-bold text-[#0a2540]">
+          <h1 className="text-xl font-bold text-brand-ink">
             Participation Flow Chart — visual preview
           </h1>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Dummy data only. Nothing here touches the tender store or the real
             dashboard.
           </p>
         </header>
 
         {/* Controls */}
-        <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               <PanelLeft size={13} /> Scenario
             </div>
             <div className="flex flex-wrap gap-2">
@@ -50,24 +50,24 @@ export default function FlowChartPreviewPage() {
                   onClick={() => setScenarioKey(s.key)}
                   className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                     s.key === scenarioKey
-                      ? "border-blue-300 bg-blue-50 text-blue-800 shadow-sm"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      ? "border-blue-300 dark:border-blue-500/25 bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-300 shadow-sm"
+                      : "border-border bg-card text-muted-foreground hover:border-slate-300 dark:hover:border-muted-foreground/40"
                   }`}
                 >
                   {s.label}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {scenario.description}{" "}
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-foreground/80">
                 {Object.keys(scenario.counts).length} nodes
               </span>
             </p>
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               <Ruler size={13} /> Sidebar width
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -78,8 +78,8 @@ export default function FlowChartPreviewPage() {
                   onClick={() => setWidth(w)}
                   className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium tabular-nums transition-colors ${
                     w === width
-                      ? "border-blue-300 bg-blue-50 text-blue-800 shadow-sm"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      ? "border-blue-300 dark:border-blue-500/25 bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-300 shadow-sm"
+                      : "border-border bg-card text-muted-foreground hover:border-slate-300 dark:hover:border-muted-foreground/40"
                   }`}
                 >
                   {w}px
@@ -94,19 +94,19 @@ export default function FlowChartPreviewPage() {
                 onChange={(e) => setWidth(Number(e.target.value))}
                 className="ml-2 w-56 cursor-pointer accent-blue-600"
               />
-              <span className="text-xs font-semibold tabular-nums text-slate-700">
+              <span className="text-xs font-semibold tabular-nums text-foreground/80">
                 {width}px
               </span>
               <span
                 className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
                   mode === "flow"
-                    ? "bg-violet-100 text-violet-700"
-                    : "bg-slate-100 text-slate-600"
+                    ? "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {mode} mode
               </span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-muted-foreground">
                 switches at {FLOW_MODE_MIN_WIDTH}px
               </span>
             </div>
@@ -116,10 +116,10 @@ export default function FlowChartPreviewPage() {
         <div className="flex flex-wrap items-start gap-5">
           {/* Live sidebar replica */}
           <div
-            className="shrink-0 rounded-lg border border-[#1e3d59] bg-[#0a2540] shadow-lg"
+            className="shrink-0 rounded-lg border border-brand-hover bg-brand shadow-lg"
             style={{ width }}
           >
-            <div className="border-b border-[#1e3d59] px-5 py-4 text-[13px] font-bold uppercase tracking-[0.8px] text-white">
+            <div className="border-b border-brand-hover px-5 py-4 text-[13px] font-bold uppercase tracking-[0.8px] text-brand-foreground">
               Participation Filters
             </div>
             <div className="max-h-[78vh] overflow-y-auto px-5 py-4">
@@ -128,21 +128,21 @@ export default function FlowChartPreviewPage() {
           </div>
 
           {/* Active filter readout */}
-          <div className="min-w-[260px] flex-1 space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+          <div className="min-w-[260px] flex-1 space-y-3 rounded-lg border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Active filters ({participationFilters.length})
               </span>
               <button
                 type="button"
                 onClick={() => dispatch(clearParticipationFilters())}
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-slate-300 dark:hover:border-muted-foreground/40 hover:bg-accent"
               >
                 <Eraser size={12} /> Clear
               </button>
             </div>
             {participationFilters.length === 0 ? (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 None. Click a node to select it — ancestors activate with it,
                 and clearing a node clears everything below it.
               </p>
@@ -151,14 +151,14 @@ export default function FlowChartPreviewPage() {
                 {participationFilters.map((f) => (
                   <span
                     key={f}
-                    className="rounded-md bg-blue-50 px-2 py-1 font-mono text-[11px] text-blue-800"
+                    className="rounded-md bg-blue-50 dark:bg-blue-500/10 px-2 py-1 font-mono text-[11px] text-blue-800 dark:text-blue-300"
                   >
                     {f}
                   </span>
                 ))}
               </div>
             )}
-            <p className="border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-500">
+            <p className="border-t border-border pt-3 text-[11px] leading-relaxed text-muted-foreground">
               The two <span className="font-semibold">We L1</span> nodes now use
               separate filter keys (<code>weL1</code> vs{" "}
               <code>financialWeL1</code>), so selecting one no longer highlights

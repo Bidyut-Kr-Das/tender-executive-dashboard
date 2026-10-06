@@ -118,8 +118,8 @@ export default function Home() {
             </TabsList>
             <TabsContent value="pre-participation" className="mt-2 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col h-[calc(100vh-144px)]">
               {table.loading ? (
-                <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "#0a2540", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
-                  <div style={{ width: "40px", height: "40px", border: "4px solid #e1e6eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+                <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "500px", color: "var(--brand-ink)", fontWeight: 700, flexDirection: "column", gap: "15px" }}>
+                  <div style={{ width: "40px", height: "40px", border: "4px solid var(--border)", borderTopColor: "var(--status-sub-text)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
                   <span style={{ fontSize: "16px", letterSpacing: "0.5px" }}>Loading tender data...</span>
                   <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
@@ -140,7 +140,7 @@ export default function Home() {
                       value="erpPartyName"
                       checked={partySearchField === "erpPartyName"}
                       onChange={() => setPartySearchField("erpPartyName")}
-                      className="size-4 accent-[#0a2540]"
+                      className="size-4 accent-brand-ink"
                     />
                     Utility
                   </label>
@@ -151,7 +151,7 @@ export default function Home() {
                       value="itemCode"
                       checked={partySearchField === "itemCode"}
                       onChange={() => setPartySearchField("itemCode")}
-                      className="size-4 accent-[#0a2540]"
+                      className="size-4 accent-brand-ink"
                     />
                     Item Code
                   </label>
@@ -187,7 +187,7 @@ export default function Home() {
               {partySearch.loading ? (
                 <div className="flex flex-1 items-center justify-center min-h-[300px] text-sm text-muted-foreground">Searching...</div>
               ) : partySearch.error ? (
-                <div className="flex flex-1 items-center justify-center min-h-[300px] text-sm text-red-600">{partySearch.error}</div>
+                <div className="flex flex-1 items-center justify-center min-h-[300px] text-sm text-red-600 dark:text-red-300">{partySearch.error}</div>
               ) : partySearch.results.length > 0 ? (
                 <TenderTable
                   records={partySearch.results as unknown as import("@/types/tender").EpcTenderRecord[]}
@@ -195,17 +195,17 @@ export default function Home() {
                   readOnly
                 />
               ) : partySearch.lastQuery ? (
-                <div className="flex flex-1 items-center justify-center min-h-[300px] rounded-lg border border-dashed bg-white">
+                <div className="flex flex-1 items-center justify-center min-h-[300px] rounded-lg border border-dashed bg-card">
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-slate-700">No results</p>
-                    <p className="text-xs text-slate-500 mt-1">No tenders found for &quot;{partySearch.lastQuery}&quot;</p>
+                    <p className="text-sm font-semibold text-foreground/80">No results</p>
+                    <p className="text-xs text-muted-foreground mt-1">No tenders found for &quot;{partySearch.lastQuery}&quot;</p>
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-1 items-center justify-center min-h-[300px] rounded-lg border border-dashed bg-white">
+                <div className="flex flex-1 items-center justify-center min-h-[300px] rounded-lg border border-dashed bg-card">
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-slate-700">Tenders by Party</p>
-                    <p className="text-xs text-slate-500 mt-1">Select field and search to view results.</p>
+                    <p className="text-sm font-semibold text-foreground/80">Tenders by Party</p>
+                    <p className="text-xs text-muted-foreground mt-1">Select field and search to view results.</p>
                   </div>
                 </div>
               )}
@@ -214,8 +214,8 @@ export default function Home() {
         </main>
         <footer className="dashboard-status-bar">
           <div className="status-left">
-            <div className="sync-live-tag" style={{ color: "#137333" }}>
-              <span className="sync-pulse-dot" style={{ backgroundColor: "#34a853" }}></span>
+            <div className="sync-live-tag" style={{ color: "var(--status-won-text)" }}>
+              <span className="sync-pulse-dot" style={{ backgroundColor: "var(--success)" }}></span>
               <span>DATABASE LIVE (SYNC: ACTIVE)</span>
             </div>
           </div>

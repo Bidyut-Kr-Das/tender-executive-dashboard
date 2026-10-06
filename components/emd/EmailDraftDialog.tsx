@@ -38,17 +38,17 @@ export function EmailDraftDialog({ open, onOpenChange, html, title }: Props) {
 
         <div className="flex-1 overflow-hidden px-6 py-4">
           {hasHtml ? (
-            <div className="border rounded-md overflow-hidden bg-white h-full" style={{ height: "70vh" }}>
+            <div className="border rounded-md overflow-hidden bg-card h-full" style={{ height: "70vh" }}>
               <IframePreview html={String(html)} />
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground border rounded-md bg-slate-50" style={{ height: "70vh" }}>
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground border rounded-md bg-muted" style={{ height: "70vh" }}>
               No draft available.
             </div>
           )}
         </div>
 
-        <div className="border-t px-6 py-3 flex justify-end bg-slate-50">
+        <div className="border-t px-6 py-3 flex justify-end bg-muted">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>

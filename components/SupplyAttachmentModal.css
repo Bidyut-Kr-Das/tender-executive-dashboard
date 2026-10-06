@@ -14,7 +14,7 @@
 }
 
 .attachment-modal-container {
-  background-color: #ffffff;
+  background-color: var(--popover);
   border-radius: 12px;
   width: 90%;
   max-width: 600px;
@@ -28,8 +28,8 @@
 
 .attachment-modal-header {
   padding: 16px 20px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--muted);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,14 +39,14 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--foreground);
 }
 
 .attachment-modal-close-btn {
   background: none;
   border: none;
   font-size: 16px;
-  color: #64748b;
+  color: var(--muted-foreground);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -56,7 +56,7 @@
 }
 
 .attachment-modal-close-btn:hover {
-  color: #0f172a;
+  color: var(--foreground);
 }
 
 .attachment-modal-body {
@@ -78,15 +78,15 @@
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   transition: background-color 0.15s, border-color 0.15s;
 }
 
 .file-item:hover {
-  background-color: #f1f5f9;
-  border-color: #cbd5e1;
+  background-color: var(--accent);
+  border-color: var(--input);
 }
 
 .file-icon {
@@ -105,7 +105,7 @@
 .file-name {
   font-size: 14px;
   font-weight: 500;
-  color: #334155;
+  color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -113,7 +113,7 @@
 
 .file-meta {
   font-size: 11px;
-  color: #64748b;
+  color: var(--muted-foreground);
   margin-top: 2px;
 }
 
@@ -185,21 +185,21 @@
 .attachment-empty-state p, .attachment-error-state p {
   margin: 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--muted-foreground);
 }
 
 .attachment-modal-footer {
   padding: 12px 20px;
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background-color: var(--muted);
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
 }
 
 .footer-close-btn {
   padding: 8px 16px;
-  background-color: #0f172a;
-  color: #ffffff;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -209,7 +209,7 @@
 }
 
 .footer-close-btn:hover {
-  background-color: #1e293b;
+  background-color: color-mix(in srgb, var(--primary) 88%, var(--background));
 }
 
 /* Skeleton Loading Shimmer */
@@ -217,8 +217,8 @@
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 12px;
 }
@@ -226,7 +226,7 @@
 .skeleton-icon {
   width: 24px;
   height: 24px;
-  background: #e2e8f0;
+  background: var(--border);
   border-radius: 4px;
   margin-right: 12px;
   animation: shimmer 1.5s infinite;
@@ -242,7 +242,7 @@
 .skeleton-title {
   width: 60%;
   height: 12px;
-  background: #e2e8f0;
+  background: var(--border);
   border-radius: 3px;
   animation: shimmer 1.5s infinite;
 }
@@ -250,7 +250,7 @@
 .skeleton-subtitle {
   width: 30%;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--border);
   border-radius: 2px;
   animation: shimmer 1.5s infinite;
 }
@@ -258,16 +258,16 @@
 .skeleton-btn {
   width: 70px;
   height: 26px;
-  background: #e2e8f0;
+  background: var(--border);
   border-radius: 6px;
   margin-left: 8px;
   animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-  0% { background-color: #f1f5f9; }
-  50% { background-color: #e2e8f0; }
-  100% { background-color: #f1f5f9; }
+  0% { background-color: var(--muted); }
+  50% { background-color: var(--border); }
+  100% { background-color: var(--muted); }
 }
 
 @keyframes fadeIn {
@@ -279,3 +279,14 @@
   from { transform: translateY(10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* ── Dark mode overrides ── */
+.dark .attachment-modal-overlay { background-color: rgba(0, 0, 0, 0.55); }
+.dark .attachment-modal-container { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35); }
+.dark .view-btn,
+.dark .open-btn { background-color: rgb(118 176 235 / 12%); border-color: rgb(118 176 235 / 25%); color: #76b0eb; }
+.dark .view-btn:hover,
+.dark .open-btn:hover { background-color: rgb(118 176 235 / 20%); }
+.dark .download-btn { background-color: rgb(124 199 154 / 12%); border-color: rgb(124 199 154 / 25%); color: #7cc79a; }
+.dark .download-btn:hover { background-color: rgb(124 199 154 / 20%); }
+.dark .file-source-badge { background-color: rgb(118 176 235 / 12%); border-color: rgb(118 176 235 / 25%); color: #76b0eb; }

@@ -139,8 +139,8 @@ export function EmdBgEmailDialog({ open, onOpenChange, row, onConfirm }: Props) 
             <div className="space-y-1">
               <label className="text-xs font-semibold">To * (comma separated)</label>
               <Textarea value={to} disabled readOnly placeholder="No contact email" className="bg-muted min-h-[60px]" />
-              {!to && <p className="text-xs text-amber-600">No contact email for this record</p>}
-              {to && !isValidEmails(to) && <p className="text-xs text-red-600">Invalid email(s): {invalidEmails(to).join(", ")}</p>}
+              {!to && <p className="text-xs text-amber-600 dark:text-amber-300">No contact email for this record</p>}
+              {to && !isValidEmails(to) && <p className="text-xs text-red-600 dark:text-red-300">Invalid email(s): {invalidEmails(to).join(", ")}</p>}
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold">Subject *</label>
@@ -154,7 +154,7 @@ export function EmdBgEmailDialog({ open, onOpenChange, row, onConfirm }: Props) 
           </div>
 
           {showPreview ? (
-            <div className="border rounded-md overflow-hidden bg-white" style={{ height: "48vh" }}>
+            <div className="border rounded-md overflow-hidden bg-card" style={{ height: "48vh" }}>
               <IframePreview html={html} />
             </div>
           ) : (
@@ -162,9 +162,9 @@ export function EmdBgEmailDialog({ open, onOpenChange, row, onConfirm }: Props) 
           )}
         </div>
 
-        <SheetFooter className="border-t px-6 py-3 flex-row justify-end gap-2 flex-shrink-0 bg-slate-50">
+        <SheetFooter className="border-t px-6 py-3 flex-row justify-end gap-2 flex-shrink-0 bg-muted">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={sending || !to || !isValidEmails(to) || !subject || !row.reason} className="bg-[#0a2540] text-white">
+          <Button onClick={handleConfirm} disabled={sending || !to || !isValidEmails(to) || !subject || !row.reason} className="bg-brand text-brand-foreground">
             {sending ? <><Loader2 size={14} className="animate-spin" /> Sending...</> : <><Mail size={14} /> Confirm & Send</>}
           </Button>
         </SheetFooter>

@@ -23,35 +23,35 @@ export const WITH_RA_TREE: FlowNode = {
   id: "withRa",
   filter: "participatedWithRa",
   label: "With RA",
-  accent: "text-violet-300",
+  accent: "text-violet-300 dark:text-violet-300/80",
   edge: "rgb(196 181 253)",
   children: [
     {
       id: "raDone",
       filter: "raDone",
       label: "RA Done",
-      accent: "text-emerald-300",
+      accent: "text-emerald-300 dark:text-emerald-300/80",
       edge: "rgb(110 231 183)",
       children: [
         {
           id: "weL1",
           filter: "weL1",
           label: "We L1",
-          accent: "text-emerald-300",
+          accent: "text-emerald-300 dark:text-emerald-300/80",
           edge: "rgb(110 231 183)",
           children: [
             {
               id: "contractReceived",
               filter: "contractReceived",
               label: "Contract Received",
-              accent: "text-teal-300",
+              accent: "text-teal-300 dark:text-teal-300/80",
               edge: "rgb(94 234 212)",
             },
             {
               id: "contractPending",
               filter: "contractPending",
               label: "Contract Pending",
-              accent: "text-orange-300",
+              accent: "text-orange-300 dark:text-orange-300/80",
               edge: "rgb(253 186 116)",
             },
           ],
@@ -60,7 +60,7 @@ export const WITH_RA_TREE: FlowNode = {
           id: "weLost",
           filter: "weLost",
           label: "We Lost",
-          accent: "text-rose-300",
+          accent: "text-rose-300 dark:text-rose-300/80",
           edge: "rgb(253 164 175)",
         },
       ],
@@ -69,14 +69,14 @@ export const WITH_RA_TREE: FlowNode = {
       id: "raPending",
       filter: "raPending",
       label: "RA Pending",
-      accent: "text-amber-300",
+      accent: "text-amber-300 dark:text-amber-300/80",
       edge: "rgb(252 211 77)",
       children: [
         {
           id: "expRaDate",
           filter: "expRaDate",
           label: "Exp RA Date",
-          accent: "text-sky-300",
+          accent: "text-sky-300 dark:text-sky-300/80",
           edge: "rgb(125 211 252)",
         },
       ],
@@ -88,42 +88,42 @@ export const WITHOUT_RA_TREE: FlowNode = {
   id: "withoutRa",
   filter: "participatedWithoutRa",
   label: "Without RA",
-  accent: "text-cyan-300",
+  accent: "text-cyan-300 dark:text-cyan-300/80",
   edge: "rgb(103 232 249)",
   children: [
     {
       id: "technicalOpen",
       filter: "technicalOpen",
       label: "Technical Open",
-      accent: "text-emerald-300",
+      accent: "text-emerald-300 dark:text-emerald-300/80",
       edge: "rgb(110 231 183)",
       children: [
         {
           id: "financialOpen",
           filter: "financialOpen",
           label: "Financial Open",
-          accent: "text-amber-300",
+          accent: "text-amber-300 dark:text-amber-300/80",
           edge: "rgb(252 211 77)",
           children: [
             {
               id: "financialWeL1",
               filter: "financialWeL1",
               label: "We L1",
-              accent: "text-emerald-300",
+              accent: "text-emerald-300 dark:text-emerald-300/80",
               edge: "rgb(110 231 183)",
               children: [
                 {
                   id: "financialContractReceived",
                   filter: "financialContractReceived",
                   label: "Contract Received",
-                  accent: "text-teal-300",
+                  accent: "text-teal-300 dark:text-teal-300/80",
                   edge: "rgb(94 234 212)",
                 },
                 {
                   id: "financialContractPending",
                   filter: "financialContractPending",
                   label: "Contract Pending",
-                  accent: "text-orange-300",
+                  accent: "text-orange-300 dark:text-orange-300/80",
                   edge: "rgb(253 186 116)",
                 },
               ],
@@ -132,7 +132,7 @@ export const WITHOUT_RA_TREE: FlowNode = {
               id: "financialWeLost",
               filter: "financialWeLost",
               label: "We Lost",
-              accent: "text-rose-300",
+              accent: "text-rose-300 dark:text-rose-300/80",
               edge: "rgb(253 164 175)",
             },
           ],
@@ -141,7 +141,7 @@ export const WITHOUT_RA_TREE: FlowNode = {
           id: "financialNotOpen",
           filter: "financialNotOpen",
           label: "Financial Not Open",
-          accent: "text-slate-300",
+          accent: "text-slate-300 dark:text-slate-300/80",
           edge: "rgb(203 213 225)",
         },
       ],
@@ -150,15 +150,15 @@ export const WITHOUT_RA_TREE: FlowNode = {
       id: "technicalNotOpen",
       filter: "technicalNotOpen",
       label: "Technical Not Open",
-      accent: "text-rose-300",
+      accent: "text-rose-300 dark:text-rose-300/80",
       edge: "rgb(253 164 175)",
     },
   ],
 };
 
 export const FLOW_TREES: { tree: FlowNode; heading: string; tone: string }[] = [
-  { tree: WITH_RA_TREE, heading: "With RA", tone: "text-violet-300/80" },
-  { tree: WITHOUT_RA_TREE, heading: "Without RA", tone: "text-cyan-300/80" },
+  { tree: WITH_RA_TREE, heading: "With RA", tone: "text-violet-300/80 dark:text-violet-300/65" },
+  { tree: WITHOUT_RA_TREE, heading: "Without RA", tone: "text-cyan-300/80 dark:text-cyan-300/65" },
 ];
 
 /** Every node of a tree, depth-first. */
