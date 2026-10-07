@@ -549,18 +549,14 @@ export default function Dashboard() {
       correctedAi: string;
       feedbackReason: string;
     }) => {
-      const toastId = toast.loading("Saving feedback and re-analyzing...");
+      const toastId = toast.loading("Sending feedback for analysis...");
       dispatch(saveFeedbackAndReanalyze(params))
         .unwrap()
         .then(() => {
-          toast.success("Feedback saved, tender re-analyzed", { id: toastId });
+          toast.success("Feedback sent for analysis", { id: toastId });
         })
         .catch((err: Error) => {
-          const msg =
-            err.message === "rate_limit"
-              ? "Re-analysis rate limited, try again later"
-              : `Failed: ${err.message}`;
-          toast.error(msg, { id: toastId });
+          toast.error(`Failed: ${err.message}`, { id: toastId });
         })
         .finally(() => {
           setFeedbackRow(null);

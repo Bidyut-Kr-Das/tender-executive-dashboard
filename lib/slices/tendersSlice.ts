@@ -23,7 +23,7 @@ import {
   updateBeneficiaryBankDetails,
 } from "@/actions/tender";
 import { importEpcTendersAction } from "@/actions/importEpcTenders";
-import { analyzeTenderValidity, saveAiRelevance } from "@/actions/ai-analysis";
+
 import { searchTendersByParty } from "@/actions/searchTendersByParty";
 import type { ReverseAuctionWebhookData } from "@/lib/integrations/n8n";
 import { filtersSlice } from "./filtersSlice";
@@ -671,19 +671,12 @@ export const saveFeedbackAndReanalyze = createAsyncThunk(
     });
     if (!res.ok) throw new Error("Failed to save feedback");
 
-    const result = await analyzeTenderValidity(params.briefText);
-    if (!result.success) throw new Error(result.error);
-
-    await saveAiRelevance({
-      tenderMergedId: params.tenderMergedId,
-      valid: result.data.valid,
-      reason: result.data.reason,
-    });
-
+    // Feedback is only pushed to the relevance queue. The worker re-analyzes
+    // the tender and results come back through /api/webhook/ai-relevance.
+    const result = await res.json();
     return {
       tenderMergedId: params.tenderMergedId,
-      valid: String(result.data.valid),
-      reason: result.data.reason,
+      queued: Boolean(result.queued),
     };
   },
 );
@@ -1310,15 +1303,13 @@ export const tendersSlice = createSlice({
       state.feedbackSaving[key] = true;
     });
     builder.addCase(saveFeedbackAndReanalyze.fulfilled, (state, action) => {
-      const { tenderMergedId, valid, reason } = action.payload;
+      const { tenderMergedId } = action.payload;
       const { correctedAi, feedbackReason } = action.meta.arg;
       const key = `${tenderMergedId}-reanalyze`;
       state.feedbackSaving[key] = false;
       if (state.data) {
         const row = state.data.rows.find((r) => Number(r.id) === tenderMergedId);
         if (row) {
-          row.aiRelevanceValid = valid;
-          row.aiRelevanceReason = reason;
           row.aiFeedbackCorrected = correctedAi;
           row.aiFeedbackReason = feedbackReason;
         }
