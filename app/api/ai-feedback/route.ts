@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { withLog } from "@/lib/activity-logger";
+import { publishFeedbackTask } from "@/lib/queue/publisher";
 
 export async function GET() {
   try {
@@ -14,6 +16,64 @@ export async function GET() {
     );
   }
 }
+
+interface SaveFeedbackInput {
+  tenderId: number;
+  tenderType: string;
+  briefText: string;
+  originalAi: string;
+  correctedAi: string;
+  feedbackReason: string;
+}
+
+async function publishFeedback(input: SaveFeedbackInput) {
+  const tender = await prisma.tenderMerged.findUnique({
+    where: { id: input.tenderId },
+    select: { referenceNo: true },
+  });
+  if (!tender) {
+    const err = new Error(`Tender not found: ${input.tenderId}`);
+    (err as Error & { status: number }).status = 404;
+    throw err;
+  }
+
+  // Feedback is not stored. It is sent to the feedback agent on the same
+  // relevance queue. Publish failure must not fail the request.
+  let queued = false;
+  try {
+    queued = await publishFeedbackTask({
+      payload_type: "feedback",
+      reference_no: tender.referenceNo,
+      company: "laser",
+      tender_id: input.tenderId,
+      tender_type: input.tenderType,
+      brief_text: input.briefText,
+      original_ai: input.originalAi,
+      corrected_ai: input.correctedAi,
+      feedback_reason: input.feedbackReason,
+    });
+    if (!queued) {
+      console.warn(
+        `[ai-feedback] Feedback job not queued for ${tender.referenceNo} (RabbitMQ unavailable?)`,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      `[ai-feedback] Feedback publish failed for ${tender.referenceNo}:`,
+      err,
+    );
+  }
+
+  return { referenceNo: tender.referenceNo, queued };
+}
+
+const publishFeedbackWithLog = withLog(publishFeedback, (result) => ({
+  action: "CREATE" as const,
+  tableName: "agent:relevance",
+  recordId: undefined,
+  referenceNo: result.referenceNo,
+  details: `Published feedback job (sent=${result.queued})`,
+}));
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,35 +95,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const feedback = await prisma.aiFeedback.upsert({
-      where: {
-        tenderId_tenderType: {
-          tenderId: Number(tenderId),
-          tenderType: String(tenderType),
-        },
-      },
-      update: {
-        correctedAi,
-        feedbackReason,
-        briefText,
-        originalAi,
-      },
-      create: {
-        tenderId: Number(tenderId),
-        tenderType: String(tenderType),
-        briefText: String(briefText),
-        originalAi: String(originalAi),
-        correctedAi: String(correctedAi),
-        feedbackReason: String(feedbackReason),
-      },
+    const result = await publishFeedbackWithLog({
+      tenderId: Number(tenderId),
+      tenderType: String(tenderType),
+      briefText: String(briefText),
+      originalAi: String(originalAi),
+      correctedAi: String(correctedAi),
+      feedbackReason: String(feedbackReason),
     });
 
-    return NextResponse.json(feedback);
+    return NextResponse.json(result);
   } catch(error) {
     console.error(error)
+    const status = (error as Error & { status?: number }).status ?? 500;
     return NextResponse.json(
-      { error: "Failed to save feedback" },
-      { status: 500 },
+      { error: error instanceof Error ? error.message : "Failed to save feedback" },
+      { status },
     );
   }
 }

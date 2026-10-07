@@ -145,6 +145,27 @@ export async function publishAiRelevanceTask(
   );
 }
 
+export type FeedbackPayload = {
+  payload_type: "feedback";
+  reference_no: string;
+  company: "laser" | "gmd";
+  tender_id: number;
+  tender_type: string;
+  brief_text: string;
+  original_ai: string;
+  corrected_ai: string;
+  feedback_reason: string;
+};
+
+export async function publishFeedbackTask(
+  payload: FeedbackPayload,
+): Promise<boolean> {
+  return publishToQueue(
+    QUEUES.AGENT_RELEVANCE,
+    withClientId("TENDER_AGENT_FEEDBACK_CLIENT_ID", payload),
+  );
+}
+
 export type IngestionPayload = {
   referenceNo: string;
   files: {
