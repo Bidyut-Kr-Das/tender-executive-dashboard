@@ -8,6 +8,7 @@ import credentialsReducer from "@/lib/slices/credentialsSlice";
 import emdReducer from "@/lib/slices/emdSlice";
 import railwaysReducer from "@/lib/slices/railwaysSlice";
 import itemsReducer from "@/lib/slices/itemsSlice";
+import performanceCertificatesReducer from "@/lib/slices/performanceCertificatesSlice";
 import tenderPageReducer from "@/lib/slices/tenderPageSlice";
 
 export const makeStore = () =>
@@ -22,6 +23,7 @@ export const makeStore = () =>
       emd: emdReducer,
       railways: railwaysReducer,
       items: itemsReducer,
+      performanceCertificates: performanceCertificatesReducer,
       tenderPage: tenderPageReducer,
     },
     middleware: (getDefaultMiddleware) =>

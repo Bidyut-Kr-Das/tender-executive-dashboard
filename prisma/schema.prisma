@@ -1120,6 +1120,17 @@ model TypeTest {
   @@map("type_tests")
 }
 
+model PerformanceCertificate {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  certificateName String?
+  certificateUrl  String?
+
+  @@map("performance_certificates")
+}
+
 model SopResponsibility {
   id          Int      @id @default(autoincrement())
   columnName  String  
