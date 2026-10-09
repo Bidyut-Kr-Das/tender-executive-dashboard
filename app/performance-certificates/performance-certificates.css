@@ -1,0 +1,138 @@
+/* Keep the performance-certificate grid at its column widths instead of
+   stretching to the full viewport width. */
+.perf-cert-page .optimized-tender-table-wrapper {
+  overflow-x: auto;
+}
+
+.perf-cert-page .optimized-tender-data-table {
+  width: max-content;
+  min-width: 0;
+}
+
+/* Slimmer rows so more fit on screen. */
+.perf-cert-page .optimized-tender-data-table td {
+  padding: 3px 12px;
+}
+
+/* The shared .column-picker-btn is styled for a dark toolbar; recolor it as a
+   normal input so the Item Schedule multi-select is visible inside the grid. */
+.perf-cert-page .column-picker-btn {
+  background-color: var(--card);
+  border: 1px solid var(--input, var(--border));
+  color: var(--foreground);
+  padding: 0 8px;
+  height: 24px;
+  width: 100%;
+  font-weight: 500;
+  justify-content: space-between;
+}
+
+.perf-cert-page .column-picker-btn:hover {
+  background-color: var(--accent);
+  border-color: var(--input, var(--border));
+}
+
+.perf-cert-page .column-picker-btn span {
+  color: var(--foreground);
+}
+
+/* Right-side inline file preview */
+.perf-cert-preview {
+  flex: 0 0 46%;
+  max-width: 60rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--card);
+}
+
+.perf-cert-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.perf-cert-preview-header > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perf-cert-preview-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.perf-cert-preview-actions a,
+.perf-cert-preview-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.perf-cert-preview-actions a:hover,
+.perf-cert-preview-actions button:hover {
+  color: var(--foreground);
+}
+
+.perf-cert-preview-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.perf-cert-preview-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.perf-cert-preview-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.perf-cert-preview-fallback {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.perf-cert-preview-fallback a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--brand-ink);
+}
+
+/* Item Schedule selected values, stacked as slim cards in the cell */
+.perf-cert-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.5;
+  background: var(--muted);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
