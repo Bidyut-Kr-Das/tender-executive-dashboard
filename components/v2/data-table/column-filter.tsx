@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Loader2, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, Search } from "lucide-react";
 import { Button } from "@/components/v2/ui/button";
-import { Field, Input } from "@/components/v2/ui/field";
+import { DateRange } from "@/components/v2/ui/calendar";
+import { CheckMark, Choice, Input } from "@/components/v2/ui/field";
 import type {
   ColumnFilterState,
   ColumnFilterType,
@@ -95,16 +95,7 @@ function OptionList({
               onClick={() => onToggle(o.value)}
               className="not-disabled:hover:bg-hover flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left"
             >
-              <span
-                className={cn(
-                  "flex size-3.5 shrink-0 items-center justify-center rounded-[0.25rem]",
-                  isOn
-                    ? "bg-accent text-on-accent"
-                    : "shadow-[inset_0_0_0_1px_var(--line-strong)]",
-                )}
-              >
-                {isOn && <Check className="size-3" strokeWidth={3} />}
-              </span>
+              <CheckMark checked={isOn} />
               <span className="min-w-0 flex-1 wrap-break-word">{o.label}</span>
             </button>
           </li>
@@ -193,41 +184,18 @@ function DateRangeFilter({
   return (
     <div className="flex flex-col gap-2.5">
       {presets && (
-        <div className="flex flex-wrap gap-1.5">
-          {presets.map((p) => (
-            <Button
-              key={p.value}
-              size="sm"
-              variant={preset === p.value ? "primary" : "secondary"}
-              aria-pressed={preset === p.value}
-              onClick={() => {
-                onChange("dateRange", undefined);
-                onChange("select", preset === p.value ? undefined : [p.value]);
-              }}
-            >
-              {p.label}
-            </Button>
-          ))}
-        </div>
+        <Choice
+          label="Presets"
+          allowClear
+          options={presets}
+          value={preset || null}
+          onChange={(next) => {
+            onChange("dateRange", undefined);
+            onChange("select", next ? [next] : undefined);
+          }}
+        />
       )}
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="From">
-          <Input
-            type="date"
-            value={start}
-            max={end || undefined}
-            onChange={(e) => setRange(e.target.value, end)}
-          />
-        </Field>
-        <Field label="To">
-          <Input
-            type="date"
-            value={end}
-            min={start || undefined}
-            onChange={(e) => setRange(start, e.target.value)}
-          />
-        </Field>
-      </div>
+      <DateRange from={start} to={end} onChange={setRange} />
     </div>
   );
 }
@@ -240,25 +208,17 @@ function BooleanFilter({
   onChange: OnChange;
 }) {
   const value = state?.boolean ?? null;
-  const choices: { label: string; value: boolean | null }[] = [
-    { label: "Any", value: null },
-    { label: "Yes", value: true },
-    { label: "No", value: false },
-  ];
   return (
-    <div className="flex gap-1.5">
-      {choices.map((c) => (
-        <Button
-          key={c.label}
-          size="sm"
-          variant={value === c.value ? "primary" : "secondary"}
-          aria-pressed={value === c.value}
-          onClick={() => onChange("boolean", c.value ?? undefined)}
-        >
-          {c.label}
-        </Button>
-      ))}
-    </div>
+    <Choice<boolean | null>
+      label="Value"
+      options={[
+        { label: "Any", value: null },
+        { label: "Yes", value: true },
+        { label: "No", value: false },
+      ]}
+      value={value}
+      onChange={(next) => onChange("boolean", next ?? undefined)}
+    />
   );
 }
 
@@ -295,7 +255,7 @@ function ExtraFilter<Row>({
   const { options, loading } = useResolvedOptions(extra.id, extra.options, getFilterOptions);
   return (
     <section className="flex flex-col gap-2 border-t pt-3">
-      <h4 className="text-[0.6875rem] font-medium tracking-[0.02em] text-ink-3">
+      <h4 className="type-label text-ink-3">
         {extra.label}
       </h4>
       <SelectFilter

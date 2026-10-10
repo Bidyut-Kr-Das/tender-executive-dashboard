@@ -3,14 +3,13 @@ import { formatDateISTLong } from "@/lib/format-ist";
 import { REASON_FOR_NOT_APM_OPTIONS } from "@/lib/reason-for-not-apm";
 import type { MergedGroup } from "@/lib/tender-query";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
+import { Chips, Clamp, StackedCell } from "@/components/v2/data-table/cells";
 import type { DataTableColumn, FilterOption } from "@/components/v2/data-table/types";
 import { Badge, Dash, Field, Input } from "@/components/v2/ui/field";
 import {
   AgentReportCell,
   AiRelevanceCell,
   AssigneeCell,
-  Chips,
-  Clamp,
   DecisionCell,
   DivisionCell,
   DocumentsCell,
@@ -22,7 +21,6 @@ import {
   RemarksCell,
   ReportingsCell,
   SizeCell,
-  StackedCell,
   WebsiteCell,
   locationText,
   type Row,

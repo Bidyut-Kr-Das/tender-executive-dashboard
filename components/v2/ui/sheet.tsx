@@ -66,7 +66,7 @@ export function Sheet({
                   transition={{ duration: 0.2 }}
                 />
               }
-              className="fixed inset-0 z-50 bg-(--scrim)"
+              className="fixed inset-0 z-(--z-modal) bg-(--scrim)"
             />
             <Dialog.Popup
               render={
@@ -86,13 +86,13 @@ export function Sheet({
                 />
               }
               style={{ width: `clamp(22rem, ${width}, calc(100vw - 2rem))` }}
-              className="fixed inset-y-0 right-0 z-50 flex flex-col bg-raised shadow-(--shadow-sheet) outline-none will-change-transform"
+              className="fixed inset-y-0 right-0 z-(--z-modal) flex flex-col bg-raised shadow-(--shadow-sheet) outline-none will-change-transform"
             >
               <header
                 onPointerDown={(e) => controls.start(e)}
                 className="flex shrink-0 cursor-grab touch-none select-none items-center gap-3 border-b px-5 py-3 active:cursor-grabbing"
               >
-                <Dialog.Title className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold tracking-[-0.01em]">
+                <Dialog.Title className="min-w-0 flex-1 truncate type-title">
                   {title}
                 </Dialog.Title>
                 <Dialog.Close

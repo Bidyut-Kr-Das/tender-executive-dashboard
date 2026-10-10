@@ -28,6 +28,11 @@
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
 
+  /* Bare sizes between Tailwind's steps. T-shirt names, so tailwind-merge
+     still reads them as font sizes. text-md is the body size. */
+  --text-3xs: 0.625rem;
+  --text-md: 0.8125rem;
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
@@ -82,6 +87,16 @@
   --dur-press: 120ms;
   --dur-pop: 150ms;
   --dur-dialog: 220ms;
+
+  /* Stacking order, lowest first. Use as z-(--z-popup). */
+  --z-pinned: 10;
+  --z-header: 20;
+  --z-header-pinned: 30;
+  --z-rail: 30;
+  --z-progress: 40;
+  --z-modal: 50;
+  --z-popup: 60;
+  --z-tip: 70;
 }
 
 .dark {
@@ -240,6 +255,61 @@
 }
 .md > :first-child {
   margin-top: 0;
+}
+
+/*
+ * Named so tailwind-merge leaves them alone: a custom `text-*` or `shadow-*`
+ * key would be read as a colour and dropped next to `text-ink`.
+ */
+
+/* Every pressable element. */
+@utility press {
+  transition-property: transform, translate, scale, rotate;
+  transition-duration: var(--dur-press);
+  transition-timing-function: var(--ease-out);
+  @media (prefers-reduced-motion: no-preference) {
+    &:active:not(:disabled) {
+      scale: 0.97;
+    }
+  }
+}
+
+/* Outline of a control, drawn inside so it adds no size. */
+@utility edge {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+/* Outline of a resting surface. */
+@utility hairline {
+  box-shadow: 0 0 0 1px var(--line);
+}
+@utility card {
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 1px 3px rgb(0 0 0 / 0.05);
+}
+
+/* Type roles. font-size stays first so tracking-*, leading-* and font-* still override. */
+@utility type-display {
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+@utility type-stat {
+  font-size: 1.125rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+@utility type-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@utility type-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 @utility no-scrollbar {

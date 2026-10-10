@@ -11,6 +11,7 @@ import {
   ListOrdered,
   Merge,
   Package,
+  Palette,
   TrainFront,
   Truck,
   UsersRound,
@@ -68,6 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/indices", label: "Column Index", icon: ListOrdered },
       { href: "/admin/merging", label: "Column Merging", icon: Merge },
       { href: "/admin/sop", label: "SOP Responsibilities", icon: UsersRound },
+      { href: "/v2/design", label: "Design System", icon: Palette, v2: true },
     ],
   },
 ];

@@ -2,18 +2,30 @@
 
 This describes the v2 interface as built. The reference page is `/v2/tenders`; every other page migrated to v2 should look and behave like it. v1 pages under `app/(v1)/` are not covered and do not follow these rules.
 
+Every token and primitive below is rendered live at `/v2/design` (Admin group in the sidebar). Look there before building anything.
+
 The feel to aim for: calm, dense, fast. A working tool for people who scan hundreds of tenders a day. Nothing decorative, nothing that makes a frequent action slower.
 
 ## Where things live
 
 | Path | What |
 |---|---|
-| `app/(v2)/v2.css` | All tokens, animation theme values, overlay motion classes, media-query fallbacks |
+| `app/(v2)/v2.css` | All tokens, utilities (`press`, `edge`, `type-*`), animation theme values, overlay motion classes, media-query fallbacks |
 | `app/(v2)/layout.tsx` | v2 root layout (fonts, boot script, providers, shell) |
-| `components/v2/ui/` | Primitives: `button`, `field`, `overlay`, `sheet` |
+| `components/v2/ui/` | Primitives: `button`, `field`, `calendar`, `overlay`, `sheet`, `page` |
 | `components/v2/shell/` | Sidebar shell and `nav-items.ts` |
-| `components/v2/data-table/` | Generic table, column filters, chips, pagination |
+| `components/v2/data-table/` | Generic table, column filters, chips, pagination, and `cells.tsx`, the cell helpers any page can use |
 | `components/v2/<page>/` | One folder per page: `columns.tsx`, `cells.tsx`, view, Redux hook |
+| `components/v2/design/` | The `/v2/design` showcase |
+
+## Before writing a class string
+
+1. Is there a primitive? Check the tables under [Components](#components) and `/v2/design`.
+2. Is there a utility? `press`, `edge`, `hairline`, `card`, `type-*` (see [Utilities](#utilities)).
+3. Is it one of the [patterns](#patterns) that are written out by hand on purpose? Copy that string exactly.
+4. Only then write new classes, from tokens. If the same string turns up a third time, move it into `components/v2/ui` and add it to this file and the showcase.
+
+Do not restyle a primitive through `className`. Pass `className` for placement only (width, margin, `self-start`). If a primitive lacks a variant, add the variant.
 
 ## Ground rules
 
@@ -63,14 +75,18 @@ The theme is a `dark` class on `<html>`, stored in `localStorage.theme`. v1 uses
 
 Base size is `0.8125rem` (13px) at line-height 1.45: the product is dense by design. Sizes are in `rem` so the layout scales with the user's text-size setting.
 
-| Role | Size | Weight | Tracking |
-|---|---|---|---|
-| Page title | `1.375rem` | 600 | `-0.022em` |
-| Stat value | `1.125rem` (`text-lg`) | 600 | `-0.015em` |
-| Dialog and sheet title | `0.9375rem` | 600 | `-0.01em` |
-| Body, cells, controls | `0.8125rem` | 400 (500 for emphasis) | 0 |
-| Column header, small control | `0.75rem` | 500 | 0 |
-| Field label, group label, badge | `0.6875rem` | 500 | `+0.01em` to `+0.02em` |
+| Role | Class | Size | Weight | Tracking |
+|---|---|---|---|---|
+| Page title | `type-display` | `1.375rem` | 600 | `-0.022em` |
+| Stat value | `type-stat` | `1.125rem` | 600 | `-0.015em` |
+| Dialog and sheet title | `type-title` | `0.9375rem` | 600 | `-0.01em` |
+| Body, cells, controls | `text-md` | `0.8125rem` | 400 (500 for emphasis) | 0 |
+| Column header, small control | `text-xs` | `0.75rem` | 500 | 0 |
+| Field label, group label, badge | `type-label` | `0.6875rem` | 500 | `+0.02em` (badge `+0.01em`) |
+| Text under a column header, avatar initials | `text-3xs` | `0.625rem` | 400 | 0 |
+
+- Use the class, never `text-[...]`. `type-*` set size, weight and tracking together; `tracking-*`, `leading-*` and `font-*` placed beside them still override. `text-md` and `text-3xs` are bare sizes.
+- Body text inherits `text-md` from `<body>`; only controls that reset their font need the class.
 
 - Tracking tightens as text grows and opens slightly for the smallest sizes. Do not apply one letter-spacing value across sizes.
 - Hierarchy comes from weight and tone (`ink`, `ink-2`, `ink-3`) before size.
@@ -82,8 +98,9 @@ Base size is `0.8125rem` (13px) at line-height 1.45: the product is dense by des
 ## Shape, depth and materials
 
 - Radius: `rounded-md` (6px) for small controls and menu items, `rounded-lg` (8px) for buttons and inputs, `rounded-xl` (12px) for cards, popovers and the table container, `rounded-2xl` (16px) for dialogs. Badges use `0.3125rem`.
-- Outlines are drawn with an inset `box-shadow` (`inset 0 0 0 1px var(--line-strong)`), not `border`, so they do not change an element's size.
+- Outlines are drawn with `box-shadow`, not `border`, so they do not change an element's size: `edge` (inset, `line-strong`) for controls, `hairline` (outer, `line`) for resting tiles and pills, `card` (hairline plus a 3px soft drop) for the table container and the active nav item.
 - Shadows: `--shadow-pop` for anchored popups, `--shadow-sheet` for dialogs and the sheet. Larger surfaces get the deeper shadow. Flat content gets none.
+- `edge`, `hairline` and `card` each set the whole `box-shadow`; do not combine one with a `shadow-*` class on the same element.
 - Translucency is for chrome that content scrolls under: the sticky table header uses `.glass` (`backdrop-filter: blur(20px) saturate(180%)`). Never stack one translucent layer on another.
 - Edge shadows appear only when there is something underneath. The pinned-column shadow shows only once the table is scrolled horizontally.
 - A modal task (dialog, sheet) dims the page with `--scrim`. Popovers and menus do not.
@@ -105,7 +122,7 @@ Motion exists to confirm an action or keep the user oriented. If it does neither
 
 **Rules**
 
-- Feedback lands on pointer-down. Every pressable element carries `transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97`.
+- Feedback lands on pointer-down. Every pressable element carries `press` (scale to 0.97 while held, 120ms, skipped when disabled or under reduced motion). `Button`, `IconButton`, `Select`, `StatTile` and `Pill` already have it.
 - Animate `transform` and `opacity` only. Never `width`, `height`, `padding` or `margin`; never `transition: all`. This is why the sidebar collapses instantly: animating its width re-laid out the table every frame.
 - Anchored popups (`.pop`) scale from their trigger with `transform-origin: var(--transform-origin)`, entering from `scale(0.97)` and opacity 0. Dialogs (`.dlg`) are not anchored and stay centre-origin, entering from `scale(0.96)`.
 - Nothing enters from `scale(0)`.
@@ -124,6 +141,41 @@ Springs (`motion`) are used only where a gesture exists. Today that is the sheet
 - It is dragged by its header with pointer capture and can be grabbed mid-animation.
 - Dismissal is decided by where the gesture is heading, not where it was released: release offset plus projected momentum (`(v / 1000) * d / (1 - d)`, `d = 0.998`) past half the panel width dismisses. A quick flick is enough; a slow short drag snaps back.
 - Dragging past the open edge rubber-bands (`dragElastic` 0.06) instead of stopping dead.
+
+## Utilities
+
+Defined with `@utility` in `v2.css`. Their names are deliberately not Tailwind prefixes: `cn` runs `tailwind-merge`, which would read a custom `text-body` or `shadow-card` as a colour and drop it next to `text-ink`.
+
+| Class | What it is |
+|---|---|
+| `press` | Press feedback for anything clickable |
+| `edge` | Control outline: inset 1px `line-strong` |
+| `hairline` | Resting surface outline: 1px `line` |
+| `card` | `hairline` plus a soft drop |
+| `type-display`, `type-stat`, `type-title`, `type-label` | Type roles, see Typography |
+| `no-scrollbar` | Hides the scrollbar of a scroller |
+| `.pop`, `.dlg`, `.scrim`, `.glass` | Overlay surfaces and their enter/exit motion; used inside `ui/overlay.tsx` |
+
+**Stacking.** Use the names, as `z-(--z-popup)`. A plain `z-10` is fine only inside an element that already makes its own stacking context.
+
+| Token | Value | Layer |
+|---|---|---|
+| `--z-pinned` | 10 | Pinned table cells |
+| `--z-header` | 20 | Sticky table header |
+| `--z-header-pinned` | 30 | Pinned header cells |
+| `--z-rail` | 30 | Sidebar |
+| `--z-progress` | 40 | Table progress bar |
+| `--z-modal` | 50 | Dialog, sheet and their scrim |
+| `--z-popup` | 60 | Popover, menu, select |
+| `--z-tip` | 70 | Tooltip |
+
+**Opacity.** Disabled is `opacity-50`. Pending or loading (a change being saved, rows being refetched) is `opacity-60`. No other values.
+
+**Icon sizes.** `size-3` inside controls 24px or smaller (sort arrow, chip remove), `size-3.5` in buttons and small icon buttons, `size-4` in 32px icon buttons, nav, list and menu rows, `size-5` in empty states and drop zones.
+
+**Spacing.** Tailwind's scale, no arbitrary values. Page padding `p-4`, gap between page blocks `gap-3`, gap between controls in a row `gap-2`, between an icon and its label `gap-1.5`, form fields `gap-3`, table cell `px-3 py-2`, dialog body `px-5 py-3`.
+
+**Durations.** `duration-(--dur-press)`, `duration-(--dur-pop)`, `duration-(--dur-dialog)`. No `duration-150`.
 
 ## Accessibility
 
@@ -149,16 +201,54 @@ Springs (`motion`) are used only where a gesture exists. Today that is the sheet
 
 ### Buttons (`ui/button.tsx`)
 
-- `Button` variants: `primary` (one per view or dialog, for the main action), `secondary` (default), `ghost` (cancel, low-emphasis), `danger` (stop or destroy). Sizes `md` (32px) and `sm` (28px).
+| Component | Props | Use it for |
+|---|---|---|
+| `Button` | `variant?: "primary" \| "secondary" \| "ghost" \| "danger"` (default `secondary`), `size?: "md" \| "sm"`, `loading?`, `icon?`, plus button attributes | Any labelled action |
+| `IconButton` | `label` (required), `size?: "md" \| "sm"`, plus button attributes | An icon-only action; `label` is its accessible name and tooltip |
+
+- `primary`: one per view or dialog, for the main action. `ghost`: cancel and low-emphasis. `danger`: stop or destroy. `md` is 32px, `sm` is 28px.
 - `loading` shows a spinner in place of the icon and disables the button.
 - Labels say what happens: "Save website", "Queue analysis", "Parse 3 files". Not "OK" or "Submit".
 
 ### Fields (`ui/field.tsx`)
 
-- `Input`, `Textarea`, and `Field` (a small label above its control).
-- `Badge` tones: `neutral`, `accent`, `good`, `bad`, `warn`.
-- An empty value renders `Dash` (an en dash in `ink-3`), never a blank cell.
-- Native inputs are used where the platform has a good one (`type="date"`, `type="file"`, `type="number"`).
+| Component | Props | Use it for |
+|---|---|---|
+| `Input` | input attributes | One line of text, a number, a date, a file |
+| `Textarea` | textarea attributes | Several lines |
+| `Field` | `label`, `children`, `className?` | A small label above one control |
+| `Checkbox` | `checked`, `onChange(checked)`, `children`, `disabled?` | One on/off option with its label |
+| `CheckMark` | `checked` | The box alone, inside a row that is already a checkbox or menu item |
+| `Choice` | `label`, `options: { value, label }[]`, `value`, `onChange(value \| null)`, `allowClear?` | Picking one of up to about five options that fit on a line: yes/no, presets |
+| `Badge` | `tone?: "neutral" \| "accent" \| "good" \| "bad" \| "warn"`, `title?` | A status word |
+| `Dash` | none | Every empty value. Never a blank cell |
+
+- Native inputs are used where the platform has a good one (`type="file"`, `type="number"`). Dates are the exception: never `type="date"`, always `DatePicker`.
+- More than about five options, or options that do not fit on a line: use `Select`, not `Choice`.
+
+### Dates (`ui/calendar.tsx`)
+
+Built on `react-day-picker`, styled only with v2 tokens (its stylesheet is not imported).
+
+| Component | Props | Use it for |
+|---|---|---|
+| `DatePicker` | `value` (`yyyy-MM-dd` or `""`), `onChange(value)`, `min?`, `max?`, `placeholder?`, `label?`, `disabled?` | One date: a field-shaped button that opens a calendar. Pressing the selected day clears it |
+| `DateRange` | `from`, `to` (`yyyy-MM-dd` or `""`), `onChange(from, to)` | A From/To pair of `DatePicker`s; each end limits the other, and either end may stay empty |
+| `Calendar` | every `react-day-picker` prop | The month grid alone, when a picker needs a different shell |
+
+- Today is outlined; the selected day is filled with `accent`.
+- Dates are shown as `d MMM yyyy` and passed around as `yyyy-MM-dd` strings.
+
+### Page (`ui/page.tsx`)
+
+| Component | Props | Use it for |
+|---|---|---|
+| `Page` | div attributes | The frame of every page: full height, `p-4`, `gap-3` column |
+| `PageHeader` | `title`, `meta?`, `actions?` | Title with a live figure beside it, page actions on the right |
+| `StatTile` | `label`, `detail?`, `value` (null while unknown), `selected?`, `onClick?` | A headline number; with `onClick` it toggles a filter |
+| `Pill` | `selected`, `onClick`, `count?`, `children` | A row of quick filter toggles |
+| `Skeleton` | `className` (its size) | First-load placeholder |
+| `EmptyState` | `icon`, `tone?: "neutral" \| "bad"`, `title`, `description?`, `action?` | Nothing to show, or could not load |
 
 ### Overlays (`ui/overlay.tsx`, `ui/sheet.tsx`)
 
@@ -171,7 +261,19 @@ Springs (`motion`) are used only where a gesture exists. Today that is the sheet
 | `Dialog` | A short modal task with a clear outcome |
 | `Sheet` | Long read-only content beside the table (agent report) |
 
-Dialogs that edit one row open with a summary of that row (organisation and brief) so the user can see what they are changing.
+Props:
+
+| Component | Props |
+|---|---|
+| `Tip` | `label`, `side?`, `children` (one element) |
+| `Popover` | `trigger?`, `children`, `open?`, `onOpenChange?`, `side?`, `align?`, `anchor?`, `className?` |
+| `Menu` | `trigger`, `children`, `side?`, `align?`, `className?`; children are `MenuItem` (`icon?`, `onClick?`, `disabled?`, `tone?: "bad"`), `MenuCheckItem` (`checked`, `onCheckedChange`, `closeOnClick?`), `MenuLabel`, `MenuSeparator` |
+| `Select` | `label` (accessible name), `value` (null for none), `onChange`, `options: { value, label }[]`, `placeholder?`, `size?: "md" \| "sm"`, `disabled?`, `icon?` |
+| `Dialog` | `open`, `onOpenChange`, `title`, `description?`, `children?`, `footer?`, `width?` (default `32rem`) |
+| `Sheet` | `open`, `onOpenChange`, `title`, `children`, `width?` (default `40vw`) |
+
+- Dialog buttons always go in `footer`: ghost "Cancel" first, primary action last. When the body is a `<form>`, give the form an `id` from `useId()` and put `type="submit" form={id}` on the primary button.
+- Dialogs that edit one row open with a summary of that row (organisation and brief) so the user can see what they are changing.
 
 ### Data table (`data-table/`)
 
@@ -180,7 +282,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 - **Header:** one row, 40px tall. Label (with optional small provenance text under it), sort arrow, filter button. Clicking the label sorts descending, then ascending. The filter button is tinted when that column has an active filter.
 - **Filter popover:** a "Contains" search box, then the column's typed control: multi-select list (options fetched when the popover opens), date range with optional presets, yes/no, or a custom control supplied by the column. "Clear" removes that column's filters.
 - **Filter bar:** every active filter is a chip above the table, including filters that live outside the columns, passed in as `extraChips`. A filter the user cannot remove is shown as a chip without a remove button. Nothing narrows the list invisibly.
-- **Cells:** text is capped at three lines (`max-h-[3lh]`). Longer text scrolls inside the cell with the scrollbar hidden. A cell is a live scroller only while hovered (`overflow-hidden hover:overflow-y-auto no-scrollbar`), always on touch screens (`pointer-coarse:overflow-y-auto`); a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
+- **Cells:** text is capped at three lines by `Clamp`. Longer text scrolls inside the cell with the scrollbar hidden. A cell is a live scroller only while hovered, always on touch screens; a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
 - **Pinned columns:** sticky to the left, capped at half the table's width (`MAX_FROZEN_SHARE`); beyond that the rightmost pinned columns scroll with the rest.
 - **Rows** are virtualised, so a 500-row page scrolls smoothly.
 - **Column resize:** drag the header edge (pointer capture, 50px minimum). Widths are not persisted.
@@ -195,6 +297,34 @@ A page describes its table as `DataTableColumn<Row>[]` (see `data-table/types.ts
 - Editing in place is preferred for one-field changes (decision toggles, selects, remarks). A dialog is used when the change needs context or more than one input.
 - A change shows immediately as pending and reverts with an error toast if the server refuses it.
 - Edit affordances are small ghost icon buttons that are always visible, not revealed on hover.
+
+### Cell helpers (`data-table/cells.tsx`)
+
+These know nothing about any page's rows. A page's own `cells.tsx` builds on them.
+
+| Component | Props | Use it for |
+|---|---|---|
+| `Clamp` | `children`, `lines?: 2 \| 3 \| 4` (default 3), `className?`, `title?` | Any cell content that can run long. Never write the `max-h-[3lh] overflow-hidden ...` string by hand |
+| `StackedCell` | `primary`, `secondary?` | Two related values in one column (organisation over department) |
+| `Chips` | `items: string[]` | A list of short values, one tag per line |
+| `CellAction` | `children`, `action?`, `pending?` | Content with an always-visible `IconButton size="sm"` at its trailing edge; `pending` dims it while saving |
+
+A column with plain text needs none of these: give it `text` and the table renders `Clamp` or `Dash` itself.
+
+### Patterns
+
+Written out by hand where they occur, because each has fewer than three uses or differs each time. Copy the string exactly.
+
+| Pattern | Classes |
+|---|---|
+| Popover panel | `flex w-72 flex-col gap-3`, opening with `<h3 className="font-semibold">` |
+| Form stack (dialog body) | `flex flex-col gap-3` of `Field`s |
+| Two fields side by side | `grid grid-cols-2 gap-2` |
+| List row (files, documents) | `<li className="flex items-center gap-2 border-b py-1.5 last:border-b-0">`: `size-4 text-ink-3` icon, `min-w-0 flex-1 truncate` name, trailing actions |
+| Inline tag inside a cell | `rounded-[0.3125rem] bg-sunken px-1.5 py-px text-xs` |
+| Row summary at the top of a dialog | `mb-3 rounded-lg bg-sunken px-3 py-2` |
+| Selected fill | `bg-accent-soft text-accent-ink` |
+| Hover fill | `not-disabled:hover:bg-hover` |
 
 ## Feedback
 
@@ -216,7 +346,8 @@ Long-running work (export, bulk AI analysis) reports progress and, where it can 
 
 1. Create `app/(v2)/v2/<page>/page.tsx` rendering a view from `components/v2/<page>/`.
 2. Write a hook that wires the page's existing slices and thunks, following `components/v2/tenders/use-tenders.ts`.
-3. Write `columns.tsx` and `cells.tsx` for the page.
-4. Compose header, optional summary strip and `DataTable` in the view.
+3. Write `columns.tsx` for the page. Plain-text columns need only `text`; build the rest from `data-table/cells.tsx` and `ui/`. Add a page `cells.tsx` only for cells that edit data or are specific to this page.
+4. Compose the view: `Page` > `PageHeader` > optional strip of `StatTile` and `Pill` > `DataTable`. First load renders `Page` with `Skeleton` blocks; add the same to the route's `loading.tsx`.
 5. Set `v2: true` and the new `href` on the page's entry in `components/v2/shell/nav-items.ts`.
 6. Check light and dark, keyboard-only use, and reduced motion.
+7. If the page needed a new primitive or variant, add it to `components/v2/ui`, to this file and to `components/v2/design/showcase.tsx`.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
@@ -31,6 +31,7 @@ import {
   MenuSeparator,
   Tip,
 } from "@/components/v2/ui/overlay";
+import { Skeleton } from "@/components/v2/ui/page";
 import { NAV_GROUPS, type NavItem } from "./nav-items";
 
 function NavLink({
@@ -44,9 +45,9 @@ function NavLink({
 }) {
   const Icon = item.icon;
   const className = cn(
-    "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[0.8125rem]",
+    "press flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-md",
     active
-      ? "bg-surface font-medium text-ink shadow-[0_0_0_1px_var(--line),0_1px_2px_rgb(0_0_0/0.06)]"
+      ? "bg-surface font-medium text-ink card"
       : "not-disabled:hover:bg-hover text-ink-2",
   );
   const content = (
@@ -92,6 +93,7 @@ function ChangePasswordDialog({
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const formId = useId();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,8 +112,23 @@ function ChangePasswordDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Change password" width="24rem">
-      <form onSubmit={submit} className="flex flex-col gap-3">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Change password"
+      width="24rem"
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" form={formId} variant="primary" loading={saving}>
+            Change password
+          </Button>
+        </>
+      }
+    >
+      <form id={formId} onSubmit={submit} className="flex flex-col gap-3">
         <Field label="Current password">
           <Input
             type="password"
@@ -130,14 +147,6 @@ function ChangePasswordDialog({
             onChange={(e) => setNewPassword(e.target.value)}
           />
         </Field>
-        <div className="mt-2 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={saving}>
-            Change password
-          </Button>
-        </div>
       </form>
     </Dialog>
   );
@@ -148,7 +157,7 @@ function UserArea() {
   const [passwordOpen, setPasswordOpen] = useState(false);
 
   if (status === "loading") {
-    return <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-8 w-full" />;
+    return <Skeleton className="h-8 w-full" />;
   }
 
   if (status !== "authenticated") {
@@ -157,7 +166,7 @@ function UserArea() {
         type="button"
         onClick={() => signIn()}
         aria-label="Sign in"
-        className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
+        className="press not-disabled:hover:bg-hover flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
       >
         <LogIn className="size-4 shrink-0 text-ink-3" aria-hidden />
         <span className="in-data-[sidebar=collapsed]:hidden">Sign in</span>
@@ -181,9 +190,9 @@ function UserArea() {
           <button
             type="button"
             aria-label={`Account: ${name}`}
-            className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex h-9 w-full items-center gap-2.5 rounded-lg px-1.5 text-left"
+            className="press not-disabled:hover:bg-hover flex h-9 w-full items-center gap-2.5 rounded-lg px-1.5 text-left"
           >
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-[0.625rem] font-semibold text-on-accent">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-3xs font-semibold text-on-accent">
               {initials}
             </span>
             <span className="in-data-[sidebar=collapsed]:hidden min-w-0 flex-1 truncate text-ink">
@@ -230,9 +239,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="h-dvh">
-      <aside className="w-(--sidebar-w) in-data-[sidebar=collapsed]:w-(--sidebar-rail-w) fixed inset-y-0 left-0 z-30 flex flex-col overflow-hidden border-r bg-rail">
+      <aside className="w-(--sidebar-w) in-data-[sidebar=collapsed]:w-(--sidebar-rail-w) fixed inset-y-0 left-0 z-(--z-rail) flex flex-col overflow-hidden border-r bg-rail">
         <div className="flex h-12 shrink-0 items-center gap-2 px-3">
-          <span className="in-data-[sidebar=collapsed]:hidden min-w-0 flex-1 truncate pl-1 text-[0.8125rem] font-semibold tracking-[-0.01em]">
+          <span className="in-data-[sidebar=collapsed]:hidden min-w-0 flex-1 truncate pl-1 text-md font-semibold tracking-[-0.01em]">
             Tender Dashboard
           </span>
           <IconButton
@@ -251,7 +260,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           {NAV_GROUPS.filter((g) => !g.adminOnly || isAdmin).map((group) => (
             <div key={group.label} className="mt-3 first:mt-1">
-              <div className="in-data-[sidebar=collapsed]:hidden px-2.5 pb-1 text-[0.6875rem] font-medium tracking-[0.02em] text-ink-3">
+              <div className="in-data-[sidebar=collapsed]:hidden px-2.5 pb-1 type-label text-ink-3">
                 {group.label}
               </div>
               <ul className="flex flex-col gap-px">
@@ -274,7 +283,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             type="button"
             onClick={() => setDark(!isDark)}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
+            className="press not-disabled:hover:bg-hover flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
           >
             {isDark ? (
               <Sun className="size-4 shrink-0 text-ink-3" aria-hidden />

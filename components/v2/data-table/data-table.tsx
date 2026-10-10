@@ -26,8 +26,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, IconButton } from "@/components/v2/ui/button";
-import { Input } from "@/components/v2/ui/field";
+import { Dash, Input } from "@/components/v2/ui/field";
 import { Menu, MenuCheckItem, Popover, Select } from "@/components/v2/ui/overlay";
+import { EmptyState } from "@/components/v2/ui/page";
+import { Clamp } from "./cells";
 import { ColumnFilterPanel, summarizeFilter } from "./column-filter";
 import {
   isFilterActive,
@@ -103,7 +105,7 @@ function HeaderCell<Row>({
       style={left != null ? { left } : undefined}
       className={cn(
         "glass sticky top-0 border-b p-0 text-left align-middle font-medium",
-        left != null ? "z-30" : "z-20",
+        left != null ? "z-(--z-header-pinned)" : "z-(--z-header)",
         isLastFrozen &&
           "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
       )}
@@ -120,7 +122,7 @@ function HeaderCell<Row>({
               {column.header}
             </span>
             {column.badges && column.badges.length > 0 && (
-              <span className="truncate text-[0.625rem] font-normal leading-tight text-ink-3">
+              <span className="truncate text-3xs font-normal leading-tight text-ink-3">
                 {column.badges.join(" · ")}
               </span>
             )}
@@ -185,7 +187,7 @@ function RowInner<Row>({
           style={left != null ? { left } : undefined}
           className={cn(
             "border-b bg-surface px-3 py-2 align-top group-hover/row:bg-(--row-hover-bg)",
-            left != null && "sticky z-10",
+            left != null && "sticky z-(--z-pinned)",
             isLastFrozen &&
               "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
           )}
@@ -211,12 +213,7 @@ const RowView = memo(RowInner) as typeof RowInner;
 
 /** Long text is capped at three lines and scrolls inside the cell, scrollbar hidden. */
 function DefaultCell({ text }: { text: string }) {
-  if (!text) return <span className="text-ink-3">–</span>;
-  return (
-    <div className="no-scrollbar max-h-[3lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word">
-      {text}
-    </div>
-  );
+  return text ? <Clamp>{text}</Clamp> : <Dash />;
 }
 
 /**
@@ -251,7 +248,7 @@ function Body<Row>({
     : 0;
 
   return (
-    <tbody className={cn("transition-opacity duration-150", loading && "opacity-55")}>
+    <tbody className={cn("transition-opacity duration-(--dur-pop)", loading && "opacity-60")}>
       {padTop > 0 && (
         <tr aria-hidden>
           <td colSpan={placed.length} style={{ height: padTop }} />
@@ -331,7 +328,7 @@ function Pagination({
             aria-current={p === page ? "page" : undefined}
             onClick={() => onPageChange(p)}
             className={cn(
-              "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 h-6 min-w-6 rounded-md px-1.5 tabular-nums",
+              "press h-6 min-w-6 rounded-md px-1.5 tabular-nums",
               p === page ? "bg-accent-soft font-medium text-accent-ink" : "not-disabled:hover:bg-hover",
             )}
           >
@@ -362,7 +359,7 @@ function Chip({ chip }: { chip: FilterChip }) {
           type="button"
           aria-label={`Remove filter: ${chip.label}`}
           onClick={chip.onRemove}
-          className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex size-4 shrink-0 items-center justify-center rounded"
+          className="press not-disabled:hover:bg-hover flex size-4 shrink-0 items-center justify-center rounded"
         >
           <X className="size-3" />
         </button>
@@ -552,7 +549,7 @@ export function DataTable<Row>({
   const hasColumnFilters = Object.values(filters).some(isFilterActive);
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-surface shadow-[0_0_0_1px_var(--line),0_1px_3px_rgb(0_0_0/0.05)]">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-surface card">
       <div className="flex shrink-0 items-start gap-3 border-b px-3 py-2">
         <div className="flex min-h-8 min-w-0 flex-1 flex-wrap items-center gap-1.5">
           {chips.length === 0 && (
@@ -584,7 +581,7 @@ export function DataTable<Row>({
           <div
             role="progressbar"
             aria-label={`Loading ${noun}`}
-            className="pointer-events-none absolute inset-x-0 top-0 z-40 h-0.5 overflow-hidden"
+            className="pointer-events-none absolute inset-x-0 top-0 z-(--z-progress) h-0.5 overflow-hidden"
           >
             <div className="h-full w-2/5 animate-progress bg-accent motion-reduce:w-full motion-reduce:animate-none motion-reduce:opacity-50" />
           </div>
@@ -650,30 +647,26 @@ export function DataTable<Row>({
 
         {error ? (
           <div className="absolute inset-x-0 bottom-0 top-10 grid place-items-center bg-surface p-6">
-            <div className="flex max-w-sm flex-col items-center gap-2 text-center">
-              <AlertTriangle className="size-5 text-bad" aria-hidden />
-              <p className="font-medium">Could not load {noun}</p>
-              <p className="text-ink-2">{error}</p>
-              {onRetry && (
-                <Button className="mt-1" onClick={onRetry}>
-                  Try again
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={AlertTriangle}
+              tone="bad"
+              title={`Could not load ${noun}`}
+              description={error}
+              action={onRetry && <Button onClick={onRetry}>Try again</Button>}
+            />
           </div>
         ) : (
           rows.length === 0 &&
           !loading && (
             <div className="pointer-events-none absolute inset-x-0 bottom-0 top-10 grid place-items-center p-6">
-              <div className="pointer-events-auto flex max-w-sm flex-col items-center gap-2 text-center">
-                <SearchX className="size-5 text-ink-3" aria-hidden />
-                <p className="font-medium">No {noun} match these filters</p>
-                {hasColumnFilters && (
-                  <Button className="mt-1" onClick={onResetFilters}>
-                    Reset column filters
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                className="pointer-events-auto"
+                icon={SearchX}
+                title={`No ${noun} match these filters`}
+                action={
+                  hasColumnFilters && <Button onClick={onResetFilters}>Reset column filters</Button>
+                }
+              />
             </div>
           )
         )}

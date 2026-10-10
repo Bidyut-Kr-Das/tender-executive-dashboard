@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -32,7 +32,8 @@ import {
   uploadTenderDocument,
 } from "@/lib/slices/tendersSlice";
 import { Button, IconButton } from "@/components/v2/ui/button";
-import { Badge, Dash, Field, Input, Textarea, type Tone } from "@/components/v2/ui/field";
+import { CellAction, Chips, Clamp } from "@/components/v2/data-table/cells";
+import { Badge, Choice, Dash, Field, Input, Textarea, type Tone } from "@/components/v2/ui/field";
 import { Dialog, Select } from "@/components/v2/ui/overlay";
 import { Sheet } from "@/components/v2/ui/sheet";
 import { useTenderCellContext } from "./use-tenders";
@@ -40,20 +41,6 @@ import { useTenderCellContext } from "./use-tenders";
 export type Row = FlatRow;
 
 const str = (v: unknown) => (v == null ? "" : String(v));
-
-/** Text capped at a few lines; longer text scrolls inside the cell, scrollbar hidden. */
-export function Clamp({ children, lines = 3 }: { children: ReactNode; lines?: 2 | 3 | 4 }) {
-  return (
-    <div
-      className={cn(
-        "no-scrollbar overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word",
-        lines === 2 ? "max-h-[2lh]" : lines === 4 ? "max-h-[4lh]" : "max-h-[3lh]",
-      )}
-    >
-      {children}
-    </div>
-  );
-}
 
 export function parseJsonArray(raw: unknown): string[] | null {
   if (Array.isArray(raw)) return raw.map(String);
@@ -63,25 +50,6 @@ export function parseJsonArray(raw: unknown): string[] | null {
   } catch {
     return null;
   }
-}
-
-export function Chips({ items }: { items: string[] }) {
-  if (items.length === 0) return <Dash />;
-  return (
-    <div
-      className="no-scrollbar flex max-h-[3lh] flex-col items-start gap-1 overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto"
-      title={items.join("\n")}
-    >
-      {items.map((item, i) => (
-        <span
-          key={i}
-          className="max-w-full shrink-0 truncate rounded-[0.3125rem] bg-sunken px-1.5 py-px text-xs"
-        >
-          {item}
-        </span>
-      ))}
-    </div>
-  );
 }
 
 function TenderSummary({ row }: { row: Row }) {
@@ -149,7 +117,7 @@ export function DecisionCell({
         disabled={pending !== null}
         onClick={() => choose(choice)}
         className={cn(
-          "h-6 w-7 rounded-[0.3125rem] text-xs font-semibold transition duration-100 ease-out motion-safe:not-disabled:active:scale-97 disabled:cursor-progress",
+          "press h-6 w-7 rounded-[0.3125rem] text-xs font-semibold disabled:cursor-progress",
           on
             ? choice === "YES"
               ? "bg-good text-white dark:text-black"
@@ -166,7 +134,7 @@ export function DecisionCell({
     <div
       className={cn(
         "inline-flex gap-0.5 rounded-md bg-sunken p-0.5",
-        pending !== null && "opacity-70",
+        pending !== null && "opacity-60",
       )}
     >
       {option("YES")}
@@ -217,23 +185,28 @@ export function AiRelevanceCell({ row }: { row: Row }) {
   };
 
   return (
-    <div className="flex items-start gap-1.5">
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex flex-wrap gap-1">
-          <Badge tone={isYes ? "good" : "bad"}>{isYes ? "Yes" : "No"}</Badge>
-          {hasFeedback && <Badge tone="warn">Feedback given</Badge>}
-        </div>
-        {row.aiRelevanceReason && (
-          <div className="no-scrollbar max-h-[2lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto text-xs text-ink-2">
-            {row.aiRelevanceReason}
+    <>
+      <CellAction
+        action={
+          !hasFeedback && (
+            <IconButton size="sm" label="Correct the AI result" onClick={() => setOpen(true)}>
+              <MessageSquarePlus className="size-3.5" />
+            </IconButton>
+          )
+        }
+      >
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap gap-1">
+            <Badge tone={isYes ? "good" : "bad"}>{isYes ? "Yes" : "No"}</Badge>
+            {hasFeedback && <Badge tone="warn">Feedback given</Badge>}
           </div>
-        )}
-      </div>
-      {!hasFeedback && (
-        <IconButton size="sm" label="Correct the AI result" onClick={() => setOpen(true)}>
-          <MessageSquarePlus className="size-3.5" />
-        </IconButton>
-      )}
+          {row.aiRelevanceReason && (
+            <Clamp lines={2} className="text-xs text-ink-2">
+              {row.aiRelevanceReason}
+            </Clamp>
+          )}
+        </div>
+      </CellAction>
       {open && (
         <Dialog
           open
@@ -262,20 +235,18 @@ export function AiRelevanceCell({ row }: { row: Row }) {
               <span className="text-ink-2">AI said</span>
               <Badge tone={isYes ? "good" : "bad"}>{isYes ? "Yes" : "No"}</Badge>
             </div>
-            <fieldset className="flex items-center gap-2">
-              <legend className="float-left mr-2 text-ink-2">Correct answer</legend>
-              {(["YES", "NO"] as const).map((choice) => (
-                <Button
-                  key={choice}
-                  size="sm"
-                  variant={corrected === choice ? "primary" : "secondary"}
-                  aria-pressed={corrected === choice}
-                  onClick={() => setCorrected(choice)}
-                >
-                  {choice === "YES" ? "Yes" : "No"}
-                </Button>
-              ))}
-            </fieldset>
+            <div className="flex items-center gap-2">
+              <span className="text-ink-2">Correct answer</span>
+              <Choice
+                label="Correct answer"
+                options={[
+                  { value: "YES", label: "Yes" },
+                  { value: "NO", label: "No" },
+                ]}
+                value={corrected}
+                onChange={(next) => next && setCorrected(next)}
+              />
+            </div>
             <Field label="Why was the AI wrong?">
               <Textarea
                 rows={4}
@@ -287,7 +258,7 @@ export function AiRelevanceCell({ row }: { row: Row }) {
           </div>
         </Dialog>
       )}
-    </div>
+    </>
   );
 }
 
@@ -490,21 +461,25 @@ export function RemarksCell({ row }: { row: Row }) {
   }
 
   return (
-    <div className={cn("flex items-start gap-1.5", saving && "opacity-60")}>
-      <div className="min-w-0 flex-1">{value ? <Clamp>{value}</Clamp> : <Dash />}</div>
-      {canEditRemarks && (
-        <IconButton
-          size="sm"
-          label="Edit remarks"
-          onClick={() => {
-            setDraft(value);
-            setEditing(true);
-          }}
-        >
-          <Pencil className="size-3.5" />
-        </IconButton>
-      )}
-    </div>
+    <CellAction
+      pending={saving}
+      action={
+        canEditRemarks && (
+          <IconButton
+            size="sm"
+            label="Edit remarks"
+            onClick={() => {
+              setDraft(value);
+              setEditing(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+          </IconButton>
+        )
+      }
+    >
+      {value ? <Clamp>{value}</Clamp> : <Dash />}
+    </CellAction>
   );
 }
 
@@ -516,6 +491,7 @@ export function WebsiteCell({ row }: { row: Row }) {
   const [open, setOpen] = useState(false);
   const [website, setWebsite] = useState(current);
   const [saving, setSaving] = useState(false);
+  const formId = useId();
   const urls = current
     .split(",")
     .map((s) => s.trim())
@@ -557,9 +533,23 @@ export function WebsiteCell({ row }: { row: Row }) {
   };
 
   return (
-    <div className="flex items-start gap-1.5">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        {urls.length === 0 && <Dash />}
+    <>
+      <CellAction
+        action={
+          <IconButton
+            size="sm"
+            label="Edit website"
+            onClick={() => {
+              setWebsite(current);
+              setOpen(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+          </IconButton>
+        }
+      >
+        <div className="flex flex-col gap-0.5">
+          {urls.length === 0 && <Dash />}
         {urls.slice(0, 3).map((url, i) => (
           <a
             key={i}
@@ -572,22 +562,33 @@ export function WebsiteCell({ row }: { row: Row }) {
             {url}
           </a>
         ))}
-        {urls.length > 3 && <span className="text-xs text-ink-3">+{urls.length - 3} more</span>}
-      </div>
-      <IconButton
-        size="sm"
-        label="Edit website"
-        onClick={() => {
-          setWebsite(current);
-          setOpen(true);
-        }}
-      >
-        <Pencil className="size-3.5" />
-      </IconButton>
+          {urls.length > 3 && <span className="text-xs text-ink-3">+{urls.length - 3} more</span>}
+        </div>
+      </CellAction>
       {open && (
-        <Dialog open onOpenChange={setOpen} title="Edit website">
+        <Dialog
+          open
+          onOpenChange={setOpen}
+          title="Edit website"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form={formId}
+                variant="primary"
+                loading={saving}
+                disabled={!website.trim()}
+              >
+                Save website
+              </Button>
+            </>
+          }
+        >
           <TenderSummary row={row} />
-          <form onSubmit={save} className="flex flex-col gap-3">
+          <form id={formId} onSubmit={save} className="flex flex-col gap-3">
             <Field label="Website URL">
               <Input
                 type="url"
@@ -600,18 +601,10 @@ export function WebsiteCell({ row }: { row: Row }) {
             <p className="text-xs text-ink-3">
               Applies to every tender from this organisation.
             </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" loading={saving} disabled={!website.trim()}>
-                Save website
-              </Button>
-            </div>
           </form>
         </Dialog>
       )}
-    </div>
+    </>
   );
 }
 
@@ -825,22 +818,6 @@ export function AgentReportCell({ row }: { row: Row }) {
 
 /* ------------------------------ Display cells ------------------------------ */
 
-export function StackedCell({ primary, secondary }: { primary: string; secondary?: string }) {
-  if (!primary && !secondary) return <Dash />;
-  return (
-    <div className="flex flex-col">
-      <span className="no-scrollbar max-h-[2lh] shrink-0 overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto font-medium">
-        {primary || "–"}
-      </span>
-      {secondary && (
-        <span className="no-scrollbar max-h-[2lh] shrink-0 overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto text-xs text-ink-2">
-          {secondary}
-        </span>
-      )}
-    </div>
-  );
-}
-
 export function ReferenceCell({ row }: { row: Row }) {
   const ref = str(row.referenceNo);
   let stage: { label: string; tone: Tone } | null = null;
@@ -899,11 +876,11 @@ export function ReportingsCell({ row }: { row: Row }) {
   } catch {}
   if (!Array.isArray(entries) || entries.length === 0) return <Dash />;
   return (
-    <div className="no-scrollbar max-h-[3lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line">
+    <Clamp>
       {entries
         .map((e) => (e.quantity ? `${e.officer} (qty ${e.quantity})` : e.officer))
         .join("\n")}
-    </div>
+    </Clamp>
   );
 }
 
@@ -929,9 +906,9 @@ export function SizeCell({ row, field }: { row: Row; field: string }) {
   if (!value) return <Dash />;
   if (row.type === "Gem") {
     return (
-      <div className="md no-scrollbar max-h-[3lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto text-xs">
+      <Clamp className="md whitespace-normal text-xs">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
-      </div>
+      </Clamp>
     );
   }
   const items = parseJsonArray(value);

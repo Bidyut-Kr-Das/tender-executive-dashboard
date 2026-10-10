@@ -9,6 +9,7 @@ import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
 import { Check, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./button";
+import { CheckMark } from "./field";
 
 type Side = "top" | "bottom" | "left" | "right";
 type Align = "start" | "center" | "end";
@@ -31,7 +32,7 @@ export function Tip({
     <BaseTooltip.Root>
       <BaseTooltip.Trigger render={children} />
       <BaseTooltip.Portal>
-        <BaseTooltip.Positioner side={side} sideOffset={6} className="z-70">
+        <BaseTooltip.Positioner side={side} sideOffset={6} className="z-(--z-tip)">
           <BaseTooltip.Popup className="pop rounded-md px-2 py-1 text-xs text-ink">
             {label}
           </BaseTooltip.Popup>
@@ -73,7 +74,7 @@ export function Popover({
           sideOffset={6}
           anchor={anchor}
           collisionPadding={8}
-          className="z-60"
+          className="z-(--z-popup)"
         >
           <BasePopover.Popup
             className={cn(
@@ -92,7 +93,7 @@ export function Popover({
 /* ----------------------------------- Menu ----------------------------------- */
 
 const ITEM =
-  "flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-[0.8125rem] text-ink outline-none data-highlighted:bg-hover data-disabled:opacity-50";
+  "flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-md text-ink outline-none data-highlighted:bg-hover data-disabled:opacity-50";
 
 export function Menu({
   trigger,
@@ -116,7 +117,7 @@ export function Menu({
           align={align}
           sideOffset={6}
           collisionPadding={8}
-          className="z-60"
+          className="z-(--z-popup)"
         >
           <BaseMenu.Popup
             className={cn(
@@ -175,11 +176,7 @@ export function MenuCheckItem({
       closeOnClick={closeOnClick}
       className={ITEM}
     >
-      <span className="flex size-3.5 items-center justify-center">
-        <BaseMenu.CheckboxItemIndicator>
-          <Check className="size-3.5 text-accent" />
-        </BaseMenu.CheckboxItemIndicator>
-      </span>
+      <CheckMark checked={checked} />
       {children}
     </BaseMenu.CheckboxItem>
   );
@@ -191,7 +188,7 @@ export const MenuSeparator = () => (
 
 export function MenuLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="px-2 pb-1 pt-1.5 text-[0.6875rem] font-medium text-ink-3">
+    <div className="px-2 pb-1 pt-1.5 type-label text-ink-3">
       {children}
     </div>
   );
@@ -238,8 +235,8 @@ export function Select({
       <BaseSelect.Trigger
         aria-label={label}
         className={cn(
-          "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink shadow-[inset_0_0_0_1px_var(--line-strong)] data-disabled:opacity-60",
-          size === "sm" ? "h-7 px-2 text-xs" : "h-8 px-2.5 text-[0.8125rem]",
+          "press not-disabled:hover:bg-hover flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink edge data-disabled:opacity-50",
+          size === "sm" ? "h-7 px-2 text-xs" : "h-8 px-2.5 text-md",
           className,
         )}
       >
@@ -256,7 +253,7 @@ export function Select({
           alignItemWithTrigger={false}
           sideOffset={6}
           collisionPadding={8}
-          className="z-60"
+          className="z-(--z-popup)"
         >
           <BaseSelect.Popup className="pop max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) overflow-auto rounded-xl p-1 outline-none">
             <BaseSelect.List>
@@ -300,15 +297,15 @@ export function Dialog({
   return (
     <BaseDialog.Root open={open} onOpenChange={onOpenChange}>
       <BaseDialog.Portal>
-        <BaseDialog.Backdrop className="scrim fixed inset-0 z-50" />
-        <BaseDialog.Viewport className="fixed inset-0 z-50 grid place-items-center p-4">
+        <BaseDialog.Backdrop className="scrim fixed inset-0 z-(--z-modal)" />
+        <BaseDialog.Viewport className="fixed inset-0 z-(--z-modal) grid place-items-center p-4">
           <BaseDialog.Popup
             style={{ width: `min(${width}, 100%)` }}
             className="dlg flex max-h-full flex-col rounded-2xl outline-none"
           >
             <header className="flex items-start gap-3 px-5 pb-1 pt-4">
               <div className="min-w-0 flex-1">
-                <BaseDialog.Title className="text-[0.9375rem] font-semibold tracking-[-0.01em]">
+                <BaseDialog.Title className="type-title">
                   {title}
                 </BaseDialog.Title>
                 {description && (

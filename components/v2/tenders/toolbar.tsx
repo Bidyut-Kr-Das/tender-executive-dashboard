@@ -40,7 +40,8 @@ import {
   uploadResultFiles,
 } from "@/lib/slices/uploadSlice";
 import { Button, IconButton } from "@/components/v2/ui/button";
-import { Field, Input } from "@/components/v2/ui/field";
+import { DateRange } from "@/components/v2/ui/calendar";
+import { Checkbox, Field } from "@/components/v2/ui/field";
 import { Dialog, Menu, MenuItem, MenuSeparator, Popover, Select } from "@/components/v2/ui/overlay";
 
 /* --------------------------------- Uploads --------------------------------- */
@@ -156,7 +157,7 @@ function UploadDialog({ mode, onClose }: { mode: UploadMode; onClose: () => void
           if (e.dataTransfer.files?.length) dispatch(addFiles(e.dataTransfer.files));
         }}
         className={cn(
-          "flex w-full flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-8 text-ink-2 transition-colors duration-150",
+          "flex w-full flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-8 text-ink-2 transition-colors duration-(--dur-pop)",
           dragOver ? "border-accent bg-accent-soft text-accent-ink" : "not-disabled:hover:bg-hover border-line-strong",
         )}
       >
@@ -339,15 +340,9 @@ export function AiAnalysisButton({ query, total }: { query: TenderQuery; total: 
           </>
         }
       >
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            className="size-3.5 accent-(--accent)"
-            checked={reRunAll}
-            onChange={(e) => setReRunAll(e.target.checked)}
-          />
+        <Checkbox checked={reRunAll} onChange={setReRunAll}>
           Also re-analyse tenders that already have a result
-        </label>
+        </Checkbox>
       </Dialog>
     </>
   );
@@ -422,24 +417,7 @@ export function UploadWindowControl() {
     >
       <div className="flex w-72 flex-col gap-3">
         <h3 className="font-semibold">Upload date</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="From">
-            <Input
-              type="date"
-              value={draft.from}
-              max={draft.to || undefined}
-              onChange={(e) => update({ ...draft, from: e.target.value })}
-            />
-          </Field>
-          <Field label="To">
-            <Input
-              type="date"
-              value={draft.to}
-              min={draft.from || undefined}
-              onChange={(e) => update({ ...draft, to: e.target.value })}
-            />
-          </Field>
-        </div>
+        <DateRange from={draft.from} to={draft.to} onChange={(from, to) => update({ from, to })} />
         <Button
           size="sm"
           variant="ghost"

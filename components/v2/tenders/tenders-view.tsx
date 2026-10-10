@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
 import { resetSelectedDateRange } from "@/lib/slices/filesSlice";
 import {
   setAnalyticsFilter,
@@ -15,6 +14,7 @@ import { DataTable } from "@/components/v2/data-table/data-table";
 import { isFilterActive, type FilterChip } from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
 import { Select } from "@/components/v2/ui/overlay";
+import { Page, PageHeader, Pill, Skeleton, StatTile } from "@/components/v2/ui/page";
 import { buildTenderColumns } from "./columns";
 import type { Row } from "./cells";
 import { exportTenders } from "./export";
@@ -39,17 +39,17 @@ const ANALYTICS: { key: NonNullable<AnalyticsFilter>; label: string; detail: str
 
 const getRowId = (row: Row) => `${row.type}-${row.id}`;
 
-function Skeleton() {
+function Loading() {
   return (
-    <div className="flex h-full flex-col gap-3 p-4" aria-busy aria-label="Loading tenders">
-      <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-8 w-48" />
+    <Page aria-busy aria-label="Loading tenders">
+      <Skeleton className="h-8 w-48" />
       <div className="flex gap-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-14 w-40" />
+          <Skeleton key={i} className="h-14 w-40" />
         ))}
       </div>
-      <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none min-h-0 flex-1" />
-    </div>
+      <Skeleton className="min-h-0 flex-1" />
+    </Page>
   );
 }
 
@@ -153,60 +153,45 @@ export function TendersView() {
     );
   };
 
-  if (t.initializing) return <Skeleton />;
+  if (t.initializing) return <Loading />;
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="flex items-baseline gap-2.5">
-          <h1 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.022em]">
-            Tenders
-          </h1>
-          <span className="tabular-nums text-ink-2" aria-live="polite">
-            {t.total.toLocaleString("en-IN")} matching
-          </span>
-        </div>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <UploadMenu />
-          <AiAnalysisButton query={query} total={t.total} />
-          <Button
-            icon={<Download className="size-3.5" />}
-            loading={exporting}
-            onClick={handleExport}
-          >
-            Export
-          </Button>
-        </div>
-      </header>
+    <Page>
+      <PageHeader
+        title="Tenders"
+        meta={`${t.total.toLocaleString("en-IN")} matching`}
+        actions={
+          <>
+            <UploadMenu />
+            <AiAnalysisButton query={query} total={t.total} />
+            <Button
+              icon={<Download className="size-3.5" />}
+              loading={exporting}
+              onClick={handleExport}
+            >
+              Export
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex flex-wrap items-stretch gap-2">
         {ANALYTICS.map((a) => {
           const on = analyticsFilter === a.key;
           return (
-            <button
+            <StatTile
               key={a.key}
-              type="button"
-              aria-pressed={on}
+              label={a.label}
+              detail={a.detail}
+              value={t.summary ? t.summary[a.key].toLocaleString("en-IN") : null}
+              selected={on}
               onClick={() => {
                 dispatch(setAnalyticsFilter(on ? null : a.key));
                 // These counts span every upload and every assignee.
                 dispatch(resetSelectedDateRange());
                 setAssociationFilter(null);
               }}
-              className={cn(
-                "flex min-w-36 flex-col items-start rounded-xl px-3 py-2 text-left transition duration-150 ease-out motion-safe:not-disabled:active:scale-97",
-                on
-                  ? "bg-accent-soft shadow-[inset_0_0_0_1.5px_var(--accent)]"
-                  : "not-disabled:hover:bg-hover bg-surface shadow-[0_0_0_1px_var(--line)]",
-              )}
-            >
-              <span className="text-xs text-ink-2">
-                {a.label} <span className="text-ink-3">· {a.detail}</span>
-              </span>
-              <span className="text-lg font-semibold leading-tight tracking-[-0.015em] tabular-nums">
-                {t.summary ? t.summary[a.key].toLocaleString("en-IN") : "–"}
-              </span>
-            </button>
+            />
           );
         })}
         <div className="ml-auto flex flex-wrap items-end gap-2">
@@ -235,19 +220,14 @@ export function TendersView() {
           {personCounts.map((p) => {
             const on = associationFilter === String(p.id);
             return (
-              <button
+              <Pill
                 key={p.id}
-                type="button"
-                aria-pressed={on}
+                selected={on}
+                count={p.count}
                 onClick={() => setAssociationFilter(on ? null : String(p.id))}
-                className={cn(
-                  "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs",
-                  on ? "bg-accent-soft text-accent-ink" : "not-disabled:hover:bg-hover bg-surface text-ink-2 shadow-[0_0_0_1px_var(--line)]",
-                )}
               >
                 {p.name}
-                <span className="font-medium tabular-nums text-ink">{p.count}</span>
-              </button>
+              </Pill>
             );
           })}
         </div>
@@ -280,6 +260,6 @@ export function TendersView() {
           actions={<ExclusionsMenu />}
         />
       </TenderCellContext>
-    </div>
+    </Page>
   );
 }

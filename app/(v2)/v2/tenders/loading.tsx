@@ -1,8 +1,10 @@
+import { Page, Skeleton } from "@/components/v2/ui/page";
+
 export default function Loading() {
   return (
-    <div className="flex h-full flex-col gap-3 p-4" aria-busy aria-label="Loading tenders">
-      <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-8 w-48" />
-      <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none min-h-0 flex-1" />
-    </div>
+    <Page aria-busy aria-label="Loading tenders">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="min-h-0 flex-1" />
+    </Page>
   );
 }
