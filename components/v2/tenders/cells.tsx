@@ -149,12 +149,12 @@ export function DecisionCell({
         disabled={pending !== null}
         onClick={() => choose(choice)}
         className={cn(
-          "press h-6 w-7 rounded-[0.3125rem] text-xs font-semibold transition-colors duration-100 disabled:cursor-progress",
+          "h-6 w-7 rounded-[0.3125rem] text-xs font-semibold transition duration-100 ease-out motion-safe:not-disabled:active:scale-97 disabled:cursor-progress",
           on
             ? choice === "YES"
               ? "bg-good text-white dark:text-black"
               : "bg-bad text-white dark:text-black"
-            : "hover-bg text-ink-3",
+            : "not-disabled:hover:bg-hover text-ink-3",
         )}
       >
         {choice === "YES" ? "Y" : "N"}

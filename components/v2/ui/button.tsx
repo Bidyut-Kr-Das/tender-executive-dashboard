@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 const VARIANTS = {
   primary: "bg-accent text-on-accent hover:brightness-110",
   secondary:
-    "bg-surface text-ink shadow-[inset_0_0_0_1px_var(--line-strong)] hover-bg",
-  ghost: "text-ink-2 hover-bg",
+    "bg-surface text-ink shadow-[inset_0_0_0_1px_var(--line-strong)] not-disabled:hover:bg-hover",
+  ghost: "text-ink-2 not-disabled:hover:bg-hover",
   danger: "bg-bad text-white hover:brightness-110",
 } as const;
 
@@ -39,14 +39,14 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       className={cn(
-        "press inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap font-medium disabled:opacity-50",
+        "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap font-medium disabled:opacity-50",
         VARIANTS[variant],
         SIZES[size],
         className,
       )}
       {...rest}
     >
-      {loading ? <Loader2 className="spin size-3.5" aria-hidden /> : icon}
+      {loading ? <Loader2 className="animate-spin size-3.5" aria-hidden /> : icon}
       {children}
     </button>
   );
@@ -74,7 +74,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={cn(
-        "press hover-bg inline-flex shrink-0 items-center justify-center rounded-md text-ink-2 disabled:opacity-50",
+        "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover inline-flex shrink-0 items-center justify-center rounded-md text-ink-2 disabled:opacity-50",
         size === "sm" ? "size-6" : "size-8",
         className,
       )}

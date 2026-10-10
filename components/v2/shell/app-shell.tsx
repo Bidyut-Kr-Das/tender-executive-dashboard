@@ -44,10 +44,10 @@ function NavLink({
 }) {
   const Icon = item.icon;
   const className = cn(
-    "press flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[0.8125rem]",
+    "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[0.8125rem]",
     active
       ? "bg-surface font-medium text-ink shadow-[0_0_0_1px_var(--line),0_1px_2px_rgb(0_0_0/0.06)]"
-      : "hover-bg text-ink-2",
+      : "not-disabled:hover:bg-hover text-ink-2",
   );
   const content = (
     <>
@@ -55,7 +55,7 @@ function NavLink({
         className={cn("size-4 shrink-0", active ? "text-accent" : "text-ink-3")}
         aria-hidden
       />
-      <span className="sidebar-label truncate">{item.label}</span>
+      <span className="in-data-[sidebar=collapsed]:hidden truncate">{item.label}</span>
     </>
   );
   // v1 pages live under a different root layout, so they need a document load.
@@ -148,7 +148,7 @@ function UserArea() {
   const [passwordOpen, setPasswordOpen] = useState(false);
 
   if (status === "loading") {
-    return <div className="skeleton h-8 w-full" />;
+    return <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-8 w-full" />;
   }
 
   if (status !== "authenticated") {
@@ -157,10 +157,10 @@ function UserArea() {
         type="button"
         onClick={() => signIn()}
         aria-label="Sign in"
-        className="press hover-bg flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
+        className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
       >
         <LogIn className="size-4 shrink-0 text-ink-3" aria-hidden />
-        <span className="sidebar-label">Sign in</span>
+        <span className="in-data-[sidebar=collapsed]:hidden">Sign in</span>
       </button>
     );
   }
@@ -181,12 +181,12 @@ function UserArea() {
           <button
             type="button"
             aria-label={`Account: ${name}`}
-            className="press hover-bg flex h-9 w-full items-center gap-2.5 rounded-lg px-1.5 text-left"
+            className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex h-9 w-full items-center gap-2.5 rounded-lg px-1.5 text-left"
           >
             <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-[0.625rem] font-semibold text-on-accent">
               {initials}
             </span>
-            <span className="sidebar-label min-w-0 flex-1 truncate text-ink">
+            <span className="in-data-[sidebar=collapsed]:hidden min-w-0 flex-1 truncate text-ink">
               {name}
             </span>
           </button>
@@ -230,9 +230,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="h-dvh">
-      <aside className="app-sidebar fixed inset-y-0 left-0 z-30 flex flex-col overflow-hidden border-r bg-rail">
+      <aside className="w-(--sidebar-w) in-data-[sidebar=collapsed]:w-(--sidebar-rail-w) fixed inset-y-0 left-0 z-30 flex flex-col overflow-hidden border-r bg-rail">
         <div className="flex h-12 shrink-0 items-center gap-2 px-3">
-          <span className="sidebar-label min-w-0 flex-1 truncate pl-1 text-[0.8125rem] font-semibold tracking-[-0.01em]">
+          <span className="in-data-[sidebar=collapsed]:hidden min-w-0 flex-1 truncate pl-1 text-[0.8125rem] font-semibold tracking-[-0.01em]">
             Tender Dashboard
           </span>
           <IconButton
@@ -251,7 +251,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           {NAV_GROUPS.filter((g) => !g.adminOnly || isAdmin).map((group) => (
             <div key={group.label} className="mt-3 first:mt-1">
-              <div className="sidebar-label px-2.5 pb-1 text-[0.6875rem] font-medium tracking-[0.02em] text-ink-3">
+              <div className="in-data-[sidebar=collapsed]:hidden px-2.5 pb-1 text-[0.6875rem] font-medium tracking-[0.02em] text-ink-3">
                 {group.label}
               </div>
               <ul className="flex flex-col gap-px">
@@ -274,20 +274,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             type="button"
             onClick={() => setDark(!isDark)}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="press hover-bg flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
+            className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ink-2"
           >
             {isDark ? (
               <Sun className="size-4 shrink-0 text-ink-3" aria-hidden />
             ) : (
               <Moon className="size-4 shrink-0 text-ink-3" aria-hidden />
             )}
-            <span className="sidebar-label">{isDark ? "Light mode" : "Dark mode"}</span>
+            <span className="in-data-[sidebar=collapsed]:hidden">{isDark ? "Light mode" : "Dark mode"}</span>
           </button>
           <UserArea />
         </div>
       </aside>
 
-      <main className="app-main h-full min-w-0">{children}</main>
+      <main className="pl-(--sidebar-w) in-data-[sidebar=collapsed]:pl-(--sidebar-rail-w) h-full min-w-0">{children}</main>
     </div>
   );
 }

@@ -157,7 +157,7 @@ function UploadDialog({ mode, onClose }: { mode: UploadMode; onClose: () => void
         }}
         className={cn(
           "flex w-full flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-8 text-ink-2 transition-colors duration-150",
-          dragOver ? "border-accent bg-accent-soft text-accent-ink" : "hover-bg border-line-strong",
+          dragOver ? "border-accent bg-accent-soft text-accent-ink" : "not-disabled:hover:bg-hover border-line-strong",
         )}
       >
         <FileUp className="size-5" aria-hidden />

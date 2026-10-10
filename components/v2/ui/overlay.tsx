@@ -238,7 +238,7 @@ export function Select({
       <BaseSelect.Trigger
         aria-label={label}
         className={cn(
-          "press hover-bg flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink shadow-[inset_0_0_0_1px_var(--line-strong)] data-disabled:opacity-60",
+          "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink shadow-[inset_0_0_0_1px_var(--line-strong)] data-disabled:opacity-60",
           size === "sm" ? "h-7 px-2 text-xs" : "h-8 px-2.5 text-[0.8125rem]",
           className,
         )}

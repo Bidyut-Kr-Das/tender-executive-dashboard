@@ -177,13 +177,13 @@ function RowInner<Row>({
   measure: (el: HTMLTableRowElement | null) => void;
 }) {
   return (
-    <tr ref={measure} data-index={rowIndex} className="row-hover">
+    <tr ref={measure} data-index={rowIndex} className="group/row">
       {placed.map(({ column, left, isLastFrozen }) => (
         <td
           key={column.id}
           style={left != null ? { left } : undefined}
           className={cn(
-            "border-b bg-surface px-3 py-2 align-top",
+            "border-b bg-surface px-3 py-2 align-top group-hover/row:bg-(--row-hover-bg)",
             left != null && "sticky z-10",
             isLastFrozen &&
               "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
@@ -274,8 +274,8 @@ function Pagination({
             aria-current={p === page ? "page" : undefined}
             onClick={() => onPageChange(p)}
             className={cn(
-              "press h-6 min-w-6 rounded-md px-1.5 tabular-nums",
-              p === page ? "bg-accent-soft font-medium text-accent-ink" : "hover-bg",
+              "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 h-6 min-w-6 rounded-md px-1.5 tabular-nums",
+              p === page ? "bg-accent-soft font-medium text-accent-ink" : "not-disabled:hover:bg-hover",
             )}
           >
             {p}
@@ -296,7 +296,7 @@ function Pagination({
 
 function Chip({ chip }: { chip: FilterChip }) {
   return (
-    <span className="chip-in inline-flex h-6 max-w-80 items-center gap-1 rounded-md bg-accent-soft pl-2 pr-1 text-xs text-accent-ink">
+    <span className="transition-[scale,opacity] duration-(--dur-pop) ease-out starting:scale-95 starting:opacity-0 inline-flex h-6 max-w-80 items-center gap-1 rounded-md bg-accent-soft pl-2 pr-1 text-xs text-accent-ink">
       <span className="truncate" title={chip.label}>
         {chip.label}
       </span>
@@ -305,7 +305,7 @@ function Chip({ chip }: { chip: FilterChip }) {
           type="button"
           aria-label={`Remove filter: ${chip.label}`}
           onClick={chip.onRemove}
-          className="press hover-bg flex size-4 shrink-0 items-center justify-center rounded"
+          className="transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 not-disabled:hover:bg-hover flex size-4 shrink-0 items-center justify-center rounded"
         >
           <X className="size-3" />
         </button>
@@ -542,7 +542,7 @@ export function DataTable<Row>({
             aria-label={`Loading ${noun}`}
             className="pointer-events-none absolute inset-x-0 top-0 z-40 h-0.5 overflow-hidden"
           >
-            <div className="progress-bar h-full w-2/5 bg-accent" />
+            <div className="h-full w-2/5 animate-progress bg-accent motion-reduce:w-full motion-reduce:animate-none motion-reduce:opacity-50" />
           </div>
         )}
 

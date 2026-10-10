@@ -93,7 +93,7 @@ function OptionList({
               role="checkbox"
               aria-checked={isOn}
               onClick={() => onToggle(o.value)}
-              className="hover-bg flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left"
+              className="not-disabled:hover:bg-hover flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left"
             >
               <span
                 className={cn(
@@ -112,7 +112,7 @@ function OptionList({
       })}
       {loading && (
         <li className="flex items-center gap-2 px-2 py-1.5 text-ink-3">
-          <Loader2 className="spin size-3.5" aria-hidden /> Loading values
+          <Loader2 className="animate-spin size-3.5" aria-hidden /> Loading values
         </li>
       )}
       {!loading && shown.length === 0 && (

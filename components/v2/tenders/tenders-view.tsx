@@ -42,13 +42,13 @@ const getRowId = (row: Row) => `${row.type}-${row.id}`;
 function Skeleton() {
   return (
     <div className="flex h-full flex-col gap-3 p-4" aria-busy aria-label="Loading tenders">
-      <div className="skeleton h-8 w-48" />
+      <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-8 w-48" />
       <div className="flex gap-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="skeleton h-14 w-40" />
+          <div key={i} className="animate-pulse rounded-md bg-hover motion-reduce:animate-none h-14 w-40" />
         ))}
       </div>
-      <div className="skeleton min-h-0 flex-1" />
+      <div className="animate-pulse rounded-md bg-hover motion-reduce:animate-none min-h-0 flex-1" />
     </div>
   );
 }
@@ -194,10 +194,10 @@ export function TendersView() {
                 setAssociationFilter(null);
               }}
               className={cn(
-                "press flex min-w-36 flex-col items-start rounded-xl px-3 py-2 text-left transition-colors duration-150",
+                "flex min-w-36 flex-col items-start rounded-xl px-3 py-2 text-left transition duration-150 ease-out motion-safe:not-disabled:active:scale-97",
                 on
                   ? "bg-accent-soft shadow-[inset_0_0_0_1.5px_var(--accent)]"
-                  : "hover-bg bg-surface shadow-[0_0_0_1px_var(--line)]",
+                  : "not-disabled:hover:bg-hover bg-surface shadow-[0_0_0_1px_var(--line)]",
               )}
             >
               <span className="text-xs text-ink-2">
@@ -241,8 +241,8 @@ export function TendersView() {
                 aria-pressed={on}
                 onClick={() => setAssociationFilter(on ? null : String(p.id))}
                 className={cn(
-                  "press flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs",
-                  on ? "bg-accent-soft text-accent-ink" : "hover-bg bg-surface text-ink-2 shadow-[0_0_0_1px_var(--line)]",
+                  "transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97 flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs",
+                  on ? "bg-accent-soft text-accent-ink" : "not-disabled:hover:bg-hover bg-surface text-ink-2 shadow-[0_0_0_1px_var(--line)]",
                 )}
               >
                 {p.name}

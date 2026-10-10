@@ -66,8 +66,7 @@ export function Sheet({
                   transition={{ duration: 0.2 }}
                 />
               }
-              style={{ background: "var(--scrim)" }}
-              className="fixed inset-0 z-50"
+              className="fixed inset-0 z-50 bg-(--scrim)"
             />
             <Dialog.Popup
               render={
@@ -86,12 +85,8 @@ export function Sheet({
                   onDragEnd={onDragEnd}
                 />
               }
-              style={{
-                width: `clamp(22rem, ${width}, calc(100vw - 2rem))`,
-                background: "var(--raised)",
-                boxShadow: "var(--shadow-sheet)",
-              }}
-              className="fixed inset-y-0 right-0 z-50 flex flex-col outline-none will-change-transform"
+              style={{ width: `clamp(22rem, ${width}, calc(100vw - 2rem))` }}
+              className="fixed inset-y-0 right-0 z-50 flex flex-col bg-raised shadow-(--shadow-sheet) outline-none will-change-transform"
             >
               <header
                 onPointerDown={(e) => controls.start(e)}
