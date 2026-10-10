@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useEpcServerTable } from "@/lib/useEpcServerTable";
 import { clearScopeFilters } from "@/lib/slices/tenderPageSlice";
 import { Eraser, ExternalLink } from "lucide-react";
-import "../Dashboard.css";
+import "@/app/Dashboard.css";
 
 const SCOPE = "postParticipation" as const;
 

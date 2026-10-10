@@ -1,0 +1,285 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
+import { resetSelectedDateRange } from "@/lib/slices/filesSlice";
+import {
+  setAnalyticsFilter,
+  setExclusionFilter,
+  type AnalyticsFilter,
+} from "@/lib/slices/filtersSlice";
+import { DataTable } from "@/components/v2/data-table/data-table";
+import { isFilterActive, type FilterChip } from "@/components/v2/data-table/types";
+import { Button } from "@/components/v2/ui/button";
+import { Select } from "@/components/v2/ui/overlay";
+import { buildTenderColumns } from "./columns";
+import type { Row } from "./cells";
+import { exportTenders } from "./export";
+import {
+  AiAnalysisButton,
+  EXCLUSION_OPTIONS,
+  ExclusionsMenu,
+  UploadMenu,
+  UploadWindowControl,
+  formatUploadWindow,
+} from "./toolbar";
+import { TenderCellContext, useTenders } from "./use-tenders";
+
+const ALL_PEOPLE = "__all__";
+
+const ANALYTICS: { key: NonNullable<AnalyticsFilter>; label: string; detail: string }[] = [
+  { key: "aiYes", label: "AI relevance yes", detail: "All" },
+  { key: "aiYesUnallocated", label: "AI relevance yes", detail: "Unallocated" },
+  { key: "apmYesAllocated", label: "APM yes", detail: "Allocated" },
+  { key: "apmYesUnallocated", label: "APM yes", detail: "Unallocated" },
+];
+
+const getRowId = (row: Row) => `${row.type}-${row.id}`;
+
+function Skeleton() {
+  return (
+    <div className="flex h-full flex-col gap-3 p-4" aria-busy aria-label="Loading tenders">
+      <div className="skeleton h-8 w-48" />
+      <div className="flex gap-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="skeleton h-14 w-40" />
+        ))}
+      </div>
+      <div className="skeleton min-h-0 flex-1" />
+    </div>
+  );
+}
+
+export function TendersView() {
+  const dispatch = useAppDispatch();
+  const t = useTenders();
+  const analyticsFilter = useAppSelector((s) => s.filters.analyticsFilter);
+  const exclusionFilter = useAppSelector((s) => s.filters.exclusionFilter);
+  const dateFrom = useAppSelector((s) => s.files.selectedDateFrom);
+  const dateTo = useAppSelector((s) => s.files.selectedDateTo);
+  const [exporting, setExporting] = useState(false);
+
+  const columns = useMemo(
+    () =>
+      buildTenderColumns({
+        serverColumns: t.serverColumns,
+        displayNameMap: t.displayNameMap,
+        columnIndices: t.columnIndices,
+        mergedGroups: t.mergedGroups,
+        associations: t.associations,
+      }),
+    [t.serverColumns, t.displayNameMap, t.columnIndices, t.mergedGroups, t.associations],
+  );
+
+  const personCounts = useMemo(() => {
+    if (!t.summary) return [];
+    const byId = new Map(t.summary.personCounts.map((p) => [p.id, p.count]));
+    return t.associations
+      .map((a) => ({ ...a, count: byId.get(a.id) ?? 0 }))
+      .filter((p) => p.count > 0);
+  }, [t.summary, t.associations]);
+
+  const { associations, associationFilter, setAssociationFilter, query, columnFilters } = t;
+
+  // Filters that live outside the columns, so nothing narrows the list unseen.
+  const extraChips = useMemo(() => {
+    const chips: FilterChip[] = [];
+    const analytics = ANALYTICS.find((a) => a.key === analyticsFilter);
+    if (analytics) {
+      chips.push({
+        key: "analytics",
+        label: `${analytics.label}: ${analytics.detail.toLowerCase()}`,
+        onRemove: () => dispatch(setAnalyticsFilter(null)),
+      });
+    }
+    const person = associations.find((a) => String(a.id) === associationFilter);
+    if (person) {
+      chips.push({
+        key: "assignee",
+        label: `Assigned to: ${person.name}`,
+        onRemove: () => setAssociationFilter(null),
+      });
+    }
+    const exclusion = EXCLUSION_OPTIONS.find((o) => o.value === exclusionFilter);
+    if (exclusion) {
+      chips.push({
+        key: "exclusion",
+        label: exclusion.label,
+        onRemove: () => dispatch(setExclusionFilter(null)),
+      });
+    }
+    const uploadWindow = formatUploadWindow(dateFrom, dateTo);
+    if (uploadWindow) {
+      chips.push({
+        key: "uploaded",
+        label: `Uploaded: ${uploadWindow}`,
+        onRemove: () => dispatch(resetSelectedDateRange()),
+      });
+    }
+    if (query.applyDefaultDeadlineFilter && !isFilterActive(columnFilters.deadline)) {
+      chips.push({ key: "deadline-default", label: "Deadline: today onward or not set" });
+    }
+    return chips;
+  }, [
+    analyticsFilter,
+    associations,
+    associationFilter,
+    setAssociationFilter,
+    exclusionFilter,
+    dateFrom,
+    dateTo,
+    query.applyDefaultDeadlineFilter,
+    columnFilters.deadline,
+    dispatch,
+  ]);
+
+  const handleExport = () => {
+    setExporting(true);
+    const visible = columns
+      .filter((c) => !c.hidden && t.columnVisibility[c.id] !== false)
+      .map((c) => ({ id: c.id, header: c.header }));
+    toast.promise(
+      exportTenders({ query, columns: visible, mergedGroups: t.mergedGroups, associations }).finally(
+        () => setExporting(false),
+      ),
+      {
+        loading: "Preparing Excel export...",
+        success: (count) => `Exported ${count.toLocaleString("en-IN")} tenders`,
+        error: (err) => (err instanceof Error ? err.message : "Export failed"),
+      },
+    );
+  };
+
+  if (t.initializing) return <Skeleton />;
+
+  return (
+    <div className="flex h-full flex-col gap-3 p-4">
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-baseline gap-2.5">
+          <h1 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.022em]">
+            Tenders
+          </h1>
+          <span className="tabular-nums text-ink-2" aria-live="polite">
+            {t.total.toLocaleString("en-IN")} matching
+          </span>
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <UploadMenu />
+          <AiAnalysisButton query={query} total={t.total} />
+          <Button
+            icon={<Download className="size-3.5" />}
+            loading={exporting}
+            onClick={handleExport}
+          >
+            Export
+          </Button>
+        </div>
+      </header>
+
+      <div className="flex flex-wrap items-stretch gap-2">
+        {ANALYTICS.map((a) => {
+          const on = analyticsFilter === a.key;
+          return (
+            <button
+              key={a.key}
+              type="button"
+              aria-pressed={on}
+              onClick={() => {
+                dispatch(setAnalyticsFilter(on ? null : a.key));
+                // These counts span every upload and every assignee.
+                dispatch(resetSelectedDateRange());
+                setAssociationFilter(null);
+              }}
+              className={cn(
+                "press flex min-w-36 flex-col items-start rounded-xl px-3 py-2 text-left transition-colors duration-150",
+                on
+                  ? "bg-accent-soft shadow-[inset_0_0_0_1.5px_var(--accent)]"
+                  : "hover-bg bg-surface shadow-[0_0_0_1px_var(--line)]",
+              )}
+            >
+              <span className="text-xs text-ink-2">
+                {a.label} <span className="text-ink-3">· {a.detail}</span>
+              </span>
+              <span className="text-lg font-semibold leading-tight tracking-[-0.015em] tabular-nums">
+                {t.summary ? t.summary[a.key].toLocaleString("en-IN") : "–"}
+              </span>
+            </button>
+          );
+        })}
+        <div className="ml-auto flex flex-wrap items-end gap-2">
+          <div className="w-48">
+            <Select
+              label="Assigned to"
+              value={associationFilter ?? ALL_PEOPLE}
+              onChange={(v) => setAssociationFilter(!v || v === ALL_PEOPLE ? null : v)}
+              options={[
+                { value: ALL_PEOPLE, label: "Assigned to anyone" },
+                ...associations.map((a) => ({ value: String(a.id), label: a.name })),
+              ]}
+            />
+          </div>
+          <UploadWindowControl />
+        </div>
+      </div>
+
+      {personCounts.length > 0 && (
+        <div
+          className="-my-0.5 flex shrink-0 items-center gap-1.5 overflow-x-auto py-0.5"
+          role="group"
+          aria-label="Assigned tenders by person"
+        >
+          <span className="shrink-0 text-xs text-ink-3">By person</span>
+          {personCounts.map((p) => {
+            const on = associationFilter === String(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setAssociationFilter(on ? null : String(p.id))}
+                className={cn(
+                  "press flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs",
+                  on ? "bg-accent-soft text-accent-ink" : "hover-bg bg-surface text-ink-2 shadow-[0_0_0_1px_var(--line)]",
+                )}
+              >
+                {p.name}
+                <span className="font-medium tabular-nums text-ink">{p.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <TenderCellContext value={t.cellContext}>
+        <DataTable<Row>
+          noun="tenders"
+          columns={columns}
+          rows={t.rows}
+          getRowId={getRowId}
+          total={t.total}
+          page={t.page}
+          pageSize={t.pageSize}
+          onPageChange={t.onPageChange}
+          onPageSizeChange={t.onPageSizeChange}
+          sort={t.sort}
+          onSortChange={t.onSortChange}
+          filters={columnFilters}
+          onFilterChange={t.onFilterChange}
+          onResetFilters={t.onResetFilters}
+          getFilterOptions={t.getFilterOptions}
+          onFilterOpen={t.onFilterOpen}
+          columnVisibility={t.columnVisibility}
+          onColumnVisibilityChange={t.onColumnVisibilityChange}
+          loading={t.loading}
+          error={t.error}
+          onRetry={t.reload}
+          extraChips={extraChips}
+          actions={<ExclusionsMenu />}
+        />
+      </TenderCellContext>
+    </div>
+  );
+}

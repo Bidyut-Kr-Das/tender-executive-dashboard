@@ -13,7 +13,7 @@ import { useSession } from "next-auth/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import "./Dashboard.css";
+import "@/app/Dashboard.css";
 
 const SCOPE = "home" as const;
 
