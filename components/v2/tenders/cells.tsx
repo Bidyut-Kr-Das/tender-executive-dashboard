@@ -46,7 +46,7 @@ export function Clamp({ children, lines = 3 }: { children: ReactNode; lines?: 2 
   return (
     <div
       className={cn(
-        "no-scrollbar overflow-y-auto whitespace-pre-line wrap-break-word",
+        "no-scrollbar overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word",
         lines === 2 ? "max-h-[2lh]" : lines === 4 ? "max-h-[4lh]" : "max-h-[3lh]",
       )}
     >
@@ -69,7 +69,7 @@ export function Chips({ items }: { items: string[] }) {
   if (items.length === 0) return <Dash />;
   return (
     <div
-      className="no-scrollbar flex max-h-[3lh] flex-col items-start gap-1 overflow-y-auto"
+      className="no-scrollbar flex max-h-[3lh] flex-col items-start gap-1 overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto"
       title={items.join("\n")}
     >
       {items.map((item, i) => (
@@ -224,7 +224,7 @@ export function AiRelevanceCell({ row }: { row: Row }) {
           {hasFeedback && <Badge tone="warn">Feedback given</Badge>}
         </div>
         {row.aiRelevanceReason && (
-          <div className="no-scrollbar max-h-[2lh] overflow-y-auto text-xs text-ink-2">
+          <div className="no-scrollbar max-h-[2lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto text-xs text-ink-2">
             {row.aiRelevanceReason}
           </div>
         )}
@@ -829,11 +829,11 @@ export function StackedCell({ primary, secondary }: { primary: string; secondary
   if (!primary && !secondary) return <Dash />;
   return (
     <div className="flex flex-col">
-      <span className="no-scrollbar max-h-[2lh] shrink-0 overflow-y-auto font-medium">
+      <span className="no-scrollbar max-h-[2lh] shrink-0 overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto font-medium">
         {primary || "–"}
       </span>
       {secondary && (
-        <span className="no-scrollbar max-h-[2lh] shrink-0 overflow-y-auto text-xs text-ink-2">
+        <span className="no-scrollbar max-h-[2lh] shrink-0 overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto text-xs text-ink-2">
           {secondary}
         </span>
       )}
@@ -899,7 +899,7 @@ export function ReportingsCell({ row }: { row: Row }) {
   } catch {}
   if (!Array.isArray(entries) || entries.length === 0) return <Dash />;
   return (
-    <div className="no-scrollbar max-h-[3lh] overflow-y-auto whitespace-pre-line">
+    <div className="no-scrollbar max-h-[3lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line">
       {entries
         .map((e) => (e.quantity ? `${e.officer} (qty ${e.quantity})` : e.officer))
         .join("\n")}
@@ -929,7 +929,7 @@ export function SizeCell({ row, field }: { row: Row; field: string }) {
   if (!value) return <Dash />;
   if (row.type === "Gem") {
     return (
-      <div className="md no-scrollbar max-h-[3lh] overflow-y-auto text-xs">
+      <div className="md no-scrollbar max-h-[3lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto text-xs">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
       </div>
     );

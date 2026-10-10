@@ -180,7 +180,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 - **Header:** one row, 40px tall. Label (with optional small provenance text under it), sort arrow, filter button. Clicking the label sorts descending, then ascending. The filter button is tinted when that column has an active filter.
 - **Filter popover:** a "Contains" search box, then the column's typed control: multi-select list (options fetched when the popover opens), date range with optional presets, yes/no, or a custom control supplied by the column. "Clear" removes that column's filters.
 - **Filter bar:** every active filter is a chip above the table, including filters that live outside the columns, passed in as `extraChips`. A filter the user cannot remove is shown as a chip without a remove button. Nothing narrows the list invisibly.
-- **Cells:** text is capped at three lines (`max-h-[3lh]`). Longer text scrolls inside the cell with the scrollbar hidden (`overflow-y-auto no-scrollbar`). No ellipsis, no click-to-expand popover.
+- **Cells:** text is capped at three lines (`max-h-[3lh]`). Longer text scrolls inside the cell with the scrollbar hidden. A cell is a live scroller only while hovered (`overflow-hidden hover:overflow-y-auto no-scrollbar`), always on touch screens (`pointer-coarse:overflow-y-auto`); a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
 - **Pinned columns:** sticky to the left, capped at half the table's width (`MAX_FROZEN_SHARE`); beyond that the rightmost pinned columns scroll with the rest.
 - **Rows** are virtualised, so a 500-row page scrolls smoothly.
 - **Column resize:** drag the header edge (pointer capture, 50px minimum). Widths are not persisted.

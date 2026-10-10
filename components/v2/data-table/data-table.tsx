@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -212,9 +213,65 @@ const RowView = memo(RowInner) as typeof RowInner;
 function DefaultCell({ text }: { text: string }) {
   if (!text) return <span className="text-ink-3">–</span>;
   return (
-    <div className="no-scrollbar max-h-[3lh] overflow-y-auto whitespace-pre-line wrap-break-word">
+    <div className="no-scrollbar max-h-[3lh] overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word">
       {text}
     </div>
+  );
+}
+
+/**
+ * Owns the virtualizer, so a scroll re-renders the rows only. Kept out of
+ * DataTable: the virtualizer re-renders its host on every row boundary, and
+ * re-rendering every header cell there costs tens of milliseconds per step.
+ */
+function Body<Row>({
+  rows,
+  getRowId,
+  scrollRef,
+  placed,
+  loading,
+}: {
+  rows: Row[];
+  getRowId: (row: Row) => string;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  placed: Placed<Row>[];
+  loading: boolean;
+}) {
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 64,
+    overscan: 8,
+    getItemKey: (i) => getRowId(rows[i]),
+  });
+  const items = virtualizer.getVirtualItems();
+  const padTop = items.length ? items[0].start : 0;
+  const padBottom = items.length
+    ? virtualizer.getTotalSize() - items[items.length - 1].end
+    : 0;
+
+  return (
+    <tbody className={cn("transition-opacity duration-150", loading && "opacity-55")}>
+      {padTop > 0 && (
+        <tr aria-hidden>
+          <td colSpan={placed.length} style={{ height: padTop }} />
+        </tr>
+      )}
+      {items.map((item) => (
+        <RowView
+          key={item.key}
+          row={rows[item.index]}
+          rowIndex={item.index}
+          placed={placed}
+          measure={virtualizer.measureElement}
+        />
+      ))}
+      {padBottom > 0 && (
+        <tr aria-hidden>
+          <td colSpan={placed.length} style={{ height: padBottom }} />
+        </tr>
+      )}
+    </tbody>
   );
 }
 
@@ -448,19 +505,6 @@ export function DataTable<Row>({
 
   const tableWidth = visible.reduce((sum, c) => sum + widthOf(c), 0);
 
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => 64,
-    overscan: 8,
-    getItemKey: (i) => getRowId(rows[i]),
-  });
-  const items = virtualizer.getVirtualItems();
-  const padTop = items.length ? items[0].start : 0;
-  const padBottom = items.length
-    ? virtualizer.getTotalSize() - items[items.length - 1].end
-    : 0;
-
   // A new page starts at its top.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
@@ -594,29 +638,13 @@ export function DataTable<Row>({
                 ))}
               </tr>
             </thead>
-            <tbody
-              className={cn("transition-opacity duration-150", loading && "opacity-55")}
-            >
-              {padTop > 0 && (
-                <tr aria-hidden>
-                  <td colSpan={visible.length} style={{ height: padTop }} />
-                </tr>
-              )}
-              {items.map((item) => (
-                <RowView
-                  key={item.key}
-                  row={rows[item.index]}
-                  rowIndex={item.index}
-                  placed={placed}
-                  measure={virtualizer.measureElement}
-                />
-              ))}
-              {padBottom > 0 && (
-                <tr aria-hidden>
-                  <td colSpan={visible.length} style={{ height: padBottom }} />
-                </tr>
-              )}
-            </tbody>
+            <Body
+              rows={rows}
+              getRowId={getRowId}
+              scrollRef={scrollRef}
+              placed={placed}
+              loading={loading}
+            />
           </table>
         </div>
 
