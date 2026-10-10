@@ -8,7 +8,7 @@ The feel to aim for: calm, dense, fast. A working tool for people who scan hundr
 
 | Path | What |
 |---|---|
-| `app/(v2)/v2.css` | All tokens, motion classes, media-query fallbacks |
+| `app/(v2)/v2.css` | All tokens, animation theme values, overlay motion classes, media-query fallbacks |
 | `app/(v2)/layout.tsx` | v2 root layout (fonts, boot script, providers, shell) |
 | `components/v2/ui/` | Primitives: `button`, `field`, `overlay`, `sheet` |
 | `components/v2/shell/` | Sidebar shell and `nav-items.ts` |
@@ -105,14 +105,14 @@ Motion exists to confirm an action or keep the user oriented. If it does neither
 
 **Rules**
 
-- Feedback lands on pointer-down. Every pressable element has `.press` (`scale(0.97)` on `:active`).
+- Feedback lands on pointer-down. Every pressable element carries `transition-transform duration-(--dur-press) ease-out motion-safe:not-disabled:active:scale-97`.
 - Animate `transform` and `opacity` only. Never `width`, `height`, `padding` or `margin`; never `transition: all`. This is why the sidebar collapses instantly: animating its width re-laid out the table every frame.
 - Anchored popups (`.pop`) scale from their trigger with `transform-origin: var(--transform-origin)`, entering from `scale(0.97)` and opacity 0. Dialogs (`.dlg`) are not anchored and stay centre-origin, entering from `scale(0.96)`.
 - Nothing enters from `scale(0)`.
 - Exit is faster than enter (popups 100ms out, dialogs 140ms out).
 - Use CSS transitions (through Base UI's `data-starting-style` / `data-ending-style`), not keyframes, for anything a user can interrupt. Keyframes are only for constant motion: the progress bar, the spinner, skeleton pulse.
 - No easing-in on UI. No animation on keyboard-initiated actions or on things done dozens of times a day: sorting, paging, filtering and row updates do not animate. A loading page dims its rows and shows a thin progress bar; rows never stagger in.
-- Hover effects sit behind `@media (hover: hover) and (pointer: fine)` (the `.hover-bg` class does this).
+- Hover effects sit behind `@media (hover: hover)`, which Tailwind's `hover:` variant applies. Hover background is `not-disabled:hover:bg-hover`.
 - Tooltips wait 500ms; once one is open, neighbours open instantly with no transition.
 
 **Gestures**
@@ -180,7 +180,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 - **Header:** one row, 40px tall. Label (with optional small provenance text under it), sort arrow, filter button. Clicking the label sorts descending, then ascending. The filter button is tinted when that column has an active filter.
 - **Filter popover:** a "Contains" search box, then the column's typed control: multi-select list (options fetched when the popover opens), date range with optional presets, yes/no, or a custom control supplied by the column. "Clear" removes that column's filters.
 - **Filter bar:** every active filter is a chip above the table, including filters that live outside the columns, passed in as `extraChips`. A filter the user cannot remove is shown as a chip without a remove button. Nothing narrows the list invisibly.
-- **Cells:** text clamps to three lines. A clamped cell opens its full text in a popover on click. Cells never contain their own scroll area.
+- **Cells:** text is capped at three lines (`max-h-[3lh]`). Longer text scrolls inside the cell with the scrollbar hidden (`overflow-y-auto no-scrollbar`). No ellipsis, no click-to-expand popover.
 - **Pinned columns:** sticky to the left, capped at half the table's width (`MAX_FROZEN_SHARE`); beyond that the rightmost pinned columns scroll with the rest.
 - **Rows** are virtualised, so a 500-row page scrolls smoothly.
 - **Column resize:** drag the header edge (pointer capture, 50px minimum). Widths are not persisted.
@@ -189,7 +189,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 
 ### Column definitions
 
-A page describes its table as `DataTableColumn<Row>[]` (see `data-table/types.ts`). Per column: `id`, `header`, `width`, `frozen`, `hidden`, `sortable`, `search`, `filter`, `extraFilters`, `badges`, and either `text` (plain text for the default clamped cell) or `cell` (a renderer).
+A page describes its table as `DataTableColumn<Row>[]` (see `data-table/types.ts`). Per column: `id`, `header`, `width`, `frozen`, `hidden`, `sortable`, `search`, `filter`, `extraFilters`, `badges`, and either `text` (plain text for the default capped, scrollable cell) or `cell` (a renderer).
 
 - A cell that edits data is its own small component: it dispatches the existing thunk, tracks its own pending state, shows a toast on success or failure, and owns any dialog it opens. The page holds no per-row dialog state.
 - Editing in place is preferred for one-field changes (decision toggles, selects, remarks). A dialog is used when the change needs context or more than one input.
