@@ -155,7 +155,7 @@ function HeaderCell<Row>({
         role="separator"
         aria-orientation="vertical"
         onPointerDown={onHandleDown}
-        className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize touch-none after:absolute after:inset-y-2.5 after:left-1/2 after:w-px after:bg-line hover:after:inset-y-1 hover:after:w-0.5 hover:after:bg-accent"
+        className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize touch-none after:absolute after:inset-y-2.5 after:right-1/2 after:w-px after:bg-line hover:after:inset-y-1 hover:after:w-0.5 hover:after:bg-accent"
       />
     </th>
   );
