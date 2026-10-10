@@ -52,7 +52,7 @@ export function parseJsonArray(raw: unknown): string[] | null {
   }
 }
 
-function TenderSummary({ row }: { row: Row }) {
+export function TenderSummary({ row }: { row: Row }) {
   const brief = str(row.tenderBrief);
   const organization = str(row.organization ?? row.nameOfTheClient);
   return (
@@ -610,10 +610,10 @@ export function WebsiteCell({ row }: { row: Row }) {
 
 /* -------------------------------- Documents -------------------------------- */
 
-type TenderFile = Record<string, string> & { tags?: string[] | string };
+export type TenderFile = Record<string, string> & { tags?: string[] | string };
 
 // Same token v1 sends; the file routes only check its shape.
-const FILE_AUTH = "Bearer MOCK_TOKEN_LASERPOWER_SECURE_AUTH_SCOPE";
+export const FILE_AUTH = "Bearer MOCK_TOKEN_LASERPOWER_SECURE_AUTH_SCOPE";
 
 const FILE_TYPES = [
   { value: "tenderDocument", label: "Tender Document" },
@@ -621,7 +621,7 @@ const FILE_TYPES = [
   { value: "catalogueDocument", label: "Catalogue Document" },
 ];
 
-function fileTags(file: TenderFile): string[] {
+export function fileTags(file: TenderFile): string[] {
   if (Array.isArray(file.tags)) return file.tags;
   if (typeof file.tags === "string") {
     try {
@@ -638,7 +638,7 @@ function driveFallbackName(url: string): string {
   return m ? `drive_document_${m[1].slice(0, 8)}` : "online_document";
 }
 
-function FileRow({ file }: { file: TenderFile }) {
+export function FileRow({ file }: { file: TenderFile }) {
   const extension = file.extension || "";
   const rawName = file.name || file.filename || "Unknown";
   const baseName = ["view", "view.pdf"].includes(rawName.toLowerCase())

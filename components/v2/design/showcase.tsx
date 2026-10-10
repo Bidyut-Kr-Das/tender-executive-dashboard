@@ -4,6 +4,8 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Download, Inbox, Pencil, Plus, Settings, Trash2, TriangleAlert } from "lucide-react";
 import { CellAction, Chips, Clamp, StackedCell } from "@/components/v2/data-table/cells";
+import { DataTable } from "@/components/v2/data-table/data-table";
+import type { DataTableColumn } from "@/components/v2/data-table/types";
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { Calendar, DatePicker, DateRange } from "@/components/v2/ui/calendar";
 import {
@@ -78,6 +80,29 @@ const LONG_TEXT =
 
 const toDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+interface GroupedRow {
+  id: string;
+  docket: string;
+  tender: string;
+  client: string;
+}
+
+const GROUPED_ROWS: GroupedRow[] = [
+  { id: "1", docket: "ENQ-101-2026-2027", tender: "GEM/2026/B/1001", client: "Power Grid Corporation" },
+  { id: "2", docket: "ENQ-101-2026-2027", tender: "GEM/2026/B/1002", client: "Power Grid Corporation" },
+  { id: "3", docket: "ENQ-101-2026-2027", tender: "GEM/2026/B/1003", client: "Power Grid Corporation" },
+  { id: "4", docket: "ENQ-102-2026-2027", tender: "NIT/44/2026", client: "Damodar Valley Corporation" },
+];
+
+const GROUPED_COLUMNS: DataTableColumn<GroupedRow>[] = [
+  { id: "docket", header: "Docket No", frozen: true, spanGroup: true, sortable: false, search: false },
+  { id: "tender", header: "Tender / NIT No", sortable: false, search: false },
+  { id: "client", header: "Client", width: 260, sortable: false, search: false },
+];
+
+const NO_FILTERS = {};
+const noop = () => {};
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -429,6 +454,30 @@ export function Showcase() {
               <Clamp>Awaiting corrigendum</Clamp>
             </CellAction>
           </CellBox>
+        </div>
+      </Section>
+
+      <Section title="Grouped rows">
+        <div className="flex h-72 flex-col">
+          <DataTable<GroupedRow>
+            noun="dockets"
+            columns={GROUPED_COLUMNS}
+            rows={GROUPED_ROWS}
+            getRowId={(row) => row.id}
+            groupBy={(row) => row.docket}
+            total={2}
+            page={1}
+            pageSize={10}
+            onPageChange={noop}
+            onPageSizeChange={noop}
+            sort={null}
+            onSortChange={noop}
+            filters={NO_FILTERS}
+            onFilterChange={noop}
+            onResetFilters={noop}
+            columnVisibility={NO_FILTERS}
+            onColumnVisibilityChange={noop}
+          />
         </div>
       </Section>
     </Page>

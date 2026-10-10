@@ -29,8 +29,8 @@ import type { ColumnIndexRow } from "./use-tenders";
 
 type Column = DataTableColumn<Row>;
 
-const BLANK: FilterOption = { value: "__blank__", label: "Blank" };
-const selectFilter = (...options: FilterOption[]): Column["filter"] => ({
+export const BLANK: FilterOption = { value: "__blank__", label: "Blank" };
+export const selectFilter = (...options: FilterOption[]): Column["filter"] => ({
   type: "select",
   options: [...options, BLANK],
 });
@@ -70,7 +70,7 @@ const PROVENANCE_LABEL = {
   NOT_PARTICIPATED: "Not participated",
 } as const;
 
-const DEADLINE_PRESETS: FilterOption[] = [
+export const DEADLINE_PRESETS: FilterOption[] = [
   { value: "thisWeek", label: "This week" },
   { value: "thisMonth", label: "This month" },
   { value: "thisYear", label: "This year" },
@@ -85,7 +85,7 @@ function formatColumnName(name: string): string {
 }
 
 /** A JSON array or object, else the raw text split on `splitBy`. */
-function parseList(raw: unknown, splitBy: RegExp, useKeys = false): string[] {
+export function parseList(raw: unknown, splitBy: RegExp, useKeys = false): string[] {
   if (typeof raw !== "string" || !raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -115,7 +115,7 @@ const LIST_COLUMNS: Record<
 type RawMaterialsRange = { aluMin: string; aluMax: string; cuMin: string; cuMax: string };
 const EMPTY_RANGE: RawMaterialsRange = { aluMin: "", aluMax: "", cuMin: "", cuMax: "" };
 
-const rawMaterialsFilter: Column["filter"] = {
+export const rawMaterialsFilter: Column["filter"] = {
   type: "custom",
   stateKey: "rawMaterials",
   render: ({ value, onChange }) => {
@@ -539,7 +539,7 @@ export function buildTenderColumns({
   return columns;
 }
 
-function DateCell({ value }: { value: string | undefined }) {
+export function DateCell({ value }: { value: string | undefined }) {
   if (!value) return <Dash />;
   return <span className="tabular-nums">{formatDateISTLong(value)}</span>;
 }

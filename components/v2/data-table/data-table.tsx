@@ -32,6 +32,7 @@ import { EmptyState } from "@/components/v2/ui/page";
 import { Clamp } from "./cells";
 import { ColumnFilterPanel, summarizeFilter } from "./column-filter";
 import {
+  groupRows,
   isFilterActive,
   type ColumnFilterType,
   type DataTableColumn,
@@ -172,39 +173,43 @@ function RowInner<Row>({
   row,
   rowIndex,
   placed,
-  measure,
+  span,
 }: {
   row: Row;
   rowIndex: number;
   placed: Placed<Row>[];
-  measure: (el: HTMLTableRowElement | null) => void;
+  /** Rows a `spanGroup` cell covers; 0 when an earlier row of the group drew it. */
+  span: number;
 }) {
   return (
-    <tr ref={measure} data-index={rowIndex} className="group/row">
-      {placed.map(({ column, left, isLastFrozen }) => (
-        <td
-          key={column.id}
-          style={left != null ? { left } : undefined}
-          className={cn(
-            "border-b bg-surface px-3 py-2 align-top group-hover/row:bg-(--row-hover-bg)",
-            left != null && "sticky z-(--z-pinned)",
-            isLastFrozen &&
-              "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
-          )}
-        >
-          {column.cell ? (
-            column.cell(row, { rowIndex })
-          ) : (
-            <DefaultCell
-              text={
-                column.text
-                  ? column.text(row)
-                  : String((row as Record<string, unknown>)[column.id] ?? "")
-              }
-            />
-          )}
-        </td>
-      ))}
+    <tr className="group/row">
+      {placed.map(({ column, left, isLastFrozen }) =>
+        column.spanGroup && span === 0 ? null : (
+          <td
+            key={column.id}
+            rowSpan={column.spanGroup ? span : undefined}
+            style={left != null ? { left } : undefined}
+            className={cn(
+              "border-b bg-surface px-3 py-2 align-top group-hover/row:bg-(--row-hover-bg)",
+              left != null && "sticky z-(--z-pinned)",
+              isLastFrozen &&
+                "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
+            )}
+          >
+            {column.cell ? (
+              column.cell(row, { rowIndex })
+            ) : (
+              <DefaultCell
+                text={
+                  column.text
+                    ? column.text(row)
+                    : String((row as Record<string, unknown>)[column.id] ?? "")
+                }
+              />
+            )}
+          </td>
+        ),
+      )}
     </tr>
   );
 }
@@ -220,26 +225,32 @@ function DefaultCell({ text }: { text: string }) {
  * Owns the virtualizer, so a scroll re-renders the rows only. Kept out of
  * DataTable: the virtualizer re-renders its host on every row boundary, and
  * re-rendering every header cell there costs tens of milliseconds per step.
+ *
+ * The virtual item is a row group, one `<tbody>` each, so a `spanGroup` cell
+ * is never cut off from the rows it covers.
  */
 function Body<Row>({
   rows,
   getRowId,
+  groupBy,
   scrollRef,
   placed,
   loading,
 }: {
   rows: Row[];
   getRowId: (row: Row) => string;
+  groupBy: ((row: Row) => string) | undefined;
   scrollRef: RefObject<HTMLDivElement | null>;
   placed: Placed<Row>[];
   loading: boolean;
 }) {
+  const groups = useMemo(() => groupRows(rows, groupBy), [rows, groupBy]);
   const virtualizer = useVirtualizer({
-    count: rows.length,
+    count: groups.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 64,
+    estimateSize: (i) => 64 * groups[i].length,
     overscan: 8,
-    getItemKey: (i) => getRowId(rows[i]),
+    getItemKey: (i) => getRowId(rows[groups[i].start]),
   });
   const items = virtualizer.getVirtualItems();
   const padTop = items.length ? items[0].start : 0;
@@ -248,27 +259,43 @@ function Body<Row>({
     : 0;
 
   return (
-    <tbody className={cn("transition-opacity duration-(--dur-pop)", loading && "opacity-60")}>
+    <>
       {padTop > 0 && (
-        <tr aria-hidden>
-          <td colSpan={placed.length} style={{ height: padTop }} />
-        </tr>
+        <tbody aria-hidden>
+          <tr>
+            <td colSpan={placed.length} style={{ height: padTop }} />
+          </tr>
+        </tbody>
       )}
-      {items.map((item) => (
-        <RowView
-          key={item.key}
-          row={rows[item.index]}
-          rowIndex={item.index}
-          placed={placed}
-          measure={virtualizer.measureElement}
-        />
-      ))}
+      {items.map((item) => {
+        const { start, length } = groups[item.index];
+        return (
+          <tbody
+            key={item.key}
+            ref={virtualizer.measureElement}
+            data-index={item.index}
+            className={cn("transition-opacity duration-(--dur-pop)", loading && "opacity-60")}
+          >
+            {rows.slice(start, start + length).map((row, i) => (
+              <RowView
+                key={getRowId(row)}
+                row={row}
+                rowIndex={start + i}
+                placed={placed}
+                span={i === 0 ? length : 0}
+              />
+            ))}
+          </tbody>
+        );
+      })}
       {padBottom > 0 && (
-        <tr aria-hidden>
-          <td colSpan={placed.length} style={{ height: padBottom }} />
-        </tr>
+        <tbody aria-hidden>
+          <tr>
+            <td colSpan={placed.length} style={{ height: padBottom }} />
+          </tr>
+        </tbody>
       )}
-    </tbody>
+    </>
   );
 }
 
@@ -434,6 +461,7 @@ export function DataTable<Row>({
   columns,
   rows,
   getRowId,
+  groupBy,
   total,
   page,
   pageSize,
@@ -638,6 +666,7 @@ export function DataTable<Row>({
             <Body
               rows={rows}
               getRowId={getRowId}
+              groupBy={groupBy}
               scrollRef={scrollRef}
               placed={placed}
               loading={loading}

@@ -285,18 +285,21 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 - **Cells:** text is capped at three lines by `Clamp`. Longer text scrolls inside the cell with the scrollbar hidden. A cell is a live scroller only while hovered, always on touch screens; a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
 - **Pinned columns:** sticky to the left, capped at half the table's width (`MAX_FROZEN_SHARE`); beyond that the rightmost pinned columns scroll with the rest.
 - **Rows** are virtualised, so a 500-row page scrolls smoothly.
+- **Row groups:** pass `groupBy` and consecutive rows with the same key form one group. A column marked `spanGroup` draws one cell for the whole group, from its first row (the docket number on the participation pages). Groups are the unit of virtualisation, so a spanning cell is never cut from its rows. The table still knows nothing about what the key means.
 - **Column resize:** drag the header edge (pointer capture, 50px minimum). Widths are not persisted.
 - **States:** skeleton on first load only; progress bar plus dimmed rows on later loads, with the old rows kept in place; an error state with "Try again"; an empty state that offers to reset column filters.
 - **Footer:** range and total, rows per page (10, 25, 50, 100, 500), first/previous/window of five/next/last.
 
 ### Column definitions
 
-A page describes its table as `DataTableColumn<Row>[]` (see `data-table/types.ts`). Per column: `id`, `header`, `width`, `frozen`, `hidden`, `sortable`, `search`, `filter`, `extraFilters`, `badges`, and either `text` (plain text for the default capped, scrollable cell) or `cell` (a renderer).
+A page describes its table as `DataTableColumn<Row>[]` (see `data-table/types.ts`). Per column: `id`, `header`, `width`, `frozen`, `hidden`, `sortable`, `search`, `filter`, `extraFilters`, `badges`, `spanGroup`, and either `text` (plain text for the default capped, scrollable cell) or `cell` (a renderer).
 
 - A cell that edits data is its own small component: it dispatches the existing thunk, tracks its own pending state, shows a toast on success or failure, and owns any dialog it opens. The page holds no per-row dialog state.
 - Editing in place is preferred for one-field changes (decision toggles, selects, remarks). A dialog is used when the change needs context or more than one input.
 - A change shows immediately as pending and reverts with an error toast if the server refuses it.
 - Edit affordances are small ghost icon buttons that are always visible, not revealed on hover.
+- When the same field is edited in more than one place (a table cell and a sheet), describe it once in a field registry and render both from it: see `components/v2/pre-participation/fields.ts` and `FieldEditor` in its `cells.tsx`. The registry holds the label, the control kind, the choices, the lock and validation rules and the thunk that saves it.
+- A sheet that shows every field of a row saves each field on its own, exactly as its table cell does. No "Save all": a half-saved row is worse than a visible per-field failure.
 
 ### Cell helpers (`data-table/cells.tsx`)
 

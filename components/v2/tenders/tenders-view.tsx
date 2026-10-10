@@ -13,7 +13,6 @@ import {
 import { DataTable } from "@/components/v2/data-table/data-table";
 import { isFilterActive, type FilterChip } from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
-import { Select } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, Pill, Skeleton, StatTile } from "@/components/v2/ui/page";
 import { buildTenderColumns } from "./columns";
 import type { Row } from "./cells";
@@ -28,9 +27,7 @@ import {
 } from "./toolbar";
 import { TenderCellContext, useTenders } from "./use-tenders";
 
-const ALL_PEOPLE = "__all__";
-
-const ANALYTICS: { key: NonNullable<AnalyticsFilter>; label: string; detail: string }[] = [
+export const ANALYTICS: { key: NonNullable<AnalyticsFilter>; label: string; detail: string }[] = [
   { key: "aiYes", label: "AI relevance yes", detail: "All" },
   { key: "aiYesUnallocated", label: "AI relevance yes", detail: "Unallocated" },
   { key: "apmYesAllocated", label: "APM yes", detail: "Allocated" },
@@ -195,17 +192,6 @@ export function TendersView() {
           );
         })}
         <div className="ml-auto flex flex-wrap items-end gap-2">
-          <div className="w-48">
-            <Select
-              label="Assigned to"
-              value={associationFilter ?? ALL_PEOPLE}
-              onChange={(v) => setAssociationFilter(!v || v === ALL_PEOPLE ? null : v)}
-              options={[
-                { value: ALL_PEOPLE, label: "Assigned to anyone" },
-                ...associations.map((a) => ({ value: String(a.id), label: a.name })),
-              ]}
-            />
-          </div>
           <UploadWindowControl />
         </div>
       </div>

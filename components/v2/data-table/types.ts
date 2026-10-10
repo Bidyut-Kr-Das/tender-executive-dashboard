@@ -61,6 +61,8 @@ export interface DataTableColumn<Row> {
   extraFilters?: { id: string; label: string; options?: FilterOption[] }[];
   /** Small tags under the header label. */
   badges?: string[];
+  /** One cell for the whole row group, drawn from its first row. Needs `groupBy`. */
+  spanGroup?: boolean;
   cell?: (row: Row, ctx: CellContext) => ReactNode;
   /** Plain text for the default cell; defaults to `String(row[id])`. */
   text?: (row: Row) => string;
@@ -82,6 +84,8 @@ export interface DataTableProps<Row> {
   columns: DataTableColumn<Row>[];
   rows: Row[];
   getRowId: (row: Row) => string;
+  /** Consecutive rows with the same key form one group; see `spanGroup`. */
+  groupBy?: (row: Row) => string;
 
   total: number;
   page: number;
@@ -134,4 +138,26 @@ export function isFilterActive(state: ColumnFilterState | undefined): boolean {
     return true;
   }
   return false;
+}
+
+export interface RowGroup {
+  start: number;
+  length: number;
+}
+
+/** Runs of consecutive rows sharing a key. Without `groupBy` every row stands alone. */
+export function groupRows<Row>(
+  rows: Row[],
+  groupBy?: (row: Row) => string,
+): RowGroup[] {
+  const groups: RowGroup[] = [];
+  let lastKey: string | null = null;
+  rows.forEach((row, i) => {
+    const key = groupBy ? groupBy(row) : null;
+    const last = groups[groups.length - 1];
+    if (last && key !== null && key === lastKey) last.length += 1;
+    else groups.push({ start: i, length: 1 });
+    lastKey = key;
+  });
+  return groups;
 }
