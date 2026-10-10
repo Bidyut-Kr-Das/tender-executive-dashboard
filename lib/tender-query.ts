@@ -745,7 +745,7 @@ const ERP_CATEGORY_RULES: Record<
 function priceBasisSql(basis: string): Prisma.Sql | null {
   const wanted = basis.trim();
   if (wanted === "" || wanted.toLowerCase() === "all") return null;
-  return Prisma.sql`lower(coalesce(nullif(btrim(t."price"), ''), 'firm')) = ${wanted.toLowerCase()}`;
+  return Prisma.sql`lower(coalesce(nullif(btrim(t."price"::text), ''), 'firm')) = ${wanted.toLowerCase()}`;
 }
 
 function erpCategorySql(category: string): Prisma.Sql | null {

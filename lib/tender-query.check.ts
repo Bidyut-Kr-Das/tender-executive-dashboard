@@ -545,7 +545,7 @@ check("price basis treats a blank column as Firm", () => {
     applyDefaultDeadlineFilter: false,
     priceBasis: "Firm",
   });
-  assert.match(text(sql), /coalesce\(nullif\(btrim\(t\."price"\), ''\), 'firm'\)/);
+  assert.match(text(sql), /coalesce\(nullif\(btrim\(t\."price"::text\), ''\), 'firm'\)/);
   assert.equal(sql.values.includes("firm"), true);
 });
 
