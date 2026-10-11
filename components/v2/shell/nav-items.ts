@@ -57,8 +57,8 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Reference",
     items: [
       { href: "/credentials", label: "Links and Password", icon: KeyRound },
-      { href: "/activity", label: "Activity", icon: Activity },
-      { href: "/sop", label: "SOP", icon: BookOpen },
+      { href: "/v2/activity", label: "Activity", icon: Activity, v2: true },
+      { href: "/v2/sop", label: "SOP", icon: BookOpen, v2: true },
     ],
   },
   {
