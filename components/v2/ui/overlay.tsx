@@ -1,6 +1,14 @@
 "use client";
 
-import type { ReactElement, ReactNode } from "react";
+import {
+  cloneElement,
+  useState,
+  type FocusEvent,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { Popover as BasePopover } from "@base-ui/react/popover";
@@ -42,6 +50,33 @@ export function Tip({
   );
 }
 
+/* ------------------------------- Lazy mounting ------------------------------ */
+
+type Armed = false | "hover" | "focus" | "click";
+
+/**
+ * A table mounts hundreds of selects and popovers as it scrolls, and each one
+ * costs about twenty times a plain button. Until the user reaches for a
+ * control, only its trigger is drawn; these handlers swap in the real one.
+ */
+function useArmed() {
+  const [armed, setArmed] = useState<Armed>(false);
+  return [
+    armed,
+    {
+      // Mouse only: a tap must stay on one element from press to click.
+      onPointerEnter: (e: PointerEvent) => {
+        if (e.pointerType === "mouse") setArmed("hover");
+      },
+      // Keyboard only; the real trigger takes the focus over.
+      onFocus: (e: FocusEvent) => {
+        if (e.currentTarget.matches(":focus-visible")) setArmed("focus");
+      },
+      onClick: () => setArmed("click"),
+    },
+  ] as const;
+}
+
 /* ---------------------------------- Popover --------------------------------- */
 
 export function Popover({
@@ -64,9 +99,26 @@ export function Popover({
   anchor?: Element | null;
   className?: string;
 }) {
+  const [armed, arm] = useArmed();
+  if (trigger && !armed && !open) {
+    const own = trigger.props as { onClick?: (e: MouseEvent) => void };
+    return cloneElement(trigger as ReactElement<Record<string, unknown>>, {
+      ...arm,
+      "aria-haspopup": "dialog",
+      onClick: (e: MouseEvent) => {
+        own.onClick?.(e);
+        arm.onClick();
+        onOpenChange?.(true);
+      },
+    });
+  }
   return (
-    <BasePopover.Root open={open} onOpenChange={onOpenChange}>
-      {trigger && <BasePopover.Trigger render={trigger} />}
+    <BasePopover.Root
+      open={open}
+      defaultOpen={open === undefined && armed === "click"}
+      onOpenChange={onOpenChange}
+    >
+      {trigger && <BasePopover.Trigger render={trigger} autoFocus={armed === "focus"} />}
       <BasePopover.Portal>
         <BasePopover.Positioner
           side={side}
@@ -224,6 +276,31 @@ export function Select({
   className?: string;
   icon?: ReactNode;
 }) {
+  const [armed, arm] = useArmed();
+  const triggerClass = cn(
+    "press not-disabled:hover:bg-hover flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink edge disabled:opacity-50 data-disabled:opacity-50",
+    size === "sm" ? "h-7 px-2 text-xs" : "h-8 px-2.5 text-md",
+    className,
+  );
+  if (!armed) {
+    const shown = options.find((o) => o.value === value)?.label;
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        aria-haspopup="listbox"
+        disabled={disabled}
+        className={triggerClass}
+        {...arm}
+      >
+        {icon}
+        <span className={cn("min-w-0 flex-1 truncate", shown == null && "text-ink-3")}>
+          {shown ?? placeholder}
+        </span>
+        <ChevronDown className="size-3.5 text-ink-3" />
+      </button>
+    );
+  }
   return (
     <BaseSelect.Root
       items={options}
@@ -231,14 +308,12 @@ export function Select({
       onValueChange={(v) => onChange((v as string | null) ?? null)}
       disabled={disabled}
       modal={false}
+      defaultOpen={armed === "click"}
     >
       <BaseSelect.Trigger
         aria-label={label}
-        className={cn(
-          "press not-disabled:hover:bg-hover flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink edge data-disabled:opacity-50",
-          size === "sm" ? "h-7 px-2 text-xs" : "h-8 px-2.5 text-md",
-          className,
-        )}
+        autoFocus={armed === "focus"}
+        className={triggerClass}
       >
         {icon}
         <span className="min-w-0 flex-1 truncate data-placeholder:text-ink-3">

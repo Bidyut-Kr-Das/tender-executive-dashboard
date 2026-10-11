@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { layoutFlow } from "@/components/participation-flow/layout";
 import { FLOW_TREES, flatten, type FlowNode } from "@/components/participation-flow/tree";
@@ -120,8 +120,9 @@ function Tree({
 /**
  * The participation funnel above the table. Pressing a stage filters the table
  * to it; the counts are the stage totals and do not follow the table's filters.
+ * Memoised: its props change only when a count or the path does.
  */
-export function FlowBand({
+export const FlowBand = memo(function FlowBand({
   counts,
   active,
   onChange,
@@ -190,4 +191,4 @@ export function FlowBand({
       )}
     </section>
   );
-}
+});

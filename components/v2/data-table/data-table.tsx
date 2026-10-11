@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
   type RefObject,
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -46,7 +45,7 @@ const MAX_FROZEN_SHARE = 0.5;
 
 /* --------------------------------- Header ---------------------------------- */
 
-function HeaderCell<Row>({
+function HeaderCellInner<Row>({
   column,
   width,
   left,
@@ -55,18 +54,24 @@ function HeaderCell<Row>({
   onSort,
   onResize,
   active,
-  panel,
+  filters,
+  onFilterChange,
+  getFilterOptions,
+  onFilterOpen,
 }: {
   column: DataTableColumn<Row>;
   width: number;
   left: number | null;
   isLastFrozen: boolean;
   sortDirection: "asc" | "desc" | null;
-  onSort: () => void;
-  onResize: (width: number) => void;
+  /** Take the column id, so one function serves every header and stays the same between renders. */
+  onSort: (columnId: string) => void;
+  onResize: (columnId: string, width: number) => void;
   active: boolean;
-  panel: ReactNode;
-}) {
+} & Pick<
+  DataTableProps<Row>,
+  "filters" | "onFilterChange" | "getFilterOptions" | "onFilterOpen"
+>) {
   const sortable = column.sortable !== false;
   const hasFilter = column.search !== false || !!column.filter;
 
@@ -80,7 +85,7 @@ function HeaderCell<Row>({
     const move = (ev: PointerEvent) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() =>
-        onResize(Math.max(MIN_WIDTH, width + ev.clientX - startX)),
+        onResize(column.id, Math.max(MIN_WIDTH, width + ev.clientX - startX)),
       );
     };
     const up = () => {
@@ -115,7 +120,7 @@ function HeaderCell<Row>({
         <button
           type="button"
           disabled={!sortable}
-          onClick={onSort}
+          onClick={() => onSort(column.id)}
           className="flex min-w-0 flex-1 items-center gap-1 text-left text-xs text-ink-2 disabled:cursor-default"
         >
           <span className="flex min-w-0 flex-col">
@@ -147,7 +152,13 @@ function HeaderCell<Row>({
               </IconButton>
             }
           >
-            {panel}
+            <ColumnFilterPanel
+              column={column}
+              filters={filters}
+              onFilterChange={onFilterChange}
+              getFilterOptions={getFilterOptions}
+              onFilterOpen={onFilterOpen}
+            />
           </Popover>
         )}
       </div>
@@ -160,6 +171,10 @@ function HeaderCell<Row>({
     </th>
   );
 }
+
+// Memoised: the table re-renders on every store change and on each step of a
+// column drag, and sixty header cells are the costly part of that.
+const HeaderCell = memo(HeaderCellInner) as typeof HeaderCellInner;
 
 /* ---------------------------------- Rows ----------------------------------- */
 
@@ -229,7 +244,7 @@ function DefaultCell({ text }: { text: string }) {
  * The virtual item is a row group, one `<tbody>` each, so a `spanGroup` cell
  * is never cut off from the rows it covers.
  */
-function Body<Row>({
+function BodyInner<Row>({
   rows,
   getRowId,
   groupBy,
@@ -298,6 +313,8 @@ function Body<Row>({
     </>
   );
 }
+
+const Body = memo(BodyInner) as typeof BodyInner;
 
 /* ------------------------------- Pagination -------------------------------- */
 
@@ -511,6 +528,12 @@ export function DataTable<Row>({
     return () => observer.disconnect();
   }, []);
 
+  // Only a pinned column's width moves a cell, so dragging any other column
+  // keeps `placed`, and with it every row, as it was.
+  const pinnedWidths = visible
+    .filter((c) => c.frozen)
+    .map(widthOf)
+    .join(" ");
   const placed = useMemo(() => {
     const budget = viewportWidth ? viewportWidth * MAX_FROZEN_SHARE : Infinity;
     let left = 0;
@@ -526,7 +549,8 @@ export function DataTable<Row>({
     const lastFrozen = out.findLastIndex((p) => p.left != null);
     if (lastFrozen >= 0) out[lastFrozen].isLastFrozen = true;
     return out;
-  }, [visible, widthOf, viewportWidth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, pinnedWidths, viewportWidth]);
 
   const tableWidth = visible.reduce((sum, c) => sum + widthOf(c), 0);
 
@@ -535,11 +559,19 @@ export function DataTable<Row>({
     scrollRef.current?.scrollTo({ top: 0 });
   }, [page, pageSize]);
 
-  const handleSort = (id: string) =>
-    onSortChange({
-      column: id,
-      direction: sort?.column === id && sort.direction === "desc" ? "asc" : "desc",
-    });
+  const handleSort = useCallback(
+    (id: string) =>
+      onSortChange({
+        column: id,
+        direction: sort?.column === id && sort.direction === "desc" ? "asc" : "desc",
+      }),
+    [sort, onSortChange],
+  );
+
+  const handleResize = useCallback(
+    (id: string, width: number) => setWidths((prev) => ({ ...prev, [id]: width })),
+    [],
+  );
 
   const clearColumn = useCallback(
     (id: string) => {
@@ -644,21 +676,16 @@ export function DataTable<Row>({
                     left={left}
                     isLastFrozen={isLastFrozen}
                     sortDirection={sort?.column === column.id ? sort.direction : null}
-                    onSort={() => handleSort(column.id)}
-                    onResize={(w) => setWidths((prev) => ({ ...prev, [column.id]: w }))}
+                    onSort={handleSort}
+                    onResize={handleResize}
                     active={
                       isFilterActive(filters[column.id]) ||
                       (column.extraFilters ?? []).some((e) => isFilterActive(filters[e.id]))
                     }
-                    panel={
-                      <ColumnFilterPanel
-                        column={column}
-                        filters={filters}
-                        onFilterChange={onFilterChange}
-                        getFilterOptions={getFilterOptions}
-                        onFilterOpen={onFilterOpen}
-                      />
-                    }
+                    filters={filters}
+                    onFilterChange={onFilterChange}
+                    getFilterOptions={getFilterOptions}
+                    onFilterOpen={onFilterOpen}
                   />
                 ))}
               </tr>
