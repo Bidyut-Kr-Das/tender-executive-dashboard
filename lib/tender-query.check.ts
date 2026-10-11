@@ -593,6 +593,11 @@ check("costing reads the whole docket, other relations the row", () => {
   assert.match(t, /ORDER BY \(tf\."tenderMergedId" = t\."id"\) DESC, tf\."id" ASC/);
 });
 
+check("the comparative chart sorts by its tagged file", () => {
+  const q: TenderQuery = { ...emptyTenderQuery(), scope: "home", sort: { column: "boqChart", direction: "desc" } };
+  assert.match(text(buildOrderBySql(q)), /^EXISTS \(SELECT 1 FROM "tender_files" tf .*'boqComparativeChart' = ANY\(tf\."tags"\).*\) DESC, t\."id" ASC$/);
+});
+
 check("every participation filter has a runtime entry", () => {
   assert.equal(PARTICIPATION_FILTERS.length, 23);
   for (const f of PARTICIPATION_FILTERS) {

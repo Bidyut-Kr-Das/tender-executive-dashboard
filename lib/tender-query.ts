@@ -1008,6 +1008,12 @@ export function buildOrderBySql(q: TenderQuery): Prisma.Sql {
     return Prisma.sql`(SELECT count(*) FROM jsonb_each_text(${RAW_MATERIALS_JSON}) AS kv(k, v) WHERE btrim(kv.v) <> '') ${dir}, t."id" ASC`;
   }
 
+  if (sort.column === "boqChart") {
+    // ponytail: only a tagged chart is known here. One the cell finds on the
+    // file share sorts as missing; index the share into tender_files to fix.
+    return Prisma.sql`EXISTS (SELECT 1 FROM "tender_files" tf WHERE tf."tenderMergedId" = t."id" AND 'boqComparativeChart' = ANY(tf."tags") AND tf."source" IS NOT NULL) ${dir}, t."id" ASC`;
+  }
+
   const expr = columnValueSql(sort.column, q);
   if (!expr) return Prisma.sql`t."id" DESC`;
 

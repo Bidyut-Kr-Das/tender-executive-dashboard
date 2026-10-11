@@ -320,7 +320,6 @@ export function buildPreParticipationColumns(
       id: "boqChart",
       header: "Comparative Chart",
       width: 190,
-      sortable: false,
       search: false,
       text: () => "",
       cell: (row) => <ComparativeChartCell row={row} />,
