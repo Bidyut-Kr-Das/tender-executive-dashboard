@@ -329,6 +329,19 @@ export const FIELDS: Record<string, FieldDef> = Object.fromEntries(
   FIELD_LIST.map((f) => [f.id, f]),
 );
 
+// v1's read-only rule for the not-participated page: status and reverse auction
+// never edit there, and a docket or contract number stays once it is set.
+const NEVER_EDITED = new Set([
+  "tenderUpdateStatus",
+  "reverseAuctionApplicable",
+  "reverseAuctionStartDate",
+  "reverseAuctionEndDate",
+]);
+const KEPT_ONCE_SET = new Set(["docketNo", "contractNo"]);
+
+export const lockedWhenNotParticipated = (fieldId: string, row: Row): boolean =>
+  NEVER_EDITED.has(fieldId) || (KEPT_ONCE_SET.has(fieldId) && !!(row[fieldId] ?? "").trim());
+
 export const FIELD_SECTIONS: { title: FieldSection; fields: FieldDef[] }[] = (
   [
     "General",

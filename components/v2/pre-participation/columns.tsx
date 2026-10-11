@@ -1,3 +1,4 @@
+import { isBeforeTodayIST } from "@/lib/format-ist";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
 import { Chips, Clamp } from "@/components/v2/data-table/cells";
 import type { DataTableColumn, FilterOption } from "@/components/v2/data-table/types";
@@ -56,6 +57,44 @@ const AVAILABILITY = selectFilter(
   { value: "Not Available", label: "Not available" },
 );
 
+// v1's column sets. Not participated adds the result columns and drops these.
+const NOT_PARTICIPATED_ONLY = new Set([
+  "bgNoUtrNo",
+  "issuingBank",
+  "currentStatus",
+  "expectedRaDate",
+  "quotationNo",
+  "competitors",
+  "ourRank",
+  "ourValue",
+  "nameOfRank1",
+  "valueOfRank1",
+  "nameOfRank2",
+  "valueOfRank2",
+  "nextAction",
+  "remarks",
+]);
+const NOT_PARTICIPATED_DROPPED = new Set([
+  "publishedDate",
+  "assignedDate",
+  "typetest",
+  "claimDate",
+  "beneficiaryBankDetails",
+  "statusCategory",
+  "apm",
+  "catalogueDone",
+  "officeName",
+  "miiPurchasePreference",
+  "tenderFileUrl",
+  "reportings",
+  "website",
+  "raQualificationRule",
+  "startupExemption",
+  "minimumAverageAnnualTurnover",
+  "yearsOfPastExperience",
+  "ePbgDurationMonths",
+]);
+
 /** A select filter with no fixed choices lists the values found in the data. */
 export const loadsFilterValues = (column: Column | undefined): boolean =>
   column?.filter?.type === "select" &&
@@ -97,11 +136,19 @@ const list = (id: string, header: string, width: number, splitBy: RegExp): Colum
   cell: (row) => <Chips items={parseList(row[id], splitBy)} />,
 });
 
+/** Shown as it is; found through the header's text search. */
+const longText = (id: string, header: string): Column => ({ id, header, width: 250 });
+
 /**
- * The pre-participation page's columns: what each shows, how it filters and
- * which control edits it. Ids are flat row keys, as on the tenders page.
+ * The columns of the pre-participation page, or of the not-participated page:
+ * what each shows, how it filters and which control edits it. Ids are flat row
+ * keys, as on the tenders page.
  */
-export function buildPreParticipationColumns(associations: TenderPageAssociation[]): Column[] {
+export function buildPreParticipationColumns(
+  associations: TenderPageAssociation[],
+  notParticipated = false,
+  developer = false,
+): Column[] {
   const names = (row: Row) =>
     (row.assignedTo ?? "")
       .split(",")
@@ -109,7 +156,7 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
       .filter(Boolean)
       .join(", ");
 
-  return [
+  const columns: Column[] = [
     {
       id: "docketNo",
       header: "Docket No",
@@ -144,6 +191,14 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
     dateColumn("deadline", "Last Date of Submission", {
       width: 190,
       filter: { type: "dateRange", presets: DEADLINE_PRESETS },
+      cell: (row) => (
+        <div className="flex flex-col items-start gap-1">
+          <DateCell value={row.deadline} />
+          {notParticipated && isBeforeTodayIST(row.deadline) && (
+            <Badge tone="bad">Deadline over</Badge>
+          )}
+        </div>
+      ),
     }),
     dateColumn("publishedDate", "Published Date"),
     dateColumn("assignedDate", "Assigned Date"),
@@ -231,8 +286,11 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
     editable("bgDate", "BG Date"),
     editable("bgExpiryDate", "BG Expiry Date"),
     editable("claimDate", "Claim Date"),
+    readOnly("bgNoUtrNo", "BG / UTR No"),
     editable("bgStatus", "BG Status", 190, { search: false }),
     editable("beneficiaryBankDetails", "Beneficiary Bank Details", 220),
+    readOnly("issuingBank", "Issuing Bank"),
+    readOnly("currentStatus", "Current Status"),
     readOnly("statusCategory", "Status Category"),
     editable("reason", "Reason for not Participated", 250),
     {
@@ -252,8 +310,17 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
       search: false,
       filter: { type: "dateRange" },
     }),
+    readOnly("expectedRaDate", "Expected RA Date"),
+    readOnly("quotationNo", "Quotation No"),
     editable("contractNo", "Contract Number"),
+    longText("competitors", "Competitors"),
+    readOnly("ourRank", "Our Rank", 130),
+    readOnly("ourValue", "Our Value"),
+    readOnly("nameOfRank1", "L1 Party Name", 200),
+    readOnly("valueOfRank1", "L1 Price"),
     readOnly("differenceBetweenRank1", "L1 Diff (%)", 130),
+    readOnly("nameOfRank2", "L2 Party Name", 200),
+    readOnly("valueOfRank2", "L2 Price"),
     readOnly("differenceBetweenRank2", "L2 Diff (%)", 130),
     editable("tenderUpdateStatus", "Tender Update Status", 170, {
       search: false,
@@ -265,6 +332,8 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
         ],
       },
     }),
+    readOnly("nextAction", "Next Action", 220),
+    longText("remarks", "Remarks"),
     list("cva", "CVA", 180, /@/),
     {
       id: "apm",
@@ -289,8 +358,11 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
     },
     editable("participated", "Participated?", 130, {
       search: false,
-      // Every tender on this page is undecided, so there is nothing to filter by.
-      filter: undefined,
+      // As in v1, not participated does not show the answer; developers still get it.
+      hidden: notParticipated && !developer,
+      // Pre participation holds undecided tenders only; not participated holds
+      // the ones answered no and the undecided ones past their deadline.
+      filter: notParticipated ? selectFilter({ value: "false", label: "No" }) : undefined,
     }),
     {
       id: "officeName",
@@ -353,4 +425,7 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
     editable("msmeExemption", "MSME Exemption"),
     editable("msePurchasePreference", "MSE Purchase Preference", 200),
   ];
+
+  const left = notParticipated ? NOT_PARTICIPATED_DROPPED : NOT_PARTICIPATED_ONLY;
+  return columns.filter((c) => !left.has(c.id));
 }

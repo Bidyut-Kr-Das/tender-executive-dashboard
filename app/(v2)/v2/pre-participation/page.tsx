@@ -1,5 +1,5 @@
-import { PreParticipationView } from "@/components/v2/pre-participation/view";
+import { ParticipationView } from "@/components/v2/pre-participation/view";
 
 export default function PreParticipationPage() {
-  return <PreParticipationView />;
+  return <ParticipationView scope="home" />;
 }

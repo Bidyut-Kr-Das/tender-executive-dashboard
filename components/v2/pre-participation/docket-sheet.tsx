@@ -108,14 +108,15 @@ function TenderForm({ row }: { row: Row }) {
 
 /** Mounted only while the sheet is open, so closed cells do not watch the store. */
 function SheetBody({ docket }: { docket: string }) {
-  const rows = useAppSelector((s) => s.tenderPage.byScope.home.rows).filter(
+  const { scope = "home" } = useTenderCellContext();
+  const rows = useAppSelector((s) => s.tenderPage.byScope[scope].rows).filter(
     (r) => docketKey(r) === docket,
   );
   const [selected, setSelected] = useState<string | null>(null);
   const row = rows.find((r) => r.id === selected) ?? rows[0];
 
   if (!row) {
-    return <p className="text-ink-2">This docket is no longer in pre participation.</p>;
+    return <p className="text-ink-2">This docket is no longer on this page.</p>;
   }
 
   return (

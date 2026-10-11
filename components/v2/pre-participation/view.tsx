@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Download, SlidersHorizontal } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -27,7 +28,7 @@ import { TenderCellContext } from "@/components/v2/tenders/use-tenders";
 import { buildPreParticipationColumns, loadsFilterValues } from "./columns";
 import { exportPreParticipation } from "./export";
 import { docketKey, type Row } from "./fields";
-import { usePreParticipation } from "./use-pre-participation";
+import { usePreParticipation, type ParticipationScope } from "./use-pre-participation";
 
 const getRowId = (row: Row) => row.id;
 
@@ -43,9 +44,20 @@ const PRICE_SELECTION: Record<string, string[] | undefined> = {
   VARIABLE: ["VARIABLE"],
 };
 
-function Loading() {
+const PAGES: Record<ParticipationScope, { title: string; stage: string }> = {
+  home: {
+    title: "Pre participation",
+    stage: "approved, not yet decided, deadline today onward",
+  },
+  notParticipated: {
+    title: "Not participated",
+    stage: "approved, decided no or undecided with the deadline passed",
+  },
+};
+
+function Loading({ title }: { title: string }) {
   return (
-    <Page aria-busy aria-label="Loading pre participation">
+    <Page aria-busy aria-label={`Loading ${title.toLowerCase()}`}>
       <Skeleton className="h-8 w-48" />
       <Skeleton className="h-8 w-80" />
       <Skeleton className="min-h-0 flex-1" />
@@ -53,9 +65,11 @@ function Loading() {
   );
 }
 
-export function PreParticipationView() {
+export function ParticipationView({ scope }: { scope: ParticipationScope }) {
   const dispatch = useAppDispatch();
-  const t = usePreParticipation();
+  const { title, stage } = PAGES[scope];
+  const developer = useSession().data?.user?.role === "developer";
+  const t = usePreParticipation(scope);
   const participationFilters = useAppSelector((s) => s.filters.participationFilters);
   const analyticsFilter = useAppSelector((s) => s.filters.analyticsFilter);
   const exclusionFilter = useAppSelector((s) => s.filters.exclusionFilter);
@@ -77,7 +91,10 @@ export function PreParticipationView() {
   const rawMaterialsSummary =
     rawMaterialsFilter?.type === "custom" ? rawMaterialsFilter.summary(rawMaterials) : null;
 
-  const columns = useMemo(() => buildPreParticipationColumns(associations), [associations]);
+  const columns = useMemo(
+    () => buildPreParticipationColumns(associations, scope === "notParticipated", developer),
+    [associations, scope, developer],
+  );
 
   const onFilterOpen = useCallback(
     (columnId: string) => {
@@ -97,7 +114,7 @@ export function PreParticipationView() {
   // it unseen. The last four are set on other pages and carry over.
   const extraChips = useMemo(() => {
     const chips: FilterChip[] = [
-      { key: "stage", label: "Stage: approved, not yet decided, deadline today onward" },
+      { key: "stage", label: `Stage: ${stage}` },
     ];
     const person = associations.find((a) => String(a.id) === associationFilter);
     if (person) {
@@ -140,6 +157,7 @@ export function PreParticipationView() {
     }
     return chips;
   }, [
+    stage,
     associations,
     associationFilter,
     setAssociationFilter,
@@ -155,7 +173,7 @@ export function PreParticipationView() {
     setExporting(true);
     const visible = columns.filter((c) => !c.hidden && t.columnVisibility[c.id] !== false);
     toast.promise(
-      exportPreParticipation(query, visible).finally(() => setExporting(false)),
+      exportPreParticipation(query, visible, title).finally(() => setExporting(false)),
       {
         loading: "Preparing Excel export...",
         success: (count) => `Exported ${count.toLocaleString("en-IN")} tenders`,
@@ -164,12 +182,12 @@ export function PreParticipationView() {
     );
   };
 
-  if (t.initializing) return <Loading />;
+  if (t.initializing) return <Loading title={title} />;
 
   return (
     <Page>
       <PageHeader
-        title="Pre participation"
+        title={title}
         meta={`${t.total.toLocaleString("en-IN")} dockets`}
         actions={
           <Button

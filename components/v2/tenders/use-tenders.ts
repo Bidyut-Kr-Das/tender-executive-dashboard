@@ -14,7 +14,8 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { loadColumnConfig, type ColumnConfig } from "@/lib/columnConfig";
 import { getDisplayNameMap } from "@/lib/tender-columns";
 import { needsFacetQuery } from "@/lib/tender-filter-meta";
-import type { TenderQuery } from "@/lib/tender-query";
+import type { FlatRow } from "@/lib/tender-flatten";
+import type { TenderQuery, TenderScope } from "@/lib/tender-query";
 import type { ColumnFilterType, FilterOption } from "@/lib/types";
 import {
   clearColumnFilter,
@@ -47,6 +48,10 @@ export interface TenderCellContext {
   associations: TenderPageAssociation[];
   canEditRemarks: boolean;
   reload: () => void;
+  /** The tenderPage slot the rows come from, for pages that share cells. */
+  scope?: TenderScope;
+  /** True when the page does not let this row edit that field. */
+  isLocked?: (fieldId: string, row: FlatRow) => boolean;
 }
 
 export const TenderCellContext = createContext<TenderCellContext>({

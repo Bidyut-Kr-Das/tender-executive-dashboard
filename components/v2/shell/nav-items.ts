@@ -40,7 +40,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/v2/tenders", label: "Tenders", icon: FileText, v2: true },
       { href: "/v2/pre-participation", label: "Pre Participation", icon: ClipboardList, v2: true },
       { href: "/post-participation", label: "Post Participation", icon: ClipboardCheck },
-      { href: "/not-participated", label: "Not Participated", icon: CircleSlash },
+      { href: "/v2/not-participated", label: "Not Participated", icon: CircleSlash, v2: true },
     ],
   },
   {

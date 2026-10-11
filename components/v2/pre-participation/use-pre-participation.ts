@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { buildCountsQuery } from "@/lib/epc-table-query";
+import { toISTDateKey } from "@/lib/format-ist";
 import type { RootState } from "@/lib/store";
 import type { TenderQuery } from "@/lib/tender-query";
 import type { ColumnFilterState, ColumnFilterType, FilterOption } from "@/lib/types";
@@ -25,20 +26,25 @@ import {
 import { fetchAllBomOptions } from "@/lib/slices/utilitySlice";
 import type { TenderCellContext } from "@/components/v2/tenders/use-tenders";
 import { ERP_CATEGORY_FILTER } from "./columns";
+import { lockedWhenNotParticipated } from "./fields";
 
-/** This page's slot in the scope-keyed tenderPage slice. */
-const SCOPE = "home" as const;
+/** The pages built on this hook, by their slot in the scope-keyed tenderPage slice. */
+export type ParticipationScope = "home" | "notParticipated";
+
+// v1 opens not participated on deadlines up to today. Seeded once per session,
+// so a user who clears the filter does not get it back on the next visit.
+let deadlineSeeded = false;
 
 /** What the server sorts by until the user picks a column. */
 const DEFAULT_SORT = { column: "deadline", direction: "desc" } as const;
 
 /**
- * All Redux wiring for the pre-participation page. Same slice, thunks and
+ * All Redux wiring for the pre-participation and not-participated pages. Same slice, thunks and
  * selectors as v1, so the data is loaded and patched exactly the same way.
  */
-export function usePreParticipation() {
+export function usePreParticipation(scope: ParticipationScope) {
   const dispatch = useAppDispatch();
-  const page = useAppSelector((s) => s.tenderPage.byScope[SCOPE]);
+  const page = useAppSelector((s) => s.tenderPage.byScope[scope]);
   const bomLoaded = useAppSelector((s) => s.utility.loaded);
   // Local: filtersSlice.columnVisibility belongs to the tenders page.
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
@@ -51,7 +57,7 @@ export function usePreParticipation() {
 
   // The route's scope owns the deadline rule, so the tenders default is off.
   const query = useAppSelector(
-    (s): TenderQuery => selectTenderQuery(s, SCOPE, false),
+    (s): TenderQuery => selectTenderQuery(s, scope, false),
     (a, b) => tenderQueryKey(a) === tenderQueryKey(b),
   );
   const queryKey = useMemo(() => tenderQueryKey(query), [query]);
@@ -64,33 +70,50 @@ export function usePreParticipation() {
   hasMetaRef.current = page.columns.length > 0;
 
   const reload = useCallback(() => {
-    dispatch(loadTenderPage({ scope: SCOPE, query, includeMeta: !hasMetaRef.current }));
-    dispatch(loadParticipationCounts({ scope: SCOPE, query: countsQuery }));
-  }, [dispatch, query, countsQuery]);
+    dispatch(loadTenderPage({ scope, query, includeMeta: !hasMetaRef.current }));
+    dispatch(loadParticipationCounts({ scope, query: countsQuery }));
+  }, [dispatch, scope, query, countsQuery]);
   const reloadRef = useRef(reload);
   reloadRef.current = reload;
   const stableReload = useCallback(() => reloadRef.current(), []);
 
+  const [seeded, setSeeded] = useState(scope !== "notParticipated" || deadlineSeeded);
   useEffect(() => {
-    dispatch(loadTenderPage({ scope: SCOPE, query, includeMeta: !hasMetaRef.current }));
+    if (seeded) return;
+    deadlineSeeded = true;
+    dispatch(
+      setScopeColumnFilter({
+        scope,
+        column: "deadline",
+        filter: { dateRange: { startDate: "", endDate: toISTDateKey(new Date()) ?? "" } },
+      }),
+    );
+    setSeeded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryKey]);
+  }, []);
 
   useEffect(() => {
-    dispatch(loadParticipationCounts({ scope: SCOPE, query: countsQuery }));
+    // Wait for the seed, or the first request is thrown away.
+    if (!seeded) return;
+    dispatch(loadTenderPage({ scope, query, includeMeta: !hasMetaRef.current }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, seeded]);
+
+  useEffect(() => {
+    dispatch(loadParticipationCounts({ scope, query: countsQuery }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countsKey]);
 
   // A sync rewrites rows wholesale.
   useEffect(() => {
     if (!page.stale) return;
-    dispatch(clearStale({ scope: SCOPE }));
+    dispatch(clearStale({ scope }));
     reloadRef.current();
-  }, [page.stale, dispatch]);
+  }, [page.stale, dispatch, scope]);
 
   const loadFilterValues = useCallback(
-    (columnId: string) => dispatch(loadTenderFacet({ scope: SCOPE, query, column: columnId })),
-    [dispatch, query],
+    (columnId: string) => dispatch(loadTenderFacet({ scope, query, column: columnId })),
+    [dispatch, scope, query],
   );
 
   const facetOptions = useMemo(() => {
@@ -115,27 +138,27 @@ export function usePreParticipation() {
       if (columnId === ERP_CATEGORY_FILTER) {
         // One category at a time: the newest pick replaces the last.
         const category = (value as string[] | undefined)?.at(-1) ?? null;
-        dispatch(setErpItemCategory({ scope: SCOPE, category }));
+        dispatch(setErpItemCategory({ scope, category }));
         return;
       }
       // Read at dispatch time: a filter panel can send two changes in one event.
       dispatch((_, getState) => {
         const state = getState() as RootState;
         const next: ColumnFilterState = {
-          ...state.tenderPage.byScope[SCOPE].columnFilters[columnId],
+          ...state.tenderPage.byScope[scope].columnFilters[columnId],
           [type]: value,
         };
         if (value === undefined) delete next[type];
         dispatch(
           setScopeColumnFilter({
-            scope: SCOPE,
+            scope,
             column: columnId,
             filter: Object.keys(next).length > 0 ? next : null,
           }),
         );
       });
     },
-    [dispatch],
+    [dispatch, scope],
   );
 
   const filters = useMemo(
@@ -147,8 +170,14 @@ export function usePreParticipation() {
   );
 
   const cellContext = useMemo<TenderCellContext>(
-    () => ({ associations: page.associations, canEditRemarks: false, reload: stableReload }),
-    [page.associations, stableReload],
+    () => ({
+      associations: page.associations,
+      canEditRemarks: false,
+      reload: stableReload,
+      scope,
+      isLocked: scope === "notParticipated" ? lockedWhenNotParticipated : undefined,
+    }),
+    [page.associations, stableReload, scope],
   );
 
   return {
@@ -175,27 +204,27 @@ export function usePreParticipation() {
     onFilterChange,
     onResetFilters: useCallback(() => {
       const associationFilter = page.associationFilter;
-      dispatch(clearScopeFilters({ scope: SCOPE }));
+      dispatch(clearScopeFilters({ scope }));
       // Column filters only: the assignee has its own chip.
-      dispatch(setAssociationFilter({ scope: SCOPE, associationFilter }));
-    }, [dispatch, page.associationFilter]),
+      dispatch(setAssociationFilter({ scope, associationFilter }));
+    }, [dispatch, scope, page.associationFilter]),
     onPageChange: useCallback(
-      (p: number) => dispatch(setPage({ scope: SCOPE, page: p })),
-      [dispatch],
+      (p: number) => dispatch(setPage({ scope, page: p })),
+      [dispatch, scope],
     ),
     onPageSizeChange: useCallback(
-      (n: number) => dispatch(setPageSize({ scope: SCOPE, pageSize: n })),
-      [dispatch],
+      (n: number) => dispatch(setPageSize({ scope, pageSize: n })),
+      [dispatch, scope],
     ),
     onSortChange: useCallback(
       (sort: { column: string; direction: "asc" | "desc" }) =>
-        dispatch(setSort({ scope: SCOPE, sort })),
-      [dispatch],
+        dispatch(setSort({ scope, sort })),
+      [dispatch, scope],
     ),
     setAssociationFilter: useCallback(
       (value: string | null) =>
-        dispatch(setAssociationFilter({ scope: SCOPE, associationFilter: value })),
-      [dispatch],
+        dispatch(setAssociationFilter({ scope, associationFilter: value })),
+      [dispatch, scope],
     ),
   };
 }

@@ -289,8 +289,25 @@ function DateTimeEditor({ field, row, form }: EditorProps) {
   );
 }
 
+/** A field the page does not let this row edit. */
+function LockedField({ field, row }: EditorProps) {
+  const value = fieldValue(field, row);
+  if (field.kind === "yesNo") {
+    if (value === field.tokens?.yes) return <Badge tone="good">Yes</Badge>;
+    if (value === field.tokens?.no) return <Badge tone="bad">No</Badge>;
+    return <Dash />;
+  }
+  if (!value) return <Dash />;
+  if (field.kind === "dateTime") {
+    return <span className="tabular-nums">{formatDateTimeIST(value)}</span>;
+  }
+  return <Clamp>{field.options?.find((o) => o.value === value)?.label ?? value}</Clamp>;
+}
+
 /** The control for one registry field, in a table cell or in the docket sheet. */
 export function FieldEditor(props: EditorProps) {
+  const { isLocked } = useTenderCellContext();
+  if (isLocked?.(props.field.id, props.row)) return <LockedField {...props} />;
   switch (props.field.kind) {
     case "select":
       return <SelectEditor {...props} />;
