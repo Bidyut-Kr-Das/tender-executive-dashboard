@@ -1,72 +1,392 @@
 "use client";
 
-import { useEffect } from "react";
-import { ExternalLink } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { ExternalLink, Eye, Pencil, X } from "lucide-react";
+import { toast } from "sonner";
+import type { PerformanceCertificateField } from "@/actions/performanceCertificates";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { fetchItems } from "@/lib/slices/itemsSlice";
 import {
   fetchPerformanceCertificates,
+  fetchSupplyPartyNames,
+  updatePerformanceCertificateField,
+  updatePerformanceCertificatePartyName,
   type PerformanceCertificateRow as Row,
 } from "@/lib/slices/performanceCertificatesSlice";
-import { dateText } from "@/components/v2/data-table/cells";
-import { ClientTablePage } from "@/components/v2/data-table/client-table-page";
+import { cn } from "@/lib/utils";
+import { CellAction, Chips } from "@/components/v2/data-table/cells";
+import { DataTable } from "@/components/v2/data-table/data-table";
 import { selectFilter, type DataTableColumn } from "@/components/v2/data-table/types";
-import { Dash } from "@/components/v2/ui/field";
+import { useClientTable } from "@/components/v2/data-table/use-client-table";
+import { Button, IconButton } from "@/components/v2/ui/button";
+import { toastError } from "@/components/v2/ui/errors";
+import { CheckMark, Choice, Dash, Input } from "@/components/v2/ui/field";
+import { Combobox, Popover, type SelectOption } from "@/components/v2/ui/overlay";
+import { Page, PageHeader, PageSkeleton } from "@/components/v2/ui/page";
 
-const dateTime = (id: "createdAt" | "updatedAt", header: string): DataTableColumn<Row> => ({
-  id,
-  header,
-  width: 170,
-  search: false,
-  filter: { type: "dateRange" },
-  text: (row) => dateText(row[id], "dd/MM/yyyy HH:mm"),
-});
+/** What the cells share: the certificate shown beside the table and the pick lists. */
+const PageContext = createContext<{
+  preview: Row | null;
+  setPreview: (row: Row | null) => void;
+  partyOptions: SelectOption[];
+  itemOptions: SelectOption[];
+}>({ preview: null, setPreview: () => {}, partyOptions: [], itemOptions: [] });
+
+const NEW_TAB_LINK =
+  "inline-flex size-6 shrink-0 items-center justify-center rounded-md text-ink-2 hover:bg-hover";
+
+function NewTabLink({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Open in new tab"
+      title="Open in new tab"
+      className={NEW_TAB_LINK}
+    >
+      <ExternalLink className="size-3.5" aria-hidden />
+    </a>
+  );
+}
+
+function LinkCell({ row }: { row: Row }) {
+  const { preview, setPreview } = useContext(PageContext);
+  if (!row.certificateUrl) return <Dash />;
+  const active = preview?.id === row.id;
+  return (
+    <div className="flex items-center gap-1">
+      <Button
+        size="sm"
+        variant={active ? "primary" : "secondary"}
+        aria-pressed={active}
+        icon={<Eye className="size-3.5" />}
+        onClick={() => setPreview(active ? null : row)}
+      >
+        Preview
+      </Button>
+      <NewTabLink url={row.certificateUrl} />
+    </div>
+  );
+}
+
+const saved = (label: string, value: string | null) =>
+  toast.success(value ? `${label} updated` : `${label} cleared`);
+
+function PartyCell({ row }: { row: Row }) {
+  const dispatch = useAppDispatch();
+  const { partyOptions } = useContext(PageContext);
+  const [pending, setPending] = useState(false);
+  return (
+    <Combobox
+      size="sm"
+      label="Party name"
+      placeholder="Not set"
+      value={row.partyName}
+      disabled={pending}
+      options={partyOptions}
+      onChange={(partyName) => {
+        setPending(true);
+        dispatch(updatePerformanceCertificatePartyName({ id: row.id, partyName }))
+          .unwrap()
+          .then(() => saved("Party name", partyName))
+          .catch((err: unknown) => toastError("Party name not saved", err))
+          .finally(() => setPending(false));
+      }}
+    />
+  );
+}
+
+function useFieldSave(row: Row, field: PerformanceCertificateField, label: string) {
+  const dispatch = useAppDispatch();
+  const pending = useAppSelector((s) => !!s.performanceCertificates.saving[`${row.id}-${field}`]);
+  const save = (value: string | null) =>
+    dispatch(updatePerformanceCertificateField({ id: row.id, field, value }))
+      .unwrap()
+      .then(() => saved(label, value))
+      .catch((err: unknown) => toastError(`${label} not saved`, err));
+  return { pending, save };
+}
+
+const UTILITY_OPTIONS: SelectOption[] = [
+  { value: "CLIENT", label: "By Client" },
+  { value: "UTILITY", label: "By Utility" },
+];
+const USE_OPTIONS: SelectOption[] = [
+  { value: "USE", label: "Use" },
+  { value: "NOT_USE", label: "Not Use" },
+];
+
+const labelOf = (options: SelectOption[], value: string | null) =>
+  options.find((o) => o.value === value)?.label ?? value ?? "";
+
+/** Pressing the selected option again clears it. */
+function ToggleCell({
+  row,
+  field,
+  label,
+  options,
+}: {
+  row: Row;
+  field: "utilityOrClient" | "useNotUse";
+  label: string;
+  options: SelectOption[];
+}) {
+  const { pending, save } = useFieldSave(row, field, label);
+  return (
+    <Choice
+      label={label}
+      options={options}
+      value={row[field]}
+      allowClear
+      onChange={save}
+      className={cn("flex-nowrap", pending && "pointer-events-none opacity-60")}
+    />
+  );
+}
+
+// Several item schedules are kept in one field, comma-separated, as v1 stores them.
+const splitList = (value: string | null) =>
+  (value ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+const MAX_SHOWN = 100;
+
+function ItemPicker({
+  selected,
+  disabled,
+  onChange,
+}: {
+  selected: string[];
+  disabled: boolean;
+  onChange: (next: string[]) => void;
+}) {
+  const { itemOptions } = useContext(PageContext);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  // Picked values lead, so they can be unticked without a search.
+  const pool = [
+    ...selected.map((value) => ({ value, label: value })),
+    ...itemOptions.filter((o) => !selected.includes(o.value)),
+  ];
+  const shown = (q ? pool.filter((o) => o.label.toLowerCase().includes(q)) : pool).slice(
+    0,
+    MAX_SHOWN,
+  );
+  return (
+    <>
+      <Input
+        autoFocus
+        aria-label="Search item schedule"
+        placeholder="Search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      <ul className="-mx-1 flex max-h-64 flex-col overflow-y-auto">
+        {shown.map((o) => {
+          const isOn = selected.includes(o.value);
+          return (
+            <li key={o.value}>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={isOn}
+                disabled={disabled}
+                onClick={() =>
+                  onChange(isOn ? selected.filter((v) => v !== o.value) : [...selected, o.value])
+                }
+                className="not-disabled:hover:bg-hover flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left disabled:opacity-50"
+              >
+                <CheckMark checked={isOn} />
+                <span className="min-w-0 flex-1 wrap-break-word">{o.label}</span>
+              </button>
+            </li>
+          );
+        })}
+        {shown.length === 0 && <li className="px-2 py-1.5 text-ink-3">No matches</li>}
+      </ul>
+    </>
+  );
+}
+
+function ItemScheduleCell({ row }: { row: Row }) {
+  const { pending, save } = useFieldSave(row, "itemSchedule", "Item schedule");
+  const selected = splitList(row.itemSchedule);
+  return (
+    <CellAction
+      pending={pending}
+      action={
+        <Popover
+          align="end"
+          className="flex w-72 flex-col gap-2 p-2"
+          trigger={
+            <IconButton size="sm" label="Edit item schedule">
+              <Pencil className="size-3.5" />
+            </IconButton>
+          }
+        >
+          <ItemPicker
+            selected={selected}
+            disabled={pending}
+            onChange={(next) => save(next.length ? next.join(",") : null)}
+          />
+        </Popover>
+      }
+    >
+      <Chips items={selected} />
+    </CellAction>
+  );
+}
 
 const columns: DataTableColumn<Row>[] = [
-  { id: "certificateName", header: "Certificate Name", width: 420, filter: selectFilter() },
+  { id: "certificateName", header: "Certificate Name", width: 300, filter: selectFilter() },
   {
     id: "certificateUrl",
     header: "Certificate Link",
-    width: 160,
+    width: 150,
     search: false,
     sortable: false,
-    cell: (row) =>
-      row.certificateUrl ? (
-        <a
-          href={row.certificateUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-accent-ink hover:underline"
-        >
-          <ExternalLink className="size-3.5" aria-hidden /> Open
-        </a>
-      ) : (
-        <Dash />
-      ),
+    cell: (row) => <LinkCell row={row} />,
   },
-  dateTime("createdAt", "Created At"),
-  dateTime("updatedAt", "Updated At"),
+  {
+    id: "partyName",
+    header: "Party Name",
+    width: 220,
+    filter: selectFilter(),
+    cell: (row) => <PartyCell row={row} />,
+  },
+  {
+    id: "utilityOrClient",
+    header: "Utility / Client",
+    width: 210,
+    filter: selectFilter(),
+    text: (row) => labelOf(UTILITY_OPTIONS, row.utilityOrClient),
+    cell: (row) => (
+      <ToggleCell row={row} field="utilityOrClient" label="Utility / Client" options={UTILITY_OPTIONS} />
+    ),
+  },
+  {
+    id: "itemSchedule",
+    header: "Item Schedule",
+    width: 240,
+    filter: selectFilter(),
+    cell: (row) => <ItemScheduleCell row={row} />,
+  },
+  {
+    id: "useNotUse",
+    header: "Use / Not Use",
+    width: 170,
+    filter: selectFilter(),
+    text: (row) => labelOf(USE_OPTIONS, row.useNotUse),
+    cell: (row) => <ToggleCell row={row} field="useNotUse" label="Use / Not Use" options={USE_OPTIONS} />,
+  },
 ];
 
 const getRowId = (row: Row) => row.id;
 
+const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"]);
+
+function extensionOf(url: string): string {
+  try {
+    return /\.[^./]+$/.exec(new URL(url, "http://x").pathname)?.[0].toLowerCase() ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function FilePreview({ url }: { url: string }) {
+  const extension = extensionOf(url);
+  if (extension === ".pdf") {
+    return <iframe key={url} src={url} title="Certificate preview" className="size-full border-0" />;
+  }
+  if (IMAGE_EXTENSIONS.has(extension)) {
+    return <img src={url} alt="Certificate" className="mx-auto block h-auto max-w-full" />;
+  }
+  return (
+    <p className="p-6 text-center text-ink-2">
+      No inline preview for {extension || "this file"}. Open it in a new tab.
+    </p>
+  );
+}
+
+function PreviewPanel({ row, onClose }: { row: Row; onClose: () => void }) {
+  const name = row.certificateName ?? "Certificate";
+  const url = row.certificateUrl ?? "";
+  return (
+    <aside
+      aria-label="Certificate preview"
+      className="flex min-h-0 w-[46%] max-w-240 shrink-0 flex-col overflow-hidden rounded-xl bg-surface card"
+    >
+      <header className="flex shrink-0 items-center gap-1 border-b px-3 py-2">
+        <span className="min-w-0 flex-1 truncate font-medium" title={name}>
+          {name}
+        </span>
+        <NewTabLink url={url} />
+        <IconButton label="Close preview" size="sm" onClick={onClose}>
+          <X className="size-4" />
+        </IconButton>
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto">
+        <FilePreview url={url} />
+      </div>
+    </aside>
+  );
+}
+
 export function PerformanceCertificatesView() {
   const dispatch = useAppDispatch();
-  const { rows, loading, error } = useAppSelector((s) => s.performanceCertificates);
+  const { rows, loading, error, partyNames } = useAppSelector((s) => s.performanceCertificates);
+  const itemRows = useAppSelector((s) => s.items.rows);
+  const [preview, setPreview] = useState<Row | null>(null);
+  const { table } = useClientTable(rows, columns);
 
   useEffect(() => {
     if (rows.length === 0) dispatch(fetchPerformanceCertificates());
-  }, [dispatch, rows.length]);
+    if (partyNames.length === 0) dispatch(fetchSupplyPartyNames());
+    if (itemRows.length === 0) dispatch(fetchItems());
+  }, [dispatch, rows.length, partyNames.length, itemRows.length]);
+
+  const partyOptions = useMemo(
+    () => partyNames.map((name) => ({ value: name, label: name })),
+    [partyNames],
+  );
+  const itemOptions = useMemo(() => {
+    const schedules = new Set<string>();
+    for (const item of itemRows) {
+      const schedule = item.itemSchedule?.trim();
+      if (schedule) schedules.add(schedule);
+    }
+    return [...schedules].map((value) => ({ value, label: value }));
+  }, [itemRows]);
+  const context = useMemo(
+    () => ({ preview, setPreview, partyOptions, itemOptions }),
+    [preview, partyOptions, itemOptions],
+  );
+
+  if (loading && rows.length === 0) return <PageSkeleton label="certificates" />;
 
   return (
-    <ClientTablePage
-      title="Performance Certificates"
-      noun="certificates"
-      rows={rows}
-      columns={columns}
-      getRowId={getRowId}
-      loading={loading}
-      error={error}
-      onRetry={() => dispatch(fetchPerformanceCertificates())}
-    />
+    <Page>
+      <PageHeader
+        title="Performance Certificates"
+        meta={`${table.total.toLocaleString("en-IN")} matching`}
+      />
+      <div className="flex min-h-0 flex-1 gap-3">
+        <PageContext value={context}>
+          <DataTable<Row>
+            noun="certificates"
+            columns={columns}
+            getRowId={getRowId}
+            loading={loading}
+            error={error}
+            onRetry={() => dispatch(fetchPerformanceCertificates())}
+            {...table}
+          />
+        </PageContext>
+        {preview && <PreviewPanel row={preview} onClose={() => setPreview(null)} />}
+      </div>
+    </Page>
   );
 }
