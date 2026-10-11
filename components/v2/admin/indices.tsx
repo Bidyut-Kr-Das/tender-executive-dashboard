@@ -8,7 +8,8 @@ import { selectFilter, type DataTableColumn, type SortState } from "@/components
 import { Button } from "@/components/v2/ui/button";
 import { Checkbox, Field, Input } from "@/components/v2/ui/field";
 import { Combobox } from "@/components/v2/ui/overlay";
-import { FormDialog, RowActions, request, useRows } from "./shared";
+import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
+import { request, useRows } from "./shared";
 
 interface ColumnIndex {
   id: number;

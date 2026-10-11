@@ -10,7 +10,8 @@ import { selectFilter, type DataTableColumn } from "@/components/v2/data-table/t
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { Field, Input } from "@/components/v2/ui/field";
 import { Combobox } from "@/components/v2/ui/overlay";
-import { FormDialog, RowActions, request, useRows } from "./shared";
+import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
+import { request, useRows } from "./shared";
 
 interface Mapping {
   id: number;

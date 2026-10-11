@@ -9,7 +9,8 @@ import { ClientTablePage } from "@/components/v2/data-table/client-table-page";
 import { selectFilter, type DataTableColumn } from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
 import { Checkbox, Dash, Field, Input } from "@/components/v2/ui/field";
-import { FormDialog, RowActions, request, useRows } from "./shared";
+import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
+import { request, useRows } from "./shared";
 
 interface Group {
   id: number;

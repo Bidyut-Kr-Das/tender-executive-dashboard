@@ -10,7 +10,8 @@ import { Button, IconButton } from "@/components/v2/ui/button";
 import { DatePicker } from "@/components/v2/ui/calendar";
 import { Badge, Checkbox, Dash, Field, Input, Textarea, type Tone } from "@/components/v2/ui/field";
 import { Select } from "@/components/v2/ui/overlay";
-import { FormDialog, RowActions, request, useRows } from "./shared";
+import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
+import { request, useRows } from "./shared";
 
 interface SopRow {
   id: number;
