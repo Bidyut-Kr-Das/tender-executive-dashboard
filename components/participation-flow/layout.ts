@@ -30,7 +30,7 @@ export interface FlowLayout {
 export const FLOW_NODE_WIDTH = 138;
 export const FLOW_NODE_HEIGHT = 56;
 export const FLOW_COL_GAP = 32;
-export const FLOW_ROW_GAP = 12;
+export const FLOW_ROW_GAP = 6;
 
 /** Node and gap sizes for the left-to-right diagram. */
 export interface FlowSize {

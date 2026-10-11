@@ -9,7 +9,7 @@ import { Button } from "@/components/v2/ui/button";
 import { Dash } from "@/components/v2/ui/field";
 import { activePath, pressNode, toneOf, type FlowFilter, type FlowTone } from "./flow";
 
-const SIZE = { width: 148, height: 38, colGap: 22, rowGap: 6 };
+const SIZE = { width: 148, height: 38, colGap: 22, rowGap: 3 };
 
 const STORAGE_KEY = "v2-flow-band";
 
