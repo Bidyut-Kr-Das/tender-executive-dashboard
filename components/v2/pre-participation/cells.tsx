@@ -45,7 +45,7 @@ const taggedFile = (row: Row, tag: string) =>
 /** Saves one registry field; resolves true when the value was written. */
 function useFieldSave(field: FieldDef, row: Row) {
   const dispatch = useAppDispatch();
-  const { associations } = useTenderCellContext();
+  const { associations, onFieldSaved } = useTenderCellContext();
   const [pending, setPending] = useState(false);
 
   const save = (value: string): Promise<boolean> => {
@@ -59,6 +59,7 @@ function useFieldSave(field: FieldDef, row: Row) {
       .save({ dispatch, associations }, row, value)
       .then(() => {
         toast.success(`${field.label} updated`);
+        onFieldSaved?.();
         return true;
       })
       .catch((err: unknown) => {

@@ -52,6 +52,8 @@ export interface TenderCellContext {
   scope?: TenderScope;
   /** True when the page does not let this row edit that field. */
   isLocked?: (fieldId: string, row: FlatRow) => boolean;
+  /** Called after a registry field saves, for figures the row patch does not reach. */
+  onFieldSaved?: () => void;
 }
 
 export const TenderCellContext = createContext<TenderCellContext>({

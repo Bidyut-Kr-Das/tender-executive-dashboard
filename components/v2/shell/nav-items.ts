@@ -39,7 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/v2/tenders", label: "Tenders", icon: FileText, v2: true },
       { href: "/v2/pre-participation", label: "Pre Participation", icon: ClipboardList, v2: true },
-      { href: "/post-participation", label: "Post Participation", icon: ClipboardCheck },
+      { href: "/v2/post-participation", label: "Post Participation", icon: ClipboardCheck, v2: true },
       { href: "/v2/not-participated", label: "Not Participated", icon: CircleSlash, v2: true },
     ],
   },

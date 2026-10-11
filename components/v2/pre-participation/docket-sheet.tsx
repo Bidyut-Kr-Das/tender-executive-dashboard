@@ -77,7 +77,10 @@ function TenderForm({ row, columns }: { row: Row; columns: PageColumns }) {
       </dl>
       {row.tenderBrief && <p className="text-ink-2">{row.tenderBrief}</p>}
 
-      {FIELD_SECTIONS.map(({ title, fields }) => (
+      {FIELD_SECTIONS.filter(
+        // A section with nothing on this page is left out; General has more than fields.
+        ({ title, fields }) => title === "General" || fields.some((f) => columns.has(f.id)),
+      ).map(({ title, fields }) => (
         <Section key={title} title={title}>
           {fields
             // The docket number is edited in the table: changing it regroups the rows.

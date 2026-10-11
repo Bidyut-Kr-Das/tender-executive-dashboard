@@ -3,13 +3,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Download, SlidersHorizontal } from "lucide-react";
+import { Download, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { resetSelectedDateRange } from "@/lib/slices/filesSlice";
 import {
   clearParticipationFilters,
   setAnalyticsFilter,
   setExclusionFilter,
+  toggleParticipationFilter,
 } from "@/lib/slices/filtersSlice";
 import { DataTable } from "@/components/v2/data-table/data-table";
 import type { FilterChip } from "@/components/v2/data-table/types";
@@ -18,16 +18,14 @@ import { describeError } from "@/components/v2/ui/errors";
 import { Popover, Select } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, Pill, Skeleton } from "@/components/v2/ui/page";
 import { ANALYTICS } from "@/components/v2/tenders/tenders-view";
-import {
-  EXCLUSION_OPTIONS,
-  UploadWindowControl,
-  formatUploadWindow,
-} from "@/components/v2/tenders/toolbar";
+import { EXCLUSION_OPTIONS, UploadWindowControl } from "@/components/v2/tenders/toolbar";
 import { BLANK, rawMaterialsFilter } from "@/components/v2/tenders/columns";
 import { TenderCellContext } from "@/components/v2/tenders/use-tenders";
 import { buildPreParticipationColumns, loadsFilterValues } from "./columns";
 import { exportPreParticipation } from "./export";
 import { docketKey, type Row } from "./fields";
+import { activePath, type FlowFilter } from "./flow";
+import { FlowBand } from "./flow-band";
 import { usePreParticipation, type ParticipationScope } from "./use-pre-participation";
 
 const getRowId = (row: Row) => row.id;
@@ -44,16 +42,14 @@ const PRICE_SELECTION: Record<string, string[] | undefined> = {
   VARIABLE: ["VARIABLE"],
 };
 
-const PAGES: Record<ParticipationScope, { title: string; stage: string }> = {
-  home: {
-    title: "Pre participation",
-    stage: "approved, not yet decided, deadline today onward",
-  },
-  notParticipated: {
-    title: "Not participated",
-    stage: "approved, decided no or undecided with the deadline passed",
-  },
+const TITLES: Record<ParticipationScope, string> = {
+  home: "Pre participation",
+  postParticipation: "Post participation",
+  notParticipated: "Not participated",
 };
+
+const POST_SHEET =
+  "https://docs.google.com/spreadsheets/d/1GTwzxMgViohbCimXqfiBZBJsKbCSr7hCgbcHF_En1VE";
 
 function Loading({ title }: { title: string }) {
   return (
@@ -67,14 +63,12 @@ function Loading({ title }: { title: string }) {
 
 export function ParticipationView({ scope }: { scope: ParticipationScope }) {
   const dispatch = useAppDispatch();
-  const { title, stage } = PAGES[scope];
+  const title = TITLES[scope];
   const developer = useSession().data?.user?.role === "developer";
   const t = usePreParticipation(scope);
   const participationFilters = useAppSelector((s) => s.filters.participationFilters);
   const analyticsFilter = useAppSelector((s) => s.filters.analyticsFilter);
   const exclusionFilter = useAppSelector((s) => s.filters.exclusionFilter);
-  const dateFrom = useAppSelector((s) => s.files.selectedDateFrom);
-  const dateTo = useAppSelector((s) => s.files.selectedDateTo);
   const [exporting, setExporting] = useState(false);
 
   const { associations, associationFilter, setAssociationFilter, query, loadFilterValues } = t;
@@ -92,7 +86,7 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
     rawMaterialsFilter?.type === "custom" ? rawMaterialsFilter.summary(rawMaterials) : null;
 
   const columns = useMemo(
-    () => buildPreParticipationColumns(associations, scope === "notParticipated", developer),
+    () => buildPreParticipationColumns(associations, scope, developer),
     [associations, scope, developer],
   );
 
@@ -103,6 +97,16 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
     [columns, loadFilterValues],
   );
 
+  // The slice has toggle and clear only. Both run in one event, so the page
+  // is asked for once.
+  const setFlow = useCallback(
+    (next: FlowFilter[]) => {
+      dispatch(clearParticipationFilters());
+      for (const filter of next) dispatch(toggleParticipationFilter(filter));
+    },
+    [dispatch],
+  );
+
   const personCounts = useMemo(() => {
     const byId = new Map(t.counts?.personCounts.map((p) => [p.id, p.count]));
     return associations
@@ -110,12 +114,10 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
       .filter((p) => p.count > 0);
   }, [t.counts, associations]);
 
-  // Everything that narrows the list beyond the column filters, so nothing does
-  // it unseen. The last four are set on other pages and carry over.
+  // What narrows the list beyond the column filters. The last three are set on
+  // other pages and carry over. The upload window shows on its own control.
   const extraChips = useMemo(() => {
-    const chips: FilterChip[] = [
-      { key: "stage", label: `Stage: ${stage}` },
-    ];
+    const chips: FilterChip[] = [];
     const person = associations.find((a) => String(a.id) === associationFilter);
     if (person) {
       chips.push({
@@ -124,18 +126,14 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
         onRemove: () => setAssociationFilter(null),
       });
     }
-    const uploadWindow = formatUploadWindow(dateFrom, dateTo);
-    if (uploadWindow) {
-      chips.push({
-        key: "uploaded",
-        label: `Uploaded: ${uploadWindow}`,
-        onRemove: () => dispatch(resetSelectedDateRange()),
-      });
-    }
     if (participationFilters.length > 0) {
+      const path = activePath(participationFilters);
       chips.push({
         key: "participation",
-        label: `Post participation filter: ${participationFilters.length} active`,
+        label:
+          path.length > 0
+            ? `Flow: ${path.map((n) => n.label).join(" > ")}`
+            : `Post participation filter: ${participationFilters.length} active`,
         onRemove: () => dispatch(clearParticipationFilters()),
       });
     }
@@ -157,12 +155,9 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
     }
     return chips;
   }, [
-    stage,
     associations,
     associationFilter,
     setAssociationFilter,
-    dateFrom,
-    dateTo,
     participationFilters,
     analyticsFilter,
     exclusionFilter,
@@ -190,15 +185,33 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
         title={title}
         meta={`${t.total.toLocaleString("en-IN")} dockets`}
         actions={
-          <Button
-            icon={<Download className="size-3.5" />}
-            loading={exporting}
-            onClick={handleExport}
-          >
-            Export
-          </Button>
+          <>
+            {scope === "postParticipation" && (
+              <Button
+                icon={<ExternalLink className="size-3.5" />}
+                onClick={() => window.open(POST_SHEET, "_blank", "noopener,noreferrer")}
+              >
+                Open sheet
+              </Button>
+            )}
+            <Button
+              icon={<Download className="size-3.5" />}
+              loading={exporting}
+              onClick={handleExport}
+            >
+              Export
+            </Button>
+          </>
         }
       />
+
+      {scope === "postParticipation" && (
+        <FlowBand
+          counts={t.counts?.nodes ?? null}
+          active={participationFilters}
+          onChange={setFlow}
+        />
+      )}
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="w-44">
@@ -229,29 +242,30 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
           </div>
         </Popover>
         <UploadWindowControl />
-        {personCounts.length > 0 && (
-          <div
-            className="-my-0.5 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-0.5"
-            role="group"
-            aria-label="Dockets by person"
-          >
-            <span className="shrink-0 text-xs text-ink-3">By person</span>
-            {personCounts.map((p) => {
-              const on = associationFilter === String(p.id);
-              return (
-                <Pill
-                  key={p.id}
-                  selected={on}
-                  count={p.count}
-                  onClick={() => setAssociationFilter(on ? null : String(p.id))}
-                >
-                  {p.name}
-                </Pill>
-              );
-            })}
-          </div>
-        )}
       </div>
+
+      {personCounts.length > 0 && (
+        <div
+          className="-my-0.5 flex shrink-0 items-center gap-1.5 overflow-x-auto py-0.5"
+          role="group"
+          aria-label="Dockets by person"
+        >
+          <span className="shrink-0 text-xs text-ink-3">By person</span>
+          {personCounts.map((p) => {
+            const on = associationFilter === String(p.id);
+            return (
+              <Pill
+                key={p.id}
+                selected={on}
+                count={p.count}
+                onClick={() => setAssociationFilter(on ? null : String(p.id))}
+              >
+                {p.name}
+              </Pill>
+            );
+          })}
+        </div>
+      )}
 
       <TenderCellContext value={t.cellContext}>
         <DataTable<Row>

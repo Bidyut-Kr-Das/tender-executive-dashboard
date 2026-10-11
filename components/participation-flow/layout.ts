@@ -32,6 +32,14 @@ export const FLOW_NODE_HEIGHT = 56;
 export const FLOW_COL_GAP = 32;
 export const FLOW_ROW_GAP = 12;
 
+/** Node and gap sizes for the left-to-right diagram. */
+export interface FlowSize {
+  width: number;
+  height: number;
+  colGap: number;
+  rowGap: number;
+}
+
 /** Indented-rail geometry (narrow sidebar). */
 export const RAIL_NODE_HEIGHT = 38;
 export const RAIL_ROW_GAP = 6;
@@ -55,10 +63,13 @@ function childrenOf(node: FlowNode): FlowNode[] {
  * children. Purely computed - no DOM measurement - so the edge paths below
  * land exactly on node edges by construction.
  */
-export function layoutFlow(root: FlowNode): FlowLayout {
+export function layoutFlow(
+  root: FlowNode,
+  size: FlowSize = { width: FLOW_NODE_WIDTH, height: FLOW_NODE_HEIGHT, colGap: FLOW_COL_GAP, rowGap: FLOW_ROW_GAP },
+): FlowLayout {
   const nodes: PositionedNode[] = [];
   const byId = new Map<string, PositionedNode>();
-  const stride = FLOW_NODE_HEIGHT + FLOW_ROW_GAP;
+  const stride = size.height + size.rowGap;
   let leafCursor = 0;
   let maxDepth = 0;
 
@@ -76,10 +87,10 @@ export function layoutFlow(root: FlowNode): FlowLayout {
     const positioned: PositionedNode = {
       node,
       depth,
-      x: depth * (FLOW_NODE_WIDTH + FLOW_COL_GAP),
+      x: depth * (size.width + size.colGap),
       y,
-      width: FLOW_NODE_WIDTH,
-      height: FLOW_NODE_HEIGHT,
+      width: size.width,
+      height: size.height,
     };
     nodes.push(positioned);
     byId.set(node.id, positioned);
@@ -94,8 +105,8 @@ export function layoutFlow(root: FlowNode): FlowLayout {
     mode: "flow",
     nodes,
     edges,
-    width: (maxDepth + 1) * FLOW_NODE_WIDTH + maxDepth * FLOW_COL_GAP,
-    height: Math.max(0, leafCursor * stride - FLOW_ROW_GAP),
+    width: (maxDepth + 1) * size.width + maxDepth * size.colGap,
+    height: Math.max(0, leafCursor * stride - size.rowGap),
   };
 }
 

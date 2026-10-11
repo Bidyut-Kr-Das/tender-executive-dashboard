@@ -32,7 +32,7 @@ import {
   parseTypeTests,
 } from "./cells";
 import { DocketCell } from "./docket-sheet";
-import { FIELDS, fieldValue, type Row } from "./fields";
+import { FIELDS, NEXT_ACTIONS, fieldValue, type ParticipationScope, type Row } from "./fields";
 
 type Column = DataTableColumn<Row>;
 
@@ -57,7 +57,8 @@ const AVAILABILITY = selectFilter(
   { value: "Not Available", label: "Not available" },
 );
 
-// v1's column sets. Not participated adds the result columns and drops these.
+// v1's column sets. Post participation and not participated add the result
+// columns and drop the pre-participation ones.
 const NOT_PARTICIPATED_ONLY = new Set([
   "bgNoUtrNo",
   "issuingBank",
@@ -94,6 +95,8 @@ const NOT_PARTICIPATED_DROPPED = new Set([
   "yearsOfPastExperience",
   "ePbgDurationMonths",
 ]);
+
+const POST_DROPPED = new Set([...NOT_PARTICIPATED_DROPPED, "reason"]);
 
 /** A select filter with no fixed choices lists the values found in the data. */
 export const loadsFilterValues = (column: Column | undefined): boolean =>
@@ -140,15 +143,15 @@ const list = (id: string, header: string, width: number, splitBy: RegExp): Colum
 const longText = (id: string, header: string): Column => ({ id, header, width: 250 });
 
 /**
- * The columns of the pre-participation page, or of the not-participated page:
- * what each shows, how it filters and which control edits it. Ids are flat row
- * keys, as on the tenders page.
+ * The columns of one participation page: what each shows, how it filters and
+ * which control edits it. Ids are flat row keys, as on the tenders page.
  */
 export function buildPreParticipationColumns(
   associations: TenderPageAssociation[],
-  notParticipated = false,
+  scope: ParticipationScope = "home",
   developer = false,
 ): Column[] {
+  const notParticipated = scope === "notParticipated";
   const names = (row: Row) =>
     (row.assignedTo ?? "")
       .split(",")
@@ -294,7 +297,7 @@ export function buildPreParticipationColumns(
     editable("bgStatus", "BG Status", 190, { search: false }),
     editable("beneficiaryBankDetails", "Beneficiary Bank Details", 220),
     readOnly("issuingBank", "Issuing Bank"),
-    readOnly("currentStatus", "Current Status"),
+    editable("currentStatus", "Current Status", 200, { search: false }),
     readOnly("statusCategory", "Status Category"),
     editable("reason", "Reason for not Participated", 250),
     {
@@ -314,17 +317,17 @@ export function buildPreParticipationColumns(
       search: false,
       filter: { type: "dateRange" },
     }),
-    readOnly("expectedRaDate", "Expected RA Date"),
+    editable("expectedRaDate", "Expected RA Date", 170, { search: false }),
     readOnly("quotationNo", "Quotation No"),
     editable("contractNo", "Contract Number"),
     longText("competitors", "Competitors"),
-    readOnly("ourRank", "Our Rank", 130),
-    readOnly("ourValue", "Our Value"),
-    readOnly("nameOfRank1", "L1 Party Name", 200),
-    readOnly("valueOfRank1", "L1 Price"),
+    editable("ourRank", "Our Rank", 130),
+    editable("ourValue", "Our Value"),
+    editable("nameOfRank1", "L1 Party Name", 200),
+    editable("valueOfRank1", "L1 Price"),
     readOnly("differenceBetweenRank1", "L1 Diff (%)", 130),
-    readOnly("nameOfRank2", "L2 Party Name", 200),
-    readOnly("valueOfRank2", "L2 Price"),
+    editable("nameOfRank2", "L2 Party Name", 200),
+    editable("valueOfRank2", "L2 Price"),
     readOnly("differenceBetweenRank2", "L2 Diff (%)", 130),
     editable("tenderUpdateStatus", "Tender Update Status", 170, {
       search: false,
@@ -336,8 +339,12 @@ export function buildPreParticipationColumns(
         ],
       },
     }),
-    readOnly("nextAction", "Next Action", 220),
-    longText("remarks", "Remarks"),
+    editable("nextAction", "Next Action", 230, {
+      search: false,
+      filter: { type: "select", options: NEXT_ACTIONS },
+    }),
+    // Found through the header's text search, like the other long text.
+    editable("remarks", "Remarks", 250, { filter: undefined }),
     list("cva", "CVA", 180, /@/),
     {
       id: "apm",
@@ -362,11 +369,17 @@ export function buildPreParticipationColumns(
     },
     editable("participated", "Participated?", 130, {
       search: false,
-      // As in v1, not participated does not show the answer; developers still get it.
-      hidden: notParticipated && !developer,
-      // Pre participation holds undecided tenders only; not participated holds
-      // the ones answered no and the undecided ones past their deadline.
-      filter: notParticipated ? selectFilter({ value: "false", label: "No" }) : undefined,
+      // As in v1, only pre participation shows the answer; developers always get it.
+      hidden: scope !== "home" && !developer,
+      // Pre participation holds undecided tenders only; post participation the
+      // ones answered yes; not participated the ones answered no and the
+      // undecided ones past their deadline.
+      filter:
+        scope === "postParticipation"
+          ? selectFilter({ value: "true", label: "Yes" })
+          : notParticipated
+            ? selectFilter({ value: "false", label: "No" })
+            : undefined,
     }),
     {
       id: "officeName",
@@ -430,7 +443,12 @@ export function buildPreParticipationColumns(
     editable("msePurchasePreference", "MSE Purchase Preference", 200),
   ];
 
-  const left = notParticipated ? NOT_PARTICIPATED_DROPPED : NOT_PARTICIPATED_ONLY;
+  const left =
+    scope === "home"
+      ? NOT_PARTICIPATED_ONLY
+      : notParticipated
+        ? NOT_PARTICIPATED_DROPPED
+        : POST_DROPPED;
   const kept = columns.filter((c) => !left.has(c.id));
   for (const c of kept) if (!c.hidden) shown.add(c.id);
   return kept;

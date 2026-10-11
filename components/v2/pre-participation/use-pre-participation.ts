@@ -26,14 +26,27 @@ import {
 import { fetchAllBomOptions } from "@/lib/slices/utilitySlice";
 import type { TenderCellContext } from "@/components/v2/tenders/use-tenders";
 import { ERP_CATEGORY_FILTER } from "./columns";
-import { lockedWhenNotParticipated } from "./fields";
+import { lockedOnceSet, lockedWhenNotParticipated, type ParticipationScope } from "./fields";
 
-/** The pages built on this hook, by their slot in the scope-keyed tenderPage slice. */
-export type ParticipationScope = "home" | "notParticipated";
+export type { ParticipationScope };
 
-// v1 opens not participated on deadlines up to today. Seeded once per session,
-// so a user who clears the filter does not get it back on the next visit.
-let deadlineSeeded = false;
+// v1 opens not participated on deadlines up to today and post participation on
+// deadlines from 2026. Seeded once per session, so a user who clears the filter
+// does not get it back on the next visit.
+const deadlineSeeded = new Set<ParticipationScope>();
+
+const deadlineSeed = (scope: ParticipationScope) =>
+  scope === "notParticipated"
+    ? { startDate: "", endDate: toISTDateKey(new Date()) ?? "" }
+    : scope === "postParticipation"
+      ? { startDate: "2026-01-01", endDate: "" }
+      : null;
+
+const LOCKS: Record<ParticipationScope, TenderCellContext["isLocked"]> = {
+  home: undefined,
+  postParticipation: lockedOnceSet,
+  notParticipated: lockedWhenNotParticipated,
+};
 
 /** What the server sorts by until the user picks a column. */
 const DEFAULT_SORT = { column: "deadline", direction: "desc" } as const;
@@ -61,9 +74,14 @@ export function usePreParticipation(scope: ParticipationScope) {
     (a, b) => tenderQueryKey(a) === tenderQueryKey(b),
   );
   const queryKey = useMemo(() => tenderQueryKey(query), [query]);
-  // Per-person counts answer "how many dockets are in this stage", so they
-  // ignore the table's filters and never refetch on paging or sorting.
-  const countsQuery = useMemo(() => buildCountsQuery(query), [query]);
+  // Per-person and flow counts answer "how many dockets are in this stage", so
+  // they ignore the table's filters and never refetch on paging or sorting.
+  // Post participation keeps its deadline window, as v1's sidebar did.
+  const countsQuery = useMemo(() => {
+    const base = buildCountsQuery(query);
+    const deadline = scope === "postParticipation" ? query.columnFilters.deadline : undefined;
+    return deadline ? { ...base, columnFilters: { deadline } } : base;
+  }, [query, scope]);
   const countsKey = useMemo(() => tenderFilterKey(countsQuery), [countsQuery]);
 
   const hasMetaRef = useRef(false);
@@ -77,17 +95,12 @@ export function usePreParticipation(scope: ParticipationScope) {
   reloadRef.current = reload;
   const stableReload = useCallback(() => reloadRef.current(), []);
 
-  const [seeded, setSeeded] = useState(scope !== "notParticipated" || deadlineSeeded);
+  const [seeded, setSeeded] = useState(!deadlineSeed(scope) || deadlineSeeded.has(scope));
   useEffect(() => {
-    if (seeded) return;
-    deadlineSeeded = true;
-    dispatch(
-      setScopeColumnFilter({
-        scope,
-        column: "deadline",
-        filter: { dateRange: { startDate: "", endDate: toISTDateKey(new Date()) ?? "" } },
-      }),
-    );
+    const dateRange = deadlineSeed(scope);
+    if (seeded || !dateRange) return;
+    deadlineSeeded.add(scope);
+    dispatch(setScopeColumnFilter({ scope, column: "deadline", filter: { dateRange } }));
     setSeeded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -169,15 +182,24 @@ export function usePreParticipation(scope: ParticipationScope) {
     [page.columnFilters, page.erpItemCategory],
   );
 
+  const countsQueryRef = useRef(countsQuery);
+  countsQueryRef.current = countsQuery;
+  // A saved rank, status or RA date moves the docket to another flow node. The
+  // row is patched in place; only the counts are asked for again.
+  const reloadCounts = useCallback(() => {
+    dispatch(loadParticipationCounts({ scope, query: countsQueryRef.current }));
+  }, [dispatch, scope]);
+
   const cellContext = useMemo<TenderCellContext>(
     () => ({
       associations: page.associations,
       canEditRemarks: false,
       reload: stableReload,
       scope,
-      isLocked: scope === "notParticipated" ? lockedWhenNotParticipated : undefined,
+      isLocked: LOCKS[scope],
+      onFieldSaved: scope === "postParticipation" ? reloadCounts : undefined,
     }),
-    [page.associations, stableReload, scope],
+    [page.associations, stableReload, scope, reloadCounts],
   );
 
   return {
