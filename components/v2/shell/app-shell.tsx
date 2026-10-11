@@ -238,6 +238,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Sign-in and account creation have their own frame.
+  if (pathname.startsWith("/auth")) return <>{children}</>;
+
   return (
     <div className="h-dvh">
       <aside className="w-(--sidebar-w) in-data-[sidebar=collapsed]:w-(--sidebar-rail-w) fixed inset-y-0 left-0 z-(--z-rail) flex flex-col overflow-hidden border-r bg-rail">
