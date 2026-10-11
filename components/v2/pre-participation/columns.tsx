@@ -156,6 +156,10 @@ export function buildPreParticipationColumns(
       .filter(Boolean)
       .join(", ");
 
+  // Filled below, once the page's column set is known. Every registry field
+  // with a column is edited in that column, so the docket sheet edits those only.
+  const shown = new Set<string>();
+
   const columns: Column[] = [
     {
       id: "docketNo",
@@ -164,7 +168,7 @@ export function buildPreParticipationColumns(
       frozen: true,
       spanGroup: true,
       filter: selectFilter(),
-      cell: (row) => <DocketCell row={row} />,
+      cell: (row) => <DocketCell row={row} columns={shown} />,
     },
     {
       id: "type",
@@ -427,5 +431,7 @@ export function buildPreParticipationColumns(
   ];
 
   const left = notParticipated ? NOT_PARTICIPATED_DROPPED : NOT_PARTICIPATED_ONLY;
-  return columns.filter((c) => !left.has(c.id));
+  const kept = columns.filter((c) => !left.has(c.id));
+  for (const c of kept) if (!c.hidden) shown.add(c.id);
+  return kept;
 }

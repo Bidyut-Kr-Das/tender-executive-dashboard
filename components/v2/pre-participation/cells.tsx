@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { BarChart3, CalendarClock, ExternalLink, FileText, Paperclip, Pencil } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -21,7 +22,7 @@ import {
   type TenderFile,
 } from "@/components/v2/tenders/cells";
 import { useTenderCellContext } from "@/components/v2/tenders/use-tenders";
-import { FIELDS, fieldValue, type FieldDef, type Row } from "./fields";
+import { FIELDS, dateKey, fieldValue, type FieldDef, type Row } from "./fields";
 
 const withAuth = (path: string) => `${path}?auth=${encodeURIComponent(FILE_AUTH)}`;
 
@@ -75,6 +76,8 @@ interface EditorProps {
   row: Row;
   /** Always-open control for the docket sheet; a table cell opens on demand. */
   form?: boolean;
+  /** Shown as plain text: the page has no editable column for this field. */
+  readOnly?: boolean;
 }
 
 function TextEditor({ field, row, form }: EditorProps) {
@@ -146,7 +149,12 @@ const CLEAR = "__clear__";
 function SelectEditor({ field, row, form }: EditorProps) {
   const { pending, save } = useFieldSave(field, row);
   const value = fieldValue(field, row);
-  const options = field.options ?? [];
+  const listed = field.options ?? [];
+  // An older value outside the list stays visible until it is replaced.
+  const options =
+    !value || listed.some((o) => o.value === value)
+      ? listed
+      : [{ value, label: value }, ...listed];
   return (
     <Select
       size={form ? "md" : "sm"}
@@ -212,6 +220,25 @@ function YesNoEditor({ field, row }: EditorProps) {
       {option(tokens.yes, true)}
       {option(tokens.no, false)}
     </div>
+  );
+}
+
+function DateEditor({ field, row, form }: EditorProps) {
+  const { pending, save } = useFieldSave(field, row);
+  const value = fieldValue(field, row);
+  const current = dateKey(value);
+  return (
+    <DatePicker
+      label={field.label}
+      value={current}
+      // A value in no known date format stays readable until a day is picked.
+      placeholder={value || "Not set"}
+      disabled={pending}
+      className={form ? undefined : "h-7 px-2 text-xs"}
+      onChange={(next) => {
+        if (next !== current) save(next);
+      }}
+    />
   );
 }
 
@@ -301,18 +328,23 @@ function LockedField({ field, row }: EditorProps) {
   if (field.kind === "dateTime") {
     return <span className="tabular-nums">{formatDateTimeIST(value)}</span>;
   }
+  if (field.kind === "date" && dateKey(value)) {
+    return <span className="tabular-nums">{format(parseISO(dateKey(value)), "d MMM yyyy")}</span>;
+  }
   return <Clamp>{field.options?.find((o) => o.value === value)?.label ?? value}</Clamp>;
 }
 
 /** The control for one registry field, in a table cell or in the docket sheet. */
 export function FieldEditor(props: EditorProps) {
   const { isLocked } = useTenderCellContext();
-  if (isLocked?.(props.field.id, props.row)) return <LockedField {...props} />;
+  if (props.readOnly || isLocked?.(props.field.id, props.row)) return <LockedField {...props} />;
   switch (props.field.kind) {
     case "select":
       return <SelectEditor {...props} />;
     case "yesNo":
       return <YesNoEditor {...props} />;
+    case "date":
+      return <DateEditor {...props} />;
     case "dateTime":
       return <DateTimeEditor {...props} />;
     default:

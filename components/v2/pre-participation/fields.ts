@@ -1,4 +1,6 @@
+import { toISTDateKey } from "@/lib/format-ist";
 import type { ReverseAuctionWebhookData } from "@/lib/integrations/n8n";
+import { parseDate } from "@/lib/parse-date";
 import type { AppDispatch } from "@/lib/store";
 import type { FlatRow } from "@/lib/tender-flatten";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
@@ -35,7 +37,7 @@ export interface FieldDef {
   /** Flat row key. */
   id: string;
   label: string;
-  kind: "text" | "textarea" | "select" | "yesNo" | "dateTime";
+  kind: "text" | "textarea" | "select" | "yesNo" | "date" | "dateTime";
   /** `select` choices. */
   options?: { value: string; label: string }[];
   /** `select` only: no blank choice. */
@@ -58,6 +60,12 @@ export const docketKey = (row: Row): string =>
 
 export const fieldValue = (field: FieldDef, row: Row): string =>
   field.value ? field.value(row) : (row[field.id] ?? "");
+
+/**
+ * A stored day as `yyyy-MM-dd`, empty when it is unset or in no known format.
+ * Older rows hold `29-May-26`, `31/07/2026` and `01-07-2026`.
+ */
+export const dateKey = (value: string): string => toISTDateKey(parseDate(value)) ?? "";
 
 /** A non-empty RA qualification rule forces reverse auction to yes. */
 export function raValue(row: Row): boolean | null {
@@ -157,6 +165,18 @@ const text = (id: string, label: string, section: FieldSection): FieldDef => ({
 
 const options = (...values: string[]) => values.map((v) => ({ value: v, label: v }));
 
+const choice = (id: string, label: string, section: FieldSection, ...values: string[]): FieldDef => ({
+  ...text(id, label, section),
+  kind: "select",
+  options: options(...values),
+});
+
+/** Saved as `yyyy-MM-dd`, the form the date-range filter reads. */
+const day = (id: string, label: string, section: FieldSection): FieldDef => ({
+  ...text(id, label, section),
+  kind: "date",
+});
+
 const FIELD_LIST: FieldDef[] = [
   {
     id: "docketNo",
@@ -176,9 +196,9 @@ const FIELD_LIST: FieldDef[] = [
         }),
       ).unwrap(),
   },
-  text("applicableIndex", "Applicable index", "General"),
+  choice("applicableIndex", "Applicable index", "General", "IEEMA", "CACMAI"),
   text("contractNo", "Contract number", "General"),
-  text("miiPurchasePreference", "MII purchase preference", "General"),
+  choice("miiPurchasePreference", "MII purchase preference", "General", "Yes", "No"),
   text("location", "Location", "General"),
 
   {
@@ -191,9 +211,9 @@ const FIELD_LIST: FieldDef[] = [
   },
   text("emd", "EMD", "EMD and BG"),
   text("documentFees", "Document fees", "EMD and BG"),
-  text("bgDate", "BG date", "EMD and BG"),
-  text("bgExpiryDate", "BG expiry date", "EMD and BG"),
-  text("claimDate", "Claim date", "EMD and BG"),
+  day("bgDate", "BG date", "EMD and BG"),
+  day("bgExpiryDate", "BG expiry date", "EMD and BG"),
+  day("claimDate", "Claim date", "EMD and BG"),
   {
     id: "bgStatus",
     label: "BG status",
@@ -305,13 +325,13 @@ const FIELD_LIST: FieldDef[] = [
   },
   text("raQualificationRule", "RA qualification rule", "Reverse auction"),
 
-  text("startupExemption", "Startup exemption", "Eligibility and terms"),
+  choice("startupExemption", "Startup exemption", "Eligibility and terms", "Yes", "No"),
   text("minimumAverageAnnualTurnover", "Minimum avg annual turnover", "Eligibility and terms"),
   text("oemAverageTurnover", "OEM average turnover", "Eligibility and terms"),
   text("yearsOfPastExperience", "Years of past experience", "Eligibility and terms"),
   text("pastPerformance", "Past performance", "Eligibility and terms"),
-  text("msmeExemption", "MSME exemption", "Eligibility and terms"),
-  text("msePurchasePreference", "MSE purchase preference", "Eligibility and terms"),
+  choice("msmeExemption", "MSME exemption", "Eligibility and terms", "Yes", "No"),
+  choice("msePurchasePreference", "MSE purchase preference", "Eligibility and terms", "Yes", "No"),
   text("contractPeriod", "Contract period", "Eligibility and terms"),
   text("bidOfferValidity", "Bid offer validity", "Eligibility and terms"),
   text("typeOfBid", "Type of bid", "Eligibility and terms"),

@@ -51,7 +51,13 @@ function Fact({ label, value }: { label: string; value: string }) {
 
 const date = (value: string | undefined) => (value ? formatDateISTLong(value) : "");
 
-function TenderForm({ row }: { row: Row }) {
+const plain = (value: string | undefined) =>
+  value ? <span className="wrap-break-word">{value}</span> : <Dash />;
+
+/** The ids of the columns the page shows; a field off the page is read only here. */
+type PageColumns = ReadonlySet<string>;
+
+function TenderForm({ row, columns }: { row: Row; columns: PageColumns }) {
   const { associations } = useTenderCellContext();
   const preparedBy = (row.assignedTo ?? "")
     .split(",")
@@ -78,19 +84,23 @@ function TenderForm({ row }: { row: Row }) {
             .filter((f) => f.id !== "docketNo")
             .map((field) => (
               <Labelled key={field.id} label={field.label} wide={field.kind === "textarea"}>
-                <FieldEditor field={field} row={row} form />
+                <FieldEditor field={field} row={row} form readOnly={!columns.has(field.id)} />
               </Labelled>
             ))}
           {title === "General" && (
             <>
               <Labelled label="Price">
-                <PriceCell row={row} />
+                {columns.has("price") ? <PriceCell row={row} /> : plain(row.price)}
               </Labelled>
               <Labelled label="Website">
-                <WebsiteCell row={row} />
+                {columns.has("website") ? <WebsiteCell row={row} /> : plain(row.website)}
               </Labelled>
               <Labelled label="Office and consignees" wide>
-                <OfficeCell row={row} />
+                {columns.has("officeName") ? (
+                  <OfficeCell row={row} />
+                ) : (
+                  plain([row.officeName, row.consigneesReportingOfficer].filter(Boolean).join(" @ "))
+                )}
               </Labelled>
             </>
           )}
@@ -107,7 +117,7 @@ function TenderForm({ row }: { row: Row }) {
 }
 
 /** Mounted only while the sheet is open, so closed cells do not watch the store. */
-function SheetBody({ docket }: { docket: string }) {
+function SheetBody({ docket, columns }: { docket: string; columns: PageColumns }) {
   const { scope = "home" } = useTenderCellContext();
   const rows = useAppSelector((s) => s.tenderPage.byScope[scope].rows).filter(
     (r) => docketKey(r) === docket,
@@ -139,13 +149,13 @@ function SheetBody({ docket }: { docket: string }) {
         />
       )}
       {/* Keyed so a field's draft never carries over to another tender. */}
-      <TenderForm key={row.id} row={row} />
+      <TenderForm key={row.id} row={row} columns={columns} />
     </div>
   );
 }
 
 /** Docket number with the button that opens every field of the docket's tenders. */
-export function DocketCell({ row }: { row: Row }) {
+export function DocketCell({ row, columns }: { row: Row; columns: PageColumns }) {
   const [open, setOpen] = useState(false);
   const docketNo = (row.docketNo ?? "").trim();
   return (
@@ -165,7 +175,7 @@ export function DocketCell({ row }: { row: Row }) {
         title={docketNo ? `Docket ${docketNo}` : "Tender without a docket"}
         width="46rem"
       >
-        <SheetBody docket={docketKey(row)} />
+        <SheetBody docket={docketKey(row)} columns={columns} />
       </Sheet>
     </div>
   );
