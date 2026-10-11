@@ -259,6 +259,7 @@ Built on `react-day-picker`, styled only with v2 tokens (its stylesheet is not i
 | `Popover` | A panel anchored to its trigger: column filters, date window, full cell text |
 | `Menu` | A list of actions or toggles: upload, exclusions, columns, account |
 | `Select` | Picking one value from a short list |
+| `Combobox` | Picking one value from a list too long to scan (item codes): type to narrow it |
 | `Dialog` | A short modal task with a clear outcome |
 | `Sheet` | Long read-only content beside the table (agent report) |
 
@@ -270,6 +271,7 @@ Props:
 | `Popover` | `trigger?`, `children`, `open?`, `onOpenChange?`, `side?`, `align?`, `anchor?`, `className?` |
 | `Menu` | `trigger`, `children`, `side?`, `align?`, `className?`; children are `MenuItem` (`icon?`, `onClick?`, `disabled?`, `tone?: "bad"`), `MenuCheckItem` (`checked`, `onCheckedChange`, `closeOnClick?`), `MenuLabel`, `MenuSeparator` |
 | `Select` | `label` (accessible name), `value` (null for none), `onChange`, `options: { value, label }[]`, `placeholder?`, `size?: "md" \| "sm"`, `disabled?`, `icon?` |
+| `Combobox` | `label` (accessible name), `value` (null for none), `onChange`, `options: { value, label }[]`, `placeholder?`, `size?: "md" \| "sm"`, `disabled?`. Shows the first 100 matches; "Not set" clears |
 | `Dialog` | `open`, `onOpenChange`, `title`, `description?`, `children?`, `footer?`, `width?` (default `32rem`) |
 | `Sheet` | `open`, `onOpenChange`, `title`, `children`, `width?` (default `40vw`) |
 
@@ -349,7 +351,7 @@ Long-running work (export, bulk AI analysis) reports progress and, where it can 
 ## Adding a page to v2
 
 1. Create `app/(v2)/v2/<page>/page.tsx` rendering a view from `components/v2/<page>/`.
-2. Write a hook that wires the page's existing slices and thunks, following `components/v2/tenders/use-tenders.ts`.
+2. Write a hook that wires the page's existing slices and thunks, following `components/v2/tenders/use-tenders.ts`. A page that holds all its rows in the browser skips this: `useClientTable` (`data-table/use-client-table.ts`) filters, sorts and pages them, and `ClientTablePage` (`data-table/client-table-page.tsx`) is the whole view for a page that is only a header and a table.
 3. Write `columns.tsx` for the page. Plain-text columns need only `text`; build the rest from `data-table/cells.tsx` and `ui/`. Add a page `cells.tsx` only for cells that edit data or are specific to this page.
 4. Compose the view: `Page` > `PageHeader` > optional strip of `StatTile` and `Pill` > `DataTable`. First load renders `Page` with `Skeleton` blocks; add the same to the route's `loading.tsx`.
 5. Set `v2: true` and the new `href` on the page's entry in `components/v2/shell/nav-items.ts`.

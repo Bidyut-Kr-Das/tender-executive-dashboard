@@ -3,7 +3,8 @@ export type ColumnFilterType =
   | "select"
   | "text"
   | "boolean"
-  | "rawMaterials";
+  | "rawMaterials"
+  | "numberRange";
 
 export interface FilterOption {
   value: string;
@@ -28,4 +29,5 @@ export interface ColumnFilterState {
     cuMin: string;
     cuMax: string;
   };
+  numberRange?: { min: string; max: string };
 }

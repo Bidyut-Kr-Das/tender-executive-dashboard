@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Dash } from "@/components/v2/ui/field";
+import { Dash, Field, Input } from "@/components/v2/ui/field";
+import type { ColumnFilter } from "./types";
 
 /**
  * Cell building blocks for any page's column definitions. Nothing here knows
@@ -91,4 +93,45 @@ export function CellAction({
       {action}
     </div>
   );
+}
+
+type NumberRange = { min: string; max: string };
+
+/** Minimum and maximum for a column of amounts or quantities. */
+export const numberRangeFilter: ColumnFilter = {
+  type: "custom",
+  stateKey: "numberRange",
+  render: ({ value, onChange }) => {
+    const range: NumberRange = { min: "", max: "", ...(value as NumberRange | undefined) };
+    const input = (key: keyof NumberRange, label: string) => (
+      <Field label={label}>
+        <Input
+          type="number"
+          inputMode="decimal"
+          value={range[key]}
+          onChange={(e) => {
+            const next = { ...range, [key]: e.target.value };
+            onChange(next.min || next.max ? next : undefined);
+          }}
+        />
+      </Field>
+    );
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {input("min", "Min")}
+        {input("max", "Max")}
+      </div>
+    );
+  },
+  summary: (value) => {
+    const r = value as NumberRange | undefined;
+    return r && (r.min || r.max) ? `${r.min || "0"}–${r.max || "any"}` : null;
+  },
+};
+
+/** A date as text for a column's `text`; empty when there is none. */
+export function dateText(value: unknown, pattern = "dd/MM/yyyy"): string {
+  if (value == null || value === "") return "";
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? "" : format(date, pattern);
 }

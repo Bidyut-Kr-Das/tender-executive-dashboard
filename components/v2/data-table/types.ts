@@ -137,8 +137,16 @@ export function isFilterActive(state: ColumnFilterState | undefined): boolean {
   if (state.rawMaterials && Object.values(state.rawMaterials).some(Boolean)) {
     return true;
   }
+  if (state.numberRange?.min || state.numberRange?.max) return true;
   return false;
 }
+
+/** The select option that matches rows with no value in the column. */
+export const BLANK: FilterOption = { value: "__blank__", label: "Blank" };
+export const selectFilter = (...options: FilterOption[]): ColumnFilter => ({
+  type: "select",
+  options: [...options, BLANK],
+});
 
 export interface RowGroup {
   start: number;

@@ -111,6 +111,16 @@ export function Skeleton({ className }: { className?: string }) {
   );
 }
 
+/** First-load placeholder for a page that is a header and a table. */
+export function PageSkeleton({ label }: { label: string }) {
+  return (
+    <Page aria-busy aria-label={`Loading ${label}`}>
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="min-h-0 flex-1" />
+    </Page>
+  );
+}
+
 /** Centred message for nothing-to-show and could-not-load. */
 export function EmptyState({
   icon: Icon,

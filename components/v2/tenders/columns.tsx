@@ -4,6 +4,7 @@ import { REASON_FOR_NOT_APM_OPTIONS } from "@/lib/reason-for-not-apm";
 import type { MergedGroup } from "@/lib/tender-query";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
 import { Chips, Clamp, StackedCell } from "@/components/v2/data-table/cells";
+import { BLANK, selectFilter } from "@/components/v2/data-table/types";
 import type { DataTableColumn, FilterOption } from "@/components/v2/data-table/types";
 import { Badge, Dash, Field, Input } from "@/components/v2/ui/field";
 import {
@@ -29,11 +30,7 @@ import type { ColumnIndexRow } from "./use-tenders";
 
 type Column = DataTableColumn<Row>;
 
-export const BLANK: FilterOption = { value: "__blank__", label: "Blank" };
-export const selectFilter = (...options: FilterOption[]): Column["filter"] => ({
-  type: "select",
-  options: [...options, BLANK],
-});
+export { BLANK, selectFilter };
 
 const normalizeKey = (s: string) => s.toLowerCase().replace(/[\s_-]+/g, "");
 

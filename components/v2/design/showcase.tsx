@@ -18,6 +18,7 @@ import {
   Textarea,
 } from "@/components/v2/ui/field";
 import {
+  Combobox,
   Dialog,
   Menu,
   MenuCheckItem,
@@ -261,6 +262,17 @@ export function Showcase() {
             <Select
               size="sm"
               label="Select, small"
+              value={select}
+              onChange={setSelect}
+              options={[
+                { value: "firm", label: "Firm" },
+                { value: "variable", label: "Variable" },
+              ]}
+            />
+          </Field>
+          <Field label="Combobox">
+            <Combobox
+              label="Combobox"
               value={select}
               onChange={setSelect}
               options={[

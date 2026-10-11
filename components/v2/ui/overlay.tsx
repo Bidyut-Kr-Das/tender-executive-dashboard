@@ -17,7 +17,7 @@ import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
 import { Check, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./button";
-import { CheckMark } from "./field";
+import { CheckMark, Input } from "./field";
 
 type Side = "top" | "bottom" | "left" | "right";
 type Align = "start" | "center" | "end";
@@ -411,5 +411,108 @@ export function Dialog({
         </BaseDialog.Viewport>
       </BaseDialog.Portal>
     </BaseDialog.Root>
+  );
+}
+
+/* --------------------------------- Combobox --------------------------------- */
+
+// ponytail: the list shows the first matches only and has no arrow-key
+// navigation (Tab reaches the options, Enter picks the first). Move to
+// base-ui Combobox if a list needs more.
+const MAX_SHOWN = 100;
+
+/** `Select` for a list too long to scan: type to narrow it. */
+export function Combobox({
+  value,
+  onChange,
+  options,
+  placeholder = "Select",
+  disabled,
+  label,
+  size = "md",
+  className,
+}: {
+  /** null means nothing selected. */
+  value: string | null;
+  onChange: (value: string | null) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  disabled?: boolean;
+  /** Accessible name; also the search box's placeholder. */
+  label: string;
+  size?: "sm" | "md";
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  // A saved value that has left the list still shows.
+  const shown = options.find((o) => o.value === value)?.label ?? value ?? undefined;
+
+  const pick = (next: string | null) => {
+    setOpen(false);
+    setQuery("");
+    if (next !== value) onChange(next);
+  };
+
+  const q = query.trim().toLowerCase();
+  const matching = open
+    ? (q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options).slice(0, MAX_SHOWN)
+    : [];
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setQuery("");
+      }}
+      className="flex w-64 flex-col gap-2 p-2"
+      trigger={
+        <button
+          type="button"
+          aria-label={label}
+          disabled={disabled}
+          className={cn(
+            "press not-disabled:hover:bg-hover flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-surface text-left text-ink edge disabled:opacity-50",
+            size === "sm" ? "h-7 px-2 text-xs" : "h-8 px-2.5 text-md",
+            className,
+          )}
+        >
+          <span className={cn("min-w-0 flex-1 truncate", shown == null && "text-ink-3")}>
+            {shown ?? placeholder}
+          </span>
+          <ChevronDown className="size-3.5 text-ink-3" />
+        </button>
+      }
+    >
+      <Input
+        autoFocus
+        aria-label={`Search ${label}`}
+        placeholder="Search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && matching[0]) pick(matching[0].value);
+        }}
+      />
+      <ul className="-mx-1 flex max-h-64 flex-col overflow-y-auto">
+        {value != null && !q && (
+          <li>
+            <button type="button" onClick={() => pick(null)} className={cn(ITEM, "w-full text-ink-3 hover:bg-hover")}>
+              Not set
+            </button>
+          </li>
+        )}
+        {matching.map((o) => (
+          <li key={o.value}>
+            <button type="button" onClick={() => pick(o.value)} className={cn(ITEM, "w-full text-left hover:bg-hover")}>
+              <span className="min-w-0 flex-1 wrap-break-word">{o.label}</span>
+              {o.value === value && <Check className="size-3.5 text-accent" />}
+            </button>
+          </li>
+        ))}
+        {matching.length === 0 && <li className="px-2 py-1.5 text-ink-3">No matches</li>}
+      </ul>
+    </Popover>
   );
 }
