@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { fetchAllFilteredTenderRows } from "@/actions/tender-query";
-import { publishAiAnalysisJob } from "@/actions/ai-analysis";
+import { publishAiAnalysisJob, startAiAnalysisRun } from "@/actions/ai-analysis";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import {
@@ -269,6 +269,9 @@ export function AiAnalysisButton({ query, total }: { query: TenderQuery; total: 
       }
 
       setProgress({ done: 0, total: targets.length });
+      // Earlier rejections stop counting on the AI analysis page. Only that count
+      // depends on it, so a failure here must not stop the queueing.
+      await startAiAnalysisRun().catch((err) => console.warn("[ai-analysis] run not reset:", err));
       let queued = 0;
       let failed = 0;
       for (const row of targets) {

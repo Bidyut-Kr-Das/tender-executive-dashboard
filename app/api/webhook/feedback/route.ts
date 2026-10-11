@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { publishAiRelevanceTask } from "@/lib/queue/publisher";
+import { setRelevanceQueued } from "@/lib/tender-lifecycle-store";
 
 // "Power Distribution" -> "power_distribution"
 function toSnakeCase(label: string | null | undefined): string | null {
@@ -54,6 +55,7 @@ async function triggerAnalysis({ referenceNo, company }: TriggerAnalysisInput) {
       `[feedback] Analysis job not queued for ${referenceNo} (RabbitMQ unavailable?)`,
     );
   }
+  await setRelevanceQueued(referenceNo, queued);
 
   return { success: true, referenceNo, queued };
 }

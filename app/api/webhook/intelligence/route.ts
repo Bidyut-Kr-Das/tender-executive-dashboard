@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { agentReportToMarkdown } from "@/lib/agent-report-markdown";
+import { lifecycleData, setLifecycleStatus } from "@/lib/tender-lifecycle-store";
 
 interface UpdateAgentReportInput {
   referenceNo: string;
@@ -21,11 +22,29 @@ async function updateAgentReport({ referenceNo, agentReport }: UpdateAgentReport
 
   await prisma.tenderMerged.update({
     where: { id: existing.id },
-    data: { agentReport },
+    // A cleared report is not a finished analysis.
+    data: { agentReport, ...(agentReport ? lifecycleData("COMPLETED") : {}) },
   });
 
   return { success: true, referenceNo, agentReport };
 }
+
+async function failIntelligence({ referenceNo, error }: { referenceNo: string; error: unknown }) {
+  await setLifecycleStatus(referenceNo, "INTELLIGENCE_FAILED", error);
+  return { success: true, referenceNo, handled: false };
+}
+
+const failIntelligenceWithLog = withLog(failIntelligence, (result, { error }) => ({
+  action: "UPDATE" as const,
+  tableName: "TenderMerged",
+  recordId: undefined,
+  referenceNo: result.referenceNo,
+  details: `Intelligence failed: ${typeof error === "string" ? error : JSON.stringify(error)}`,
+  // Public webhook — no auth session, so label the actor explicitly.
+  userId: null,
+  userName: "Intelligence Agent",
+  userEmail: "ai-agent@laserpower.in",
+}));
 
 const updateAgentReportWithLog = withLog(
   updateAgentReport,
@@ -52,6 +71,14 @@ export async function PATCH(req: NextRequest) {
 
     if (!referenceNo) {
       return NextResponse.json({ error: "referenceNo is required" }, { status: 400 });
+    }
+
+    // A failure event carries no report; it must not clear a saved one.
+    const failed = typeof raw?.event === "string" && raw.event.endsWith("_failed");
+    if (body.error || failed) {
+      return NextResponse.json(
+        await failIntelligenceWithLog({ referenceNo, error: body.error ?? raw.event }),
+      );
     }
 
     const report = body.agentReport ?? (body.sections ? body : null);

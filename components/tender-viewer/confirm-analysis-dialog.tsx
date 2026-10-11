@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { publishAiAnalysisJob } from "@/actions/ai-analysis";
+import { publishAiAnalysisJob, startAiAnalysisRun } from "@/actions/ai-analysis";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,6 +71,9 @@ export default function ConfirmAnalysisDialog({
 
       let successCount = 0;
       let failCount = 0;
+      // Earlier rejections stop counting on the AI analysis page. Only that count
+      // depends on it, so a failure here must not stop the queueing.
+      await startAiAnalysisRun().catch((err) => console.warn("[ai-analysis] run not reset:", err));
 
       for (let i = 0; i < targets.length; i++) {
         if (abortRef.current) {

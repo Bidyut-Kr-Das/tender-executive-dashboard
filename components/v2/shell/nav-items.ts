@@ -16,6 +16,7 @@ import {
   Truck,
   UsersRound,
   Wallet,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +42,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/v2/pre-participation", label: "Pre Participation", icon: ClipboardList, v2: true },
       { href: "/v2/post-participation", label: "Post Participation", icon: ClipboardCheck, v2: true },
       { href: "/v2/not-participated", label: "Not Participated", icon: CircleSlash, v2: true },
+      { href: "/v2/ai-analysis", label: "AI Analysis", icon: Workflow, v2: true },
     ],
   },
   {

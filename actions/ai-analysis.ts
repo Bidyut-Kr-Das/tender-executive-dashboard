@@ -6,8 +6,16 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAiFeedbackContext } from "@/lib/ai-feedback";
 import { logActivity, withLog } from "@/lib/activity-logger";
-import { publishAiRelevanceTask } from "@/lib/queue/publisher";
+import {
+  INGESTION_FILE_SELECT,
+  publishAgentIntelligenceTask,
+  publishAiRelevanceTask,
+  publishIngestionTask,
+  publishTenderTask,
+} from "@/lib/queue/publisher";
 import { requireUserAction } from "@/lib/dal";
+import { TENDER_LIFECYCLE_STATUS, type LifecycleStageCount } from "@/lib/tender-lifecycle";
+import { setLifecycleStatus, setRelevanceQueued } from "@/lib/tender-lifecycle-store";
 
 const model = openai("gpt-5-mini");
 
@@ -154,16 +162,122 @@ async function publishAiAnalysisJobFn(params: {
     where: { referenceNo: params.referenceNo },
     select: { subCategory: true, value: true, estimatedBidValue: true },
   });
+  const sent = await publishRelevance({ ...tender, ...params });
+  await setRelevanceQueued(params.referenceNo, sent);
+  return sent;
+}
+
+function publishRelevance(tender: {
+  referenceNo: string;
+  tenderBrief?: string | null;
+  itemCategory?: string | null;
+  subCategory?: string | null;
+  value?: string | null;
+  estimatedBidValue?: string | null;
+}) {
   return publishAiRelevanceTask({
     payloadType: "analysis",
-    referenceNo: params.referenceNo,
+    referenceNo: tender.referenceNo,
     company: "laser",
-    tenderbrief: params.tenderBrief,
-    itemcategory: params.itemCategory,
-    category: toSnakeCase(tender?.subCategory),
-    tenderAmount: parseAmount(tender?.value ?? tender?.estimatedBidValue),
+    tenderbrief: tender.tenderBrief ?? "",
+    itemcategory: tender.itemCategory ?? "",
+    category: toSnakeCase(tender.subCategory),
+    tenderAmount: parseAmount(tender.value ?? tender.estimatedBidValue),
   });
 }
+
+type RequeueStage = LifecycleStageCount["stage"];
+const REQUEUE_STAGES: RequeueStage[] = ["RELEVANCE", "AUTOMATION", "INGESTION", "INTELLIGENCE"];
+// ponytail: one request publishes them one by one; past this many, press again
+// or move the loop to a background job.
+const REQUEUE_LIMIT = 500;
+
+/**
+ * Publishes the failed stage's job again for every tender stuck on it, the same
+ * job the stage before would have published. A tender whose job is sent moves to
+ * that stage's QUEUED; one that still cannot be sent stays FAILED.
+ */
+async function requeueFailedStageFn(stage: RequeueStage) {
+  const user = await requireUserAction();
+  if (user.role !== "developer") throw new Error("Forbidden: developer role required");
+  if (!REQUEUE_STAGES.includes(stage)) throw new Error(`Unknown stage: ${stage}`);
+
+  const tenders = await prisma.tenderMerged.findMany({
+    where: { lifecycleStatus: `${stage}_FAILED` },
+    select: {
+      id: true,
+      referenceNo: true,
+      tenderType: true,
+      tenderBrief: true,
+      itemCategory: true,
+      subCategory: true,
+      value: true,
+      estimatedBidValue: true,
+    },
+    orderBy: { lifecycleUpdatedAt: "asc" },
+    take: REQUEUE_LIMIT,
+  });
+
+  let queued = 0;
+  for (const tender of tenders) {
+    const { id, referenceNo } = tender;
+    let sent = false;
+    if (stage === "RELEVANCE") {
+      sent = await publishRelevance(tender);
+    } else if (stage === "AUTOMATION") {
+      sent = await publishTenderTask(
+        tender.tenderType === "GEM"
+          ? { type: "GEM_DOWNLOAD", tenderId: id, gemId: referenceNo, referenceNo, timestamp: Date.now() }
+          : { type: "NON_GEM_DOWNLOAD", tenderId: id, referenceNo, timestamp: Date.now() },
+      );
+    } else if (stage === "INGESTION") {
+      const files = await prisma.tenderFile.findMany({
+        where: { tenderMergedId: id },
+        select: INGESTION_FILE_SELECT,
+        orderBy: { id: "asc" },
+      });
+      // Nothing to ingest: the download has to be requeued first.
+      sent = files.length > 0 && (await publishIngestionTask({ referenceNo, files }));
+    } else {
+      sent = await publishAgentIntelligenceTask({
+        payloadType: "analysis",
+        referenceNo,
+        company: "laser",
+        tenderbrief: tender.tenderBrief ?? "",
+        itemcategory: tender.itemCategory ?? "",
+      });
+    }
+    if (!sent) continue;
+    await setLifecycleStatus(referenceNo, `${stage}_QUEUED`);
+    queued++;
+  }
+
+  return { stage, queued, notQueued: tenders.length - queued };
+}
+
+export const requeueFailedStage = withLog(requeueFailedStageFn, (result) => ({
+  action: "UPDATE" as const,
+  tableName: "TenderMerged",
+  details: `Requeued failed ${result.stage}: ${result.queued} queued, ${result.notQueued} not queued`,
+}));
+
+// A new batch starts a fresh count: tenders an earlier batch rejected go back to
+// "not started", so the AI analysis page does not show them as rejected again.
+// Their saved verdict (aiRelevanceValid, aiRelevanceReason) is untouched.
+async function startAiAnalysisRunFn(): Promise<number> {
+  await requireUserAction();
+  const { count } = await prisma.tenderMerged.updateMany({
+    where: { lifecycleStatus: TENDER_LIFECYCLE_STATUS.RELEVANCE_REJECTED },
+    data: { lifecycleStatus: null, lifecycleUpdatedAt: null, lifecycleError: null },
+  });
+  return count;
+}
+
+export const startAiAnalysisRun = withLog(startAiAnalysisRunFn, (cleared) => ({
+  action: "UPDATE" as const,
+  tableName: "TenderMerged",
+  details: `AI analysis run started; cleared ${cleared} rejected lifecycle statuses`,
+}));
 
 export const publishAiAnalysisJob = withLog(
   publishAiAnalysisJobFn,
