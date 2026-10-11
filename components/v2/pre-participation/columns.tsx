@@ -1,7 +1,12 @@
 import { isBeforeTodayIST } from "@/lib/format-ist";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
 import { Chips, Clamp } from "@/components/v2/data-table/cells";
-import type { DataTableColumn, FilterOption } from "@/components/v2/data-table/types";
+import {
+  stackColumns,
+  type ColumnStack,
+  type DataTableColumn,
+  type FilterOption,
+} from "@/components/v2/data-table/types";
 import { Badge, Dash } from "@/components/v2/ui/field";
 import {
   PriceCell,
@@ -27,7 +32,6 @@ import {
   ReverseAuctionCell,
   TypeTestCell,
   YesNoBadge,
-  parseCostingItems,
   parseFiles,
   parseTypeTests,
 } from "./cells";
@@ -70,8 +74,10 @@ const NOT_PARTICIPATED_ONLY = new Set([
   "ourValue",
   "nameOfRank1",
   "valueOfRank1",
+  "differenceBetweenRank1",
   "nameOfRank2",
   "valueOfRank2",
+  "differenceBetweenRank2",
   "nextAction",
   "remarks",
 ]);
@@ -82,11 +88,9 @@ const NOT_PARTICIPATED_DROPPED = new Set([
   "claimDate",
   "beneficiaryBankDetails",
   "statusCategory",
-  "apm",
   "catalogueDone",
   "officeName",
   "miiPurchasePreference",
-  "tenderFileUrl",
   "reportings",
   "website",
   "raQualificationRule",
@@ -97,6 +101,62 @@ const NOT_PARTICIPATED_DROPPED = new Set([
 ]);
 
 const POST_DROPPED = new Set([...NOT_PARTICIPATED_DROPPED, "reason"]);
+
+// Related fields shown as one column. A stack only forms from the members the
+// page has, so the list can name fields another scope drops.
+const STACKS: ColumnStack[] = [
+  { header: "Tender References", members: ["referenceNo", "quotationNo", "contractNo"] },
+  { header: "Tender Dates", members: ["deadline", "publishedDate", "assignedDate"] },
+  { header: "Price Basis", members: ["price", "applicableIndex", "rawMaterials"] },
+  { header: "EMD Details", members: ["emd", "emdPaymentMode", "bgNoUtrNo", "documentFees"] },
+  { header: "BG Details", members: ["bgStatus", "bgDate", "bgExpiryDate", "claimDate"] },
+  {
+    header: "Reverse Auction",
+    members: [
+      "reverseAuctionApplicable",
+      "reverseAuctionStartDate",
+      "reverseAuctionEndDate",
+      "expectedRaDate",
+      "raQualificationRule",
+    ],
+  },
+  {
+    header: "Status",
+    members: ["currentStatus", "statusCategory", "tenderUpdateStatus", "nextAction"],
+  },
+  {
+    header: "Eligibility",
+    members: [
+      "minimumAverageAnnualTurnover",
+      "oemAverageTurnover",
+      "yearsOfPastExperience",
+      "pastPerformance",
+    ],
+  },
+  {
+    header: "Exemptions & Preference",
+    members: [
+      "msmeExemption",
+      "startupExemption",
+      "msePurchasePreference",
+      "miiPurchasePreference",
+    ],
+  },
+  { header: "e-PBG", members: ["ePbgPercentage", "ePbgDurationMonths"] },
+  {
+    header: "Bid Terms",
+    members: ["bidOfferValidity", "bidValidityExpired", "contractPeriod", "typeOfBid"],
+  },
+  {
+    header: "Clauses",
+    members: ["mediationClause", "arbitrationClause", "technicalClarificationTimeAllowed"],
+  },
+  { header: "Office & Contact", members: ["officeName", "website", "location"] },
+  { header: "Internal", members: ["assignedTo", "catalogueDone"] },
+  { header: "Our Bid", members: ["ourRank", "ourValue"] },
+  { header: "L1 Details", members: ["nameOfRank1", "valueOfRank1", "differenceBetweenRank1"] },
+  { header: "L2 Details", members: ["nameOfRank2", "valueOfRank2", "differenceBetweenRank2"] },
+];
 
 /** A select filter with no fixed choices lists the values found in the data. */
 export const loadsFilterValues = (column: Column | undefined): boolean =>
@@ -219,16 +279,13 @@ export function buildPreParticipationColumns(
     list("itemSchedules", "Item Schedule", 220, /\n+/),
     {
       id: "proposedErpItemName",
-      header: "Proposed ERP Item Name",
+      header: "Proposed ERP Items",
       width: 300,
       extraFilters: [{ id: ERP_CATEGORY_FILTER, label: "Category", options: ERP_CATEGORIES }],
-      text: (row) =>
-        parseCostingItems(row)
-          .map((c) => c.proposedErpItemName)
-          .join(" | "),
+      // Each item with its quantity, which the cell shows beside the name.
+      text: (row) => parseList(row.proposedErpQuantity, /[\n,;]+/).join(" | "),
       cell: (row) => <ErpItemsCell row={row} />,
     },
-    list("proposedErpQuantity", "Proposed ERP Quantity", 280, /[\n,;]+/),
     {
       id: "typetest",
       header: "Type Test",
@@ -346,15 +403,6 @@ export function buildPreParticipationColumns(
     // Found through the header's text search, like the other long text.
     editable("remarks", "Remarks", 250, { filter: undefined }),
     list("cva", "CVA", 180, /@/),
-    {
-      id: "apm",
-      header: "Mgmt Dec.",
-      width: 110,
-      sortable: false,
-      search: false,
-      cell: (row) =>
-        row.apm === "YES" ? <Badge tone="good">Yes</Badge> : <Clamp>{row.apm ?? ""}</Clamp>,
-    },
     editable("catalogueDone", "Catalogue Done", 130, {
       search: false,
       filter: selectFilter({ value: "YES", label: "Yes" }, { value: "NO", label: "No" }),
@@ -391,14 +439,6 @@ export function buildPreParticipationColumns(
       cell: (row) => <OfficeCell row={row} />,
     },
     editable("miiPurchasePreference", "MII Purchase Preference"),
-    {
-      id: "tenderFileUrl",
-      header: "Tender Document",
-      width: 180,
-      search: false,
-      filter: AVAILABILITY,
-      cell: (row) => <FileLinkCell href={row.tenderFileUrl ?? ""}>Tender document</FileLinkCell>,
-    },
     {
       id: "reportings",
       header: "Reporting Officers",
@@ -451,5 +491,8 @@ export function buildPreParticipationColumns(
         : POST_DROPPED;
   const kept = columns.filter((c) => !left.has(c.id));
   for (const c of kept) if (!c.hidden) shown.add(c.id);
-  return kept;
+  return stackColumns(
+    kept.filter((c) => !c.hidden),
+    STACKS,
+  );
 }

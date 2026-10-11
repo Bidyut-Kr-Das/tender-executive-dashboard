@@ -12,7 +12,7 @@ import {
   toggleParticipationFilter,
 } from "@/lib/slices/filtersSlice";
 import { DataTable } from "@/components/v2/data-table/data-table";
-import type { FilterChip } from "@/components/v2/data-table/types";
+import { leafColumns, type FilterChip } from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
 import { describeError } from "@/components/v2/ui/errors";
 import { Popover, Select } from "@/components/v2/ui/overlay";
@@ -92,7 +92,9 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
 
   const onFilterOpen = useCallback(
     (columnId: string) => {
-      if (loadsFilterValues(columns.find((c) => c.id === columnId))) loadFilterValues(columnId);
+      if (loadsFilterValues(leafColumns(columns).find((c) => c.id === columnId))) {
+        loadFilterValues(columnId);
+      }
     },
     [columns, loadFilterValues],
   );
@@ -166,7 +168,10 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
 
   const handleExport = () => {
     setExporting(true);
-    const visible = columns.filter((c) => !c.hidden && t.columnVisibility[c.id] !== false);
+    // One sheet column per field, stacked or not.
+    const visible = leafColumns(
+      columns.filter((c) => !c.hidden && t.columnVisibility[c.id] !== false),
+    );
     toast.promise(
       exportPreParticipation(query, visible, title).finally(() => setExporting(false)),
       {

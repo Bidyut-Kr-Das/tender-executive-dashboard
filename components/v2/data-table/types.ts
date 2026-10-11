@@ -66,6 +66,58 @@ export interface DataTableColumn<Row> {
   cell?: (row: Row, ctx: CellContext) => ReactNode;
   /** Plain text for the default cell; defaults to `String(row[id])`. */
   text?: (row: Row) => string;
+  /**
+   * Several fields stacked in one column. Each member keeps its own id, cell,
+   * filter and sort; this column supplies the header, width and position only.
+   */
+  members?: DataTableColumn<Row>[];
+}
+
+/** The columns that hold data: a stacked column counts as its members. */
+export const leafColumns = <Row>(columns: DataTableColumn<Row>[]): DataTableColumn<Row>[] =>
+  columns.flatMap((c) => c.members ?? [c]);
+
+/** Every filter id a column's panel writes to. */
+export const filterIds = <Row>(column: DataTableColumn<Row>): string[] =>
+  leafColumns([column]).flatMap((c) => [c.id, ...(c.extraFilters ?? []).map((e) => e.id)]);
+
+export interface ColumnStack {
+  header: string;
+  /** Column ids in the order they stack; the first one present names the column. */
+  members: string[];
+  width?: number;
+}
+
+/**
+ * Folds each stack's columns into one, placed where the first of them stood.
+ * A stack with fewer than two of its columns present is left as it is.
+ */
+export function stackColumns<Row>(
+  columns: DataTableColumn<Row>[],
+  stacks: ColumnStack[],
+): DataTableColumn<Row>[] {
+  const out: DataTableColumn<Row>[] = [];
+  const done = new Set<ColumnStack>();
+  for (const column of columns) {
+    const stack = stacks.find((s) => s.members.includes(column.id));
+    const members = stack
+      ? stack.members.flatMap((id) => columns.filter((c) => c.id === id))
+      : [];
+    if (!stack || members.length < 2) {
+      out.push(column);
+      continue;
+    }
+    if (done.has(stack)) continue;
+    done.add(stack);
+    out.push({
+      id: members[0].id,
+      header: stack.header,
+      width: stack.width ?? Math.max(220, ...members.map((m) => m.width ?? 0)),
+      frozen: members.some((m) => m.frozen) || undefined,
+      members,
+    });
+  }
+  return out;
 }
 
 export interface SortState {

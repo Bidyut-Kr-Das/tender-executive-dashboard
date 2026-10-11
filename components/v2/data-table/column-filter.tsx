@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Search } from "lucide-react";
-import { Button } from "@/components/v2/ui/button";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, Loader2, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button, IconButton } from "@/components/v2/ui/button";
 import { DateRange } from "@/components/v2/ui/calendar";
 import { CheckMark, Choice, Input } from "@/components/v2/ui/field";
 import type {
@@ -12,7 +13,7 @@ import type {
   DataTableProps,
   FilterOption,
 } from "./types";
-import { isFilterActive } from "./types";
+import { filterIds, isFilterActive } from "./types";
 
 type OnChange = (type: ColumnFilterType, value: unknown | undefined) => void;
 
@@ -268,19 +269,20 @@ function ExtraFilter<Row>({
   );
 }
 
-/** Body of a column's filter popover. */
-export function ColumnFilterPanel<Row>({
+type FilterProps<Row> = Pick<
+  DataTableProps<Row>,
+  "filters" | "onFilterChange" | "getFilterOptions" | "onFilterOpen"
+>;
+
+/** One column's controls: its search box, its filter and any extra filters. */
+function FilterBody<Row>({
   column,
+  autoFocus,
   filters,
   onFilterChange,
   getFilterOptions,
   onFilterOpen,
-}: {
-  column: DataTableColumn<Row>;
-} & Pick<
-  DataTableProps<Row>,
-  "filters" | "onFilterChange" | "getFilterOptions" | "onFilterOpen"
->) {
+}: { column: DataTableColumn<Row>; autoFocus?: boolean } & FilterProps<Row>) {
   const state = filters[column.id];
   const onChange: OnChange = (type, value) => onFilterChange(column.id, type, value);
   const filter = column.filter;
@@ -298,33 +300,12 @@ export function ColumnFilterPanel<Row>({
   }, [column.id]);
 
   const searchBox = column.search !== false && !(filter?.type === "select" && filter.searchAsText);
-  const anyActive =
-    isFilterActive(state) || (column.extraFilters ?? []).some((e) => isFilterActive(filters[e.id]));
-
-  const clearAll = () => {
-    for (const id of [column.id, ...(column.extraFilters ?? []).map((e) => e.id)]) {
-      const s = filters[id];
-      if (!s) continue;
-      for (const key of Object.keys(s) as ColumnFilterType[]) {
-        if (s[key] !== undefined) onFilterChange(id, key, undefined);
-      }
-    }
-  };
 
   return (
-    <div className="flex w-72 flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <h3 className="min-w-0 flex-1 truncate font-semibold">{column.header}</h3>
-        {anyActive && (
-          <Button size="sm" variant="ghost" onClick={clearAll}>
-            Clear
-          </Button>
-        )}
-      </div>
-
+    <>
       {searchBox && (
         <DebouncedInput
-          autoFocus
+          autoFocus={autoFocus}
           label={`Search ${column.header}`}
           value={state?.text ?? ""}
           placeholder="Contains"
@@ -360,6 +341,122 @@ export function ColumnFilterPanel<Row>({
           getFilterOptions={getFilterOptions}
         />
       ))}
+    </>
+  );
+}
+
+/** One field of a stacked column: its sort, and its filter once opened. */
+function MemberSection<Row>({
+  member,
+  sortDirection,
+  onSort,
+  ...shared
+}: {
+  member: DataTableColumn<Row>;
+  sortDirection: "asc" | "desc" | null;
+  onSort: (columnId: string) => void;
+} & FilterProps<Row>) {
+  const active = filterIds(member).some((id) => isFilterActive(shared.filters[id]));
+  const hasFilter = member.search !== false || !!member.filter;
+  // Closed until asked for, so a panel of four fields stays short and only the
+  // opened field's values are fetched.
+  const [open, setOpen] = useState(active);
+
+  return (
+    <section className="flex flex-col gap-2 border-t pt-2">
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          aria-expanded={open}
+          disabled={!hasFilter}
+          onClick={() => setOpen(!open)}
+          className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+        >
+          <ChevronRight
+            className={cn(
+              "size-3.5 shrink-0 text-ink-3 transition-transform",
+              open && "rotate-90",
+              !hasFilter && "invisible",
+            )}
+            aria-hidden
+          />
+          <span className="type-label min-w-0 truncate text-ink-3">{member.header}</span>
+          {active && <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden />}
+        </button>
+        {member.sortable !== false && (
+          <IconButton
+            size="sm"
+            label={`Sort by ${member.header}`}
+            className={cn(sortDirection && "bg-accent-soft text-accent")}
+            onClick={() => onSort(member.id)}
+          >
+            {sortDirection === "asc" ? (
+              <ArrowUp className="size-3.5" />
+            ) : sortDirection === "desc" ? (
+              <ArrowDown className="size-3.5" />
+            ) : (
+              <ArrowUpDown className="size-3.5" />
+            )}
+          </IconButton>
+        )}
+      </div>
+      {open && hasFilter && <FilterBody column={member} {...shared} />}
+    </section>
+  );
+}
+
+/** Body of a column's filter popover. */
+export function ColumnFilterPanel<Row>({
+  column,
+  sortedId,
+  sortDirection,
+  onSort,
+  ...shared
+}: {
+  column: DataTableColumn<Row>;
+  /** The member the table is sorted by, when it is one of this column's. */
+  sortedId: string | null;
+  sortDirection: "asc" | "desc" | null;
+  onSort: (columnId: string) => void;
+} & FilterProps<Row>) {
+  const { filters, onFilterChange } = shared;
+  const ids = filterIds(column);
+  const anyActive = ids.some((id) => isFilterActive(filters[id]));
+
+  const clearAll = () => {
+    for (const id of ids) {
+      const s = filters[id];
+      if (!s) continue;
+      for (const key of Object.keys(s) as ColumnFilterType[]) {
+        if (s[key] !== undefined) onFilterChange(id, key, undefined);
+      }
+    }
+  };
+
+  return (
+    <div className="flex w-72 flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <h3 className="min-w-0 flex-1 truncate font-semibold">{column.header}</h3>
+        {anyActive && (
+          <Button size="sm" variant="ghost" onClick={clearAll}>
+            Clear
+          </Button>
+        )}
+      </div>
+
+      {column.members ? (
+        column.members.map((member) => (
+          <MemberSection
+            key={member.id}
+            member={member}
+            sortDirection={sortedId === member.id ? sortDirection : null}
+            onSort={onSort}
+            {...shared}
+          />
+        ))
+      ) : (
+        <FilterBody column={column} autoFocus {...shared} />
+      )}
     </div>
   );
 }

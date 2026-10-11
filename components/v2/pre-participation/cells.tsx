@@ -518,6 +518,7 @@ export function ReverseAuctionCell({ row }: { row: Row }) {
 interface CostingItem {
   id: number;
   proposedErpItemName: string | null;
+  proposedErpQuantity?: string | null;
   bomType?: string | null;
   bomCode?: string | null;
 }
@@ -587,7 +588,14 @@ function ErpItem({ item }: { item: CostingItem }) {
 
   return (
     <div className="flex shrink-0 flex-col gap-1.5 rounded-lg bg-sunken px-2 py-1.5">
-      <span className="text-xs font-medium wrap-break-word">{name}</span>
+      <div className="flex items-baseline gap-2 text-xs font-medium">
+        <span className="min-w-0 flex-1 wrap-break-word">{name}</span>
+        {item.proposedErpQuantity?.trim() && (
+          <span className="shrink-0 tabular-nums text-ink-2" title="Proposed ERP quantity">
+            {item.proposedErpQuantity.trim()}
+          </span>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-1.5">
         <Select
           size="sm"

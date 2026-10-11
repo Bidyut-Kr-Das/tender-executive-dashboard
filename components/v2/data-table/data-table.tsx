@@ -31,8 +31,10 @@ import { EmptyState } from "@/components/v2/ui/page";
 import { Clamp } from "./cells";
 import { ColumnFilterPanel, summarizeFilter } from "./column-filter";
 import {
+  filterIds,
   groupRows,
   isFilterActive,
+  leafColumns,
   type ColumnFilterType,
   type DataTableColumn,
   type DataTableProps,
@@ -50,6 +52,7 @@ function HeaderCellInner<Row>({
   width,
   left,
   isLastFrozen,
+  sortedId,
   sortDirection,
   onSort,
   onResize,
@@ -63,6 +66,8 @@ function HeaderCellInner<Row>({
   width: number;
   left: number | null;
   isLastFrozen: boolean;
+  /** The column sorted by: this one, or one of its members. */
+  sortedId: string | null;
   sortDirection: "asc" | "desc" | null;
   /** Take the column id, so one function serves every header and stays the same between renders. */
   onSort: (columnId: string) => void;
@@ -72,8 +77,17 @@ function HeaderCellInner<Row>({
   DataTableProps<Row>,
   "filters" | "onFilterChange" | "getFilterOptions" | "onFilterOpen"
 >) {
-  const sortable = column.sortable !== false;
-  const hasFilter = column.search !== false || !!column.filter;
+  const members = column.members;
+  // A stacked column's header re-sorts the member already sorted by, else its
+  // first sortable one; the filter panel picks any other.
+  const sortTarget = members
+    ? (sortedId ?? members.find((m) => m.sortable !== false)?.id)
+    : column.sortable !== false
+      ? column.id
+      : undefined;
+  const hasFilter = !!members || column.search !== false || !!column.filter;
+  const sortedMember = members?.find((m) => m.id === sortedId);
+  const badges = sortedMember ? [`by ${sortedMember.header}`] : column.badges;
 
   // Pointer capture keeps the drag alive when the cursor leaves the handle.
   const onHandleDown = (e: React.PointerEvent<HTMLSpanElement>) => {
@@ -119,17 +133,17 @@ function HeaderCellInner<Row>({
       <div className="flex h-10 items-center gap-0.5 pl-3 pr-1.5">
         <button
           type="button"
-          disabled={!sortable}
-          onClick={() => onSort(column.id)}
+          disabled={!sortTarget}
+          onClick={() => sortTarget && onSort(sortTarget)}
           className="flex min-w-0 flex-1 items-center gap-1 text-left text-xs text-ink-2 disabled:cursor-default"
         >
           <span className="flex min-w-0 flex-col">
             <span className="truncate" title={column.header}>
               {column.header}
             </span>
-            {column.badges && column.badges.length > 0 && (
+            {badges && badges.length > 0 && (
               <span className="truncate text-3xs font-normal leading-tight text-ink-3">
-                {column.badges.join(" · ")}
+                {badges.join(" · ")}
               </span>
             )}
           </span>
@@ -154,6 +168,9 @@ function HeaderCellInner<Row>({
           >
             <ColumnFilterPanel
               column={column}
+              sortedId={sortedId}
+              sortDirection={sortDirection}
+              onSort={onSort}
               filters={filters}
               onFilterChange={onFilterChange}
               getFilterOptions={getFilterOptions}
@@ -211,16 +228,17 @@ function RowInner<Row>({
                 "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
             )}
           >
-            {column.cell ? (
-              column.cell(row, { rowIndex })
+            {column.members ? (
+              <dl className="flex flex-col gap-2">
+                {column.members.map((member) => (
+                  <div key={member.id} className="min-w-0">
+                    <dt className="text-3xs leading-tight text-ink-3">{member.header}</dt>
+                    <dd>{cellContent(member, row, rowIndex)}</dd>
+                  </div>
+                ))}
+              </dl>
             ) : (
-              <DefaultCell
-                text={
-                  column.text
-                    ? column.text(row)
-                    : String((row as Record<string, unknown>)[column.id] ?? "")
-                }
-              />
+              cellContent(column, row, rowIndex)
             )}
           </td>
         ),
@@ -230,6 +248,17 @@ function RowInner<Row>({
 }
 
 const RowView = memo(RowInner) as typeof RowInner;
+
+function cellContent<Row>(column: DataTableColumn<Row>, row: Row, rowIndex: number) {
+  if (column.cell) return column.cell(row, { rowIndex });
+  return (
+    <DefaultCell
+      text={
+        column.text ? column.text(row) : String((row as Record<string, unknown>)[column.id] ?? "")
+      }
+    />
+  );
+}
 
 /** Long text is capped at three lines and scrolls inside the cell, scrollbar hidden. */
 function DefaultCell({ text }: { text: string }) {
@@ -586,7 +615,7 @@ export function DataTable<Row>({
 
   const chips = useMemo(() => {
     const out: FilterChip[] = [...extraChips];
-    for (const c of columns) {
+    for (const c of leafColumns(columns)) {
       if (isFilterActive(filters[c.id])) {
         out.push({
           key: c.id,
@@ -668,26 +697,28 @@ export function DataTable<Row>({
             </colgroup>
             <thead>
               <tr>
-                {placed.map(({ column, left, isLastFrozen }) => (
-                  <HeaderCell
-                    key={column.id}
-                    column={column}
-                    width={widthOf(column)}
-                    left={left}
-                    isLastFrozen={isLastFrozen}
-                    sortDirection={sort?.column === column.id ? sort.direction : null}
-                    onSort={handleSort}
-                    onResize={handleResize}
-                    active={
-                      isFilterActive(filters[column.id]) ||
-                      (column.extraFilters ?? []).some((e) => isFilterActive(filters[e.id]))
-                    }
-                    filters={filters}
-                    onFilterChange={onFilterChange}
-                    getFilterOptions={getFilterOptions}
-                    onFilterOpen={onFilterOpen}
-                  />
-                ))}
+                {placed.map(({ column, left, isLastFrozen }) => {
+                  const sorted =
+                    sort && leafColumns([column]).some((c) => c.id === sort.column) ? sort : null;
+                  return (
+                    <HeaderCell
+                      key={column.id}
+                      column={column}
+                      width={widthOf(column)}
+                      left={left}
+                      isLastFrozen={isLastFrozen}
+                      sortedId={sorted?.column ?? null}
+                      sortDirection={sorted?.direction ?? null}
+                      onSort={handleSort}
+                      onResize={handleResize}
+                      active={filterIds(column).some((id) => isFilterActive(filters[id]))}
+                      filters={filters}
+                      onFilterChange={onFilterChange}
+                      getFilterOptions={getFilterOptions}
+                      onFilterOpen={onFilterOpen}
+                    />
+                  );
+                })}
               </tr>
             </thead>
             <Body
