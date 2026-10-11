@@ -41,6 +41,7 @@ import {
 } from "@/lib/slices/uploadSlice";
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { DateRange } from "@/components/v2/ui/calendar";
+import { describeError } from "@/components/v2/ui/errors";
 import { Checkbox, Field } from "@/components/v2/ui/field";
 import { Dialog, Menu, MenuItem, MenuSeparator, Popover, Select } from "@/components/v2/ui/overlay";
 
@@ -293,9 +294,7 @@ export function AiAnalysisButton({ query, total }: { query: TenderQuery; total: 
       else if (failed === 0) toast.success(`${queued} tender(s) queued for AI analysis`, { id: toastId });
       else toast.warning(`${queued} queued, ${failed} failed`, { id: toastId });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "AI analysis could not start", {
-        id: toastId,
-      });
+      toast.error(`AI analysis not started: ${await describeError(err)}`, { id: toastId });
     } finally {
       setProgress(null);
     }

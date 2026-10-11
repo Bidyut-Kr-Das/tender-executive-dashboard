@@ -154,6 +154,7 @@ Defined with `@utility` in `v2.css`. Their names are deliberately not Tailwind p
 | `card` | `hairline` plus a soft drop |
 | `type-display`, `type-stat`, `type-title`, `type-label` | Type roles, see Typography |
 | `no-scrollbar` | Hides the scrollbar of a scroller |
+| `thumb-scrollbar` | Scrollbar reduced to a 6px thumb, for small scrollers such as table cells |
 | `.pop`, `.dlg`, `.scrim`, `.glass` | Overlay surfaces and their enter/exit motion; used inside `ui/overlay.tsx` |
 
 **Stacking.** Use the names, as `z-(--z-popup)`. A plain `z-10` is fine only inside an element that already makes its own stacking context.
@@ -282,7 +283,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 - **Header:** one row, 40px tall. Label (with optional small provenance text under it), sort arrow, filter button. Clicking the label sorts descending, then ascending. The filter button is tinted when that column has an active filter.
 - **Filter popover:** a "Contains" search box, then the column's typed control: multi-select list (options fetched when the popover opens), date range with optional presets, yes/no, or a custom control supplied by the column. "Clear" removes that column's filters.
 - **Filter bar:** every active filter is a chip above the table, including filters that live outside the columns, passed in as `extraChips`. A filter the user cannot remove is shown as a chip without a remove button. Nothing narrows the list invisibly.
-- **Cells:** text is capped at three lines by `Clamp`. Longer text scrolls inside the cell with the scrollbar hidden. A cell is a live scroller only while hovered, always on touch screens; a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
+- **Cells:** text is capped at three lines by `Clamp`. Longer text scrolls inside the cell; a bare scroll thumb (`thumb-scrollbar`: no arrow buttons, no track) shows while the cell is hovered, in a gutter that is always reserved so text does not rewrap. A cell is a live scroller only while hovered, always on touch screens; a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
 - **Pinned columns:** sticky to the left, capped at half the table's width (`MAX_FROZEN_SHARE`); beyond that the rightmost pinned columns scroll with the rest.
 - **Rows** are virtualised, so a 500-row page scrolls smoothly.
 - **Row groups:** pass `groupBy` and consecutive rows with the same key form one group. A column marked `spanGroup` draws one cell for the whole group, from its first row (the docket number on the participation pages). Groups are the unit of virtualisation, so a spanning cell is never cut from its rows. The table still knows nothing about what the key means.
@@ -334,7 +335,7 @@ Written out by hand where they occur, because each has fewer than three uses or 
 - **Status:** progress bar while a page loads; "n matching" beside the title updates live.
 - **Completion:** a success toast naming what changed ("APM set to YES", "Website saved").
 - **Warning:** before a bulk action, a dialog states how many rows it affects.
-- **Error:** a toast with the server's message; the control returns to its previous value.
+- **Error:** a toast with the server's message; the control returns to its previous value. Always go through `toastError` / `describeError` (`ui/errors.ts`), never `err.message`: they turn "signed out", "page out of date after a deploy" and "no connection" into what the user should do next.
 
 Long-running work (export, bulk AI analysis) reports progress and, where it can be interrupted, turns its button into a Stop control.
 

@@ -136,7 +136,7 @@ export function buildPreParticipationColumns(associations: TenderPageAssociation
       filter: selectFilter(),
       cell: (row) =>
         row.referenceNo ? (
-          <span className="break-all font-mono text-xs tabular-nums">{row.referenceNo}</span>
+          <Clamp className="break-all font-mono text-xs tabular-nums">{row.referenceNo}</Clamp>
         ) : (
           <Dash />
         ),

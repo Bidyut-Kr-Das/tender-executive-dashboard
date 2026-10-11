@@ -12,6 +12,7 @@ import { DatePicker } from "@/components/v2/ui/calendar";
 import { CellAction, Clamp } from "@/components/v2/data-table/cells";
 import { Badge, Dash, Field, Input, Textarea } from "@/components/v2/ui/field";
 import { Dialog, Popover, Select } from "@/components/v2/ui/overlay";
+import { toastError } from "@/components/v2/ui/errors";
 import {
   FILE_AUTH,
   FileRow,
@@ -21,9 +22,6 @@ import {
 } from "@/components/v2/tenders/cells";
 import { useTenderCellContext } from "@/components/v2/tenders/use-tenders";
 import { FIELDS, fieldValue, type FieldDef, type Row } from "./fields";
-
-const errorText = (err: unknown) =>
-  typeof err === "string" ? err : err instanceof Error ? err.message : "Unknown error";
 
 const withAuth = (path: string) => `${path}?auth=${encodeURIComponent(FILE_AUTH)}`;
 
@@ -63,7 +61,7 @@ function useFieldSave(field: FieldDef, row: Row) {
         return true;
       })
       .catch((err: unknown) => {
-        toast.error(`${field.label} not saved: ${errorText(err)}`);
+        toastError(`${field.label} not saved`, err);
         return false;
       })
       .finally(() => setPending(false));
@@ -121,7 +119,7 @@ function TextEditor({ field, row, form }: EditorProps) {
     <Control
       aria-label={field.label}
       autoFocus={!form}
-      rows={3}
+      rows={form ? 3 : 2}
       disabled={pending}
       value={draft}
       onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -527,7 +525,7 @@ function ErpItem({ item }: { item: CostingItem }) {
         setBom(next);
         toast.success(`${label} updated`);
       })
-      .catch((err: unknown) => toast.error(`${label} not saved: ${errorText(err)}`))
+      .catch((err: unknown) => toastError(`${label} not saved`, err))
       .finally(() => setPending(false));
   };
 
@@ -592,11 +590,11 @@ export function ErpItemsCell({ row }: { row: Row }) {
   const items = parseCostingItems(row);
   if (items.length === 0) return <Dash />;
   return (
-    <div className="flex flex-col gap-1.5">
+    <Clamp lines={4} className="flex flex-col gap-1.5">
       {items.map((item) => (
         <ErpItem key={item.id} item={item} />
       ))}
-    </div>
+    </Clamp>
   );
 }
 
@@ -633,7 +631,7 @@ export function OfficeCell({ row }: { row: Row }) {
       if (writes.length > 0) toast.success("Office details updated");
       setOpen(false);
     } catch (err) {
-      toast.error(`Office details not saved: ${errorText(err)}`);
+      toastError("Office details not saved", err);
     } finally {
       setSaving(false);
     }

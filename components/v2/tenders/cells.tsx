@@ -32,6 +32,7 @@ import {
   uploadTenderDocument,
 } from "@/lib/slices/tendersSlice";
 import { Button, IconButton } from "@/components/v2/ui/button";
+import { toastError } from "@/components/v2/ui/errors";
 import { CellAction, Chips, Clamp } from "@/components/v2/data-table/cells";
 import { Badge, Choice, Dash, Field, Input, Textarea, type Tone } from "@/components/v2/ui/field";
 import { Dialog, Select } from "@/components/v2/ui/overlay";
@@ -103,7 +104,7 @@ export function DecisionCell({
           notify(`${result.referenceNo ?? ""}: ${result.webhookResponse.message}`);
         }
       })
-      .catch((err: Error) => toast.error(`${label} not saved: ${err.message}`))
+      .catch((err: unknown) => toastError(`${label} not saved`, err))
       .finally(() => setPending(null));
   };
 
@@ -180,7 +181,7 @@ export function AiRelevanceCell({ row }: { row: Row }) {
         setOpen(false);
         setReason("");
       })
-      .catch((err: Error) => toast.error(`Feedback not sent: ${err.message}`))
+      .catch((err: unknown) => toastError("Feedback not sent", err))
       .finally(() => setSaving(false));
   };
 
@@ -311,7 +312,7 @@ export function AssigneeCell({ row, rowIndex }: { row: Row; rowIndex: number }) 
             // The slice cannot patch this row from an id list, so refetch.
             reload();
           })
-          .catch((err: Error) => toast.error(`Not assigned: ${err.message}`))
+          .catch((err: unknown) => toastError("Not assigned", err))
           .finally(() => setSaving(false));
       }}
     />
@@ -351,7 +352,7 @@ export function ReasonNotApmCell({ row }: { row: Row }) {
         )
           .unwrap()
           .then(() => toast.success(next ? "Reason updated" : "Reason cleared"))
-          .catch((err: Error) => toast.error(err?.message || "Reason not saved"))
+          .catch((err: unknown) => toastError("Reason not saved", err))
           .finally(() => setSaving(false));
       }}
     />
@@ -393,7 +394,7 @@ export function PriceCell({ row }: { row: Row }) {
         )
           .unwrap()
           .then(() => toast.success("Price updated"))
-          .catch((err: Error) => toast.error(err?.message || "Price not saved"))
+          .catch((err: unknown) => toastError("Price not saved", err))
           .finally(() => setSaving(false));
       }}
     />
@@ -426,7 +427,7 @@ export function RemarksCell({ row }: { row: Row }) {
     )
       .unwrap()
       .then(() => toast.success("Remarks updated"))
-      .catch((err: Error) => toast.error(err.message || "Remarks not saved"))
+      .catch((err: unknown) => toastError("Remarks not saved", err))
       .finally(() => setSaving(false));
   };
 
@@ -526,9 +527,9 @@ export function WebsiteCell({ row }: { row: Row }) {
               );
             }
           })
-          .catch((err: Error) => toast.error(`Bulk update failed: ${err.message}`));
+          .catch((err: unknown) => toastError("Bulk update failed", err));
       })
-      .catch((err: Error) => toast.error(`Website not saved: ${err.message}`))
+      .catch((err: unknown) => toastError("Website not saved", err))
       .finally(() => setSaving(false));
   };
 
@@ -715,7 +716,7 @@ function UploadDocumentDialog({ row, onClose }: { row: Row; onClose: () => void 
         onClose();
         reload();
       })
-      .catch((err: Error) => toast.error(`Upload failed: ${err.message}`))
+      .catch((err: unknown) => toastError("Upload failed", err))
       .finally(() => setSaving(false));
   };
 

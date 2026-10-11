@@ -23,6 +23,7 @@ import {
   useSidebarCollapsed,
 } from "@/components/v2/providers";
 import { Button, IconButton } from "@/components/v2/ui/button";
+import { toastError } from "@/components/v2/ui/errors";
 import { Field, Input } from "@/components/v2/ui/field";
 import {
   Dialog,
@@ -105,7 +106,7 @@ function ChangePasswordDialog({
       setNewPassword("");
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not change password");
+      toastError("Password not changed", err);
     } finally {
       setSaving(false);
     }

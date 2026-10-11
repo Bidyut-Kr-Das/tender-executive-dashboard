@@ -13,6 +13,7 @@ import {
 import { DataTable } from "@/components/v2/data-table/data-table";
 import { isFilterActive, type FilterChip } from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
+import { describeError } from "@/components/v2/ui/errors";
 import { Page, PageHeader, Pill, Skeleton, StatTile } from "@/components/v2/ui/page";
 import { buildTenderColumns } from "./columns";
 import type { Row } from "./cells";
@@ -145,7 +146,7 @@ export function TendersView() {
       {
         loading: "Preparing Excel export...",
         success: (count) => `Exported ${count.toLocaleString("en-IN")} tenders`,
-        error: (err) => (err instanceof Error ? err.message : "Export failed"),
+        error: async (err) => `Export failed: ${await describeError(err)}`,
       },
     );
   };

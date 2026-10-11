@@ -319,6 +319,27 @@
   }
 }
 
+/* A bare thumb: no arrow buttons, no track. For scrollers too small for a full scrollbar. */
+@utility thumb-scrollbar {
+  scrollbar-gutter: stable;
+  /* Chrome ignores the ::-webkit-scrollbar rules while an inherited scrollbar-color is set. */
+  scrollbar-color: auto;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background-color: var(--ink-3);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pop[data-starting-style],
   .pop[data-ending-style],

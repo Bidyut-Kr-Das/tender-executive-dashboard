@@ -13,6 +13,7 @@ import {
 import { DataTable } from "@/components/v2/data-table/data-table";
 import type { FilterChip } from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
+import { describeError } from "@/components/v2/ui/errors";
 import { Popover, Select } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, Pill, Skeleton } from "@/components/v2/ui/page";
 import { ANALYTICS } from "@/components/v2/tenders/tenders-view";
@@ -158,7 +159,7 @@ export function PreParticipationView() {
       {
         loading: "Preparing Excel export...",
         success: (count) => `Exported ${count.toLocaleString("en-IN")} tenders`,
-        error: (err) => (err instanceof Error ? err.message : "Export failed"),
+        error: async (err) => `Export failed: ${await describeError(err)}`,
       },
     );
   };

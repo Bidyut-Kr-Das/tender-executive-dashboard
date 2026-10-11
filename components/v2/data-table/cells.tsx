@@ -9,7 +9,11 @@ import { Dash } from "@/components/v2/ui/field";
 
 const LINES = { 2: "max-h-[2lh]", 3: "max-h-[3lh]", 4: "max-h-[4lh]" } as const;
 
-/** Content capped at a few lines; the rest scrolls inside the cell, scrollbar hidden. */
+/**
+ * Content capped at a few lines; the rest scrolls inside the cell. A bare
+ * scroll thumb shows only while hovered; its gutter is always reserved so the
+ * text does not rewrap when it appears.
+ */
 export function Clamp({
   children,
   lines = 3,
@@ -25,7 +29,7 @@ export function Clamp({
     <div
       title={title}
       className={cn(
-        "no-scrollbar overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word",
+        "thumb-scrollbar overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word",
         LINES[lines],
         className,
       )}
