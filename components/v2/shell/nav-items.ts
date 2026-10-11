@@ -47,9 +47,9 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Operations",
     items: [
       { href: "/supply-history", label: "Supply History", icon: Truck },
-      { href: "/railways", label: "Railways", icon: TrainFront },
-      { href: "/items", label: "Master Item List", icon: Package },
-      { href: "/performance-certificates", label: "Performance Certificates", icon: Award },
+      { href: "/v2/railways", label: "Railways", icon: TrainFront, v2: true },
+      { href: "/v2/items", label: "Master Item List", icon: Package, v2: true },
+      { href: "/v2/performance-certificates", label: "Performance Certificates", icon: Award, v2: true },
       { href: "/emd", label: "EMD Merged", icon: Wallet },
     ],
   },
