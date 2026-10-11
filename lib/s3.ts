@@ -30,7 +30,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
  */
 
 const REGION = process.env.AWS_REGION ?? "us-east-1";
-const BUCKET = process.env.S3_BUCKET_NAME ?? "";
+export const BUCKET = process.env.S3_BUCKET_NAME ?? "";
 const ENDPOINT = process.env.S3_ENDPOINT?.replace(/\/+$/, "") || undefined;
 // MinIO/self-hosted buckets usually enforce public access via a bucket policy
 // (mc anonymous set download), not canned ACLs — so only send an ACL for AWS
@@ -41,7 +41,7 @@ const ACL = (process.env.S3_ACL ?? (ENDPOINT ? undefined : "public-read")) as
 
 let client: S3Client | null = null;
 
-function getS3Client(): S3Client {
+export function getS3Client(): S3Client {
   if (!client) {
     if (!BUCKET) throw new Error("S3_BUCKET_NAME is not set");
     client = new S3Client({

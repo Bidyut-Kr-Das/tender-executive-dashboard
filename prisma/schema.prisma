@@ -1133,6 +1133,10 @@ model PerformanceCertificate {
 
   certificateName String?
   certificateUrl  String?
+  partyName       String?
+  utilityOrClient String?
+  itemSchedule    String?
+  useNotUse       String?
 
   @@map("performance_certificates")
 }

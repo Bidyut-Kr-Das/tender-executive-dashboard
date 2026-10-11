@@ -16,6 +16,8 @@ interface MultiSelectProps {
   title?: string;
   placeholder?: string;
   showCount?: boolean;
+  /** When true, the trigger shows the selected option labels instead of a count. */
+  showSelectedLabels?: boolean;
   searchable?: boolean;
   searchPlaceholder?: string;
   emptyText?: string;
@@ -38,6 +40,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   title = "Select",
   placeholder = "All",
   showCount = true,
+  showSelectedLabels = false,
   searchable = false,
   searchPlaceholder = "Search...",
   emptyText = "No items found.",
@@ -143,10 +146,14 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     if (!o) setSearch("");
   }, []);
 
-  const triggerLabel =
-    showCount && selected.length > 0
-      ? `${selected.length} selected`
-      : placeholder;
+  const triggerLabel = useMemo(() => {
+    if (selected.length === 0) return placeholder;
+    if (showSelectedLabels) {
+      const labelByValue = new Map(options.map((o) => [o.value, o.label]));
+      return selected.map((v) => labelByValue.get(v) ?? v).join(", ");
+    }
+    return showCount ? `${selected.length} selected` : placeholder;
+  }, [selected, showSelectedLabels, showCount, options, placeholder]);
 
   return (
     <div
