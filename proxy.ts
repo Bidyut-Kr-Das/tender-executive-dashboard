@@ -10,6 +10,10 @@ export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
   const isAuthRoute = path.startsWith("/auth")
 
+  if (path === "/") {
+    return NextResponse.redirect(new URL("/v2/tenders", req.url))
+  }
+
   if (path.startsWith("/api/")) {
     // Auth endpoints (signup, signin, session, etc.) are public
     if (path.startsWith("/api/auth")) {
