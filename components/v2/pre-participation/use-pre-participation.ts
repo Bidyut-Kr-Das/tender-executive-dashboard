@@ -69,8 +69,9 @@ export function usePreParticipation(scope: ParticipationScope) {
   }, []);
 
   // The route's scope owns the deadline rule, so the tenders default is off.
+  // Rows of one docket are one tender, so status and costing read docket-wide.
   const query = useAppSelector(
-    (s): TenderQuery => selectTenderQuery(s, scope, false),
+    (s): TenderQuery => ({ ...selectTenderQuery(s, scope, false), docketRollup: true }),
     (a, b) => tenderQueryKey(a) === tenderQueryKey(b),
   );
   const queryKey = useMemo(() => tenderQueryKey(query), [query]);

@@ -118,6 +118,7 @@ export function tenderQueryKey(query: TenderQuery): string {
   return JSON.stringify({
     scope: query.scope,
     groupByDocket: query.groupByDocket,
+    docketRollup: query.docketRollup,
     erpItemCategory: query.erpItemCategory,
     priceBasis: query.priceBasis,
     columnFilters: Object.keys(query.columnFilters)

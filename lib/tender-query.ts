@@ -60,6 +60,11 @@ export interface TenderQuery {
    * rowSpan'd docketNo cell per group, so the page unit has to be the group.
    */
   groupByDocket: boolean;
+  /**
+   * Read status and costing fields at docket level: a row with a blank value
+   * takes it from a sibling row of the same docket. See tenderSourceSql.
+   */
+  docketRollup?: boolean;
   /** One of the five hardcoded proposedErpItemName rule sets, or null. */
   erpItemCategory: string | null;
   /** "Firm" / "Variable" from the sidebar; null or "All" means no filter. */
@@ -133,7 +138,66 @@ const DATETIME_COLUMNS: ReadonlySet<string> = new Set([
  * A blank docketNo is its own group, so every count using this expression
  * agrees with countUniqueDockets and with TenderTable's getDocketGroupKey.
  */
-export const DOCKET_KEY_SQL = Prisma.sql`coalesce(nullif(upper(btrim(t."docketNo")), ''), '__row_' || t."id"::text)`;
+function docketKeySql(alias: "t" | "m"): Prisma.Sql {
+  const a = Prisma.raw(alias);
+  return Prisma.sql`coalesce(nullif(upper(btrim(${a}."docketNo")), ''), '__row_' || ${a}."id"::text)`;
+}
+
+export const DOCKET_KEY_SQL = docketKeySql("t");
+
+/**
+ * Fields that describe the docket, not the reference number. Rows of one
+ * docket are the same tender, so a blank here is filled from a sibling.
+ */
+const DOCKET_FILL: Record<string, "bool" | "date" | "text" | "status"> = {
+  participated: "bool",
+  reverseAuctionApplicable: "bool",
+  reverseAuctionStartDate: "date",
+  reverseAuctionEndDate: "date",
+  expectedRaDate: "text",
+  raQualificationRule: "text",
+  currentStatus: "status",
+  ourRank: "text",
+  contractNo: "text",
+  loiPoNoAndDate: "text",
+};
+
+function docketFillSql(name: string): Prisma.Sql {
+  const c = Prisma.raw(`m."${name}"`);
+  const kind = DOCKET_FILL[name];
+  if (!kind) return c;
+  if (kind === "bool") return Prisma.sql`coalesce(${c}, bool_or(${c}) OVER w)`;
+  if (kind === "date") return Prisma.sql`coalesce(${c}, max(${c}) OVER w)`;
+  // NOT EVALUATED is the column default, so it says nothing about the docket.
+  const blank =
+    kind === "status" ? Prisma.sql`('', 'NOT EVALUATED')` : Prisma.sql`('')`;
+  const real = Prisma.sql`CASE WHEN upper(btrim(coalesce(${c}, ''))) IN ${blank} THEN NULL ELSE ${c} END`;
+  return Prisma.sql`coalesce(${real}, max(${real}) OVER w, ${c})`;
+}
+
+/**
+ * The FROM item every tender query reads, aliased `t`.
+ *
+ * Plain: tender_merged as stored. With docketRollup: each DOCKET_FILL column
+ * keeps the row's own value and falls back to a sibling's when blank, so two
+ * rows of one docket stop answering a status filter differently. A real
+ * conflict (one row yes, one row no) is left as stored.
+ *
+ * "docketIds" is every row id of the docket, for the costing lookups.
+ *
+ * ponytail: when a blank row has siblings that disagree, bool_or / max picks
+ * (yes, latest date, alphabetical text). And this windows the whole table on
+ * every query; index docketNo or materialise it if the pages get slow.
+ */
+export function tenderSourceSql(q: Pick<TenderQuery, "docketRollup">): Prisma.Sql {
+  if (!q.docketRollup) {
+    return Prisma.sql`(SELECT m.*, ARRAY[m."id"] AS "docketIds" FROM "tender_merged" m) t`;
+  }
+  const columns = [...TENDER_COLUMNS].map(
+    (name) => Prisma.sql`${docketFillSql(name)} AS ${Prisma.raw(`"${name}"`)}`,
+  );
+  return Prisma.sql`(SELECT ${Prisma.join(columns, ", ")}, array_agg(m."id") OVER w AS "docketIds" FROM "tender_merged" m WINDOW w AS (PARTITION BY ${docketKeySql("m")})) t`;
+}
 
 /** Quoted column reference. Never call with unvalidated input. */
 function col(name: string): Prisma.Sql {
@@ -153,7 +217,7 @@ function taggedFileUrlSql(tag: string): Prisma.Sql {
 }
 
 /** costingFileUrl rewrites non-sheet sources to an internal viewer link. */
-const COSTING_FILE_URL_SQL = Prisma.sql`coalesce((SELECT CASE WHEN tf."source" IS NOT NULL AND tf."source" <> 'SHEET_SYNC' THEN '/api/executive-files/view/' || tf."source" ELSE tf."url" END FROM "tender_files" tf WHERE tf."tenderMergedId" = t."id" AND 'costingAttachment' = ANY(tf."tags") ORDER BY tf."id" ASC LIMIT 1), '')`;
+const COSTING_FILE_URL_SQL = Prisma.sql`coalesce((SELECT CASE WHEN tf."source" IS NOT NULL AND tf."source" <> 'SHEET_SYNC' THEN '/api/executive-files/view/' || tf."source" ELSE tf."url" END FROM "tender_files" tf WHERE tf."tenderMergedId" = ANY(t."docketIds") AND 'costingAttachment' = ANY(tf."tags") ORDER BY (tf."tenderMergedId" = t."id") DESC, tf."id" ASC LIMIT 1), '')`;
 
 /**
  * Distinct non-empty values of one CostingSheetDetails field, comma-joined.
@@ -166,15 +230,16 @@ const COSTING_FILE_URL_SQL = Prisma.sql`coalesce((SELECT CASE WHEN tf."source" I
  */
 function costingAggSql(field: string): Prisma.Sql {
   const ref = Prisma.raw(`csd."${field}"`);
-  return Prisma.sql`coalesce((SELECT string_agg(DISTINCT btrim(${ref}), ', ') FROM "CostingSheetDetails" csd WHERE csd."tenderMergedId" = t."id" AND btrim(coalesce(${ref}, '')) <> ''), '')`;
+  return Prisma.sql`coalesce((SELECT string_agg(DISTINCT btrim(${ref}), ', ') FROM "CostingSheetDetails" csd WHERE csd."tenderMergedId" = ANY(t."docketIds") AND btrim(coalesce(${ref}, '')) <> ''), '')`;
 }
 
-const TYPE_TESTS_SQL = Prisma.sql`coalesce((SELECT string_agg(DISTINCT tt."testCertificateNo", ', ') FROM "CostingSheetDetails" csd JOIN "type_tests" tt ON upper(btrim(tt."itemCode")) = upper(btrim(csd."itemCode")) WHERE csd."tenderMergedId" = t."id"), '')`;
+const TYPE_TESTS_SQL = Prisma.sql`coalesce((SELECT string_agg(DISTINCT tt."testCertificateNo", ', ') FROM "CostingSheetDetails" csd JOIN "type_tests" tt ON upper(btrim(tt."itemCode")) = upper(btrim(csd."itemCode")) WHERE csd."tenderMergedId" = ANY(t."docketIds")), '')`;
 
 /** Blank vs not-blank for a column that renders a JSON dump of a relation. */
-function relationPresentSql(table: string): Prisma.Sql {
+function relationPresentSql(table: string, docketWide = false): Prisma.Sql {
   const ref = Prisma.raw(`"${table}"`);
-  return Prisma.sql`CASE WHEN EXISTS (SELECT 1 FROM ${ref} r WHERE r."tenderMergedId" = t."id") THEN '1' ELSE '' END`;
+  const owner = docketWide ? Prisma.sql`ANY(t."docketIds")` : Prisma.sql`t."id"`;
+  return Prisma.sql`CASE WHEN EXISTS (SELECT 1 FROM ${ref} r WHERE r."tenderMergedId" = ${owner}) THEN '1' ELSE '' END`;
 }
 
 const ASSIGNED_TO_SQL = Prisma.sql`coalesce((SELECT string_agg(ta."associationId"::text, ',' ORDER BY ta."id") FROM "tender_associations" ta WHERE ta."tenderMergedId" = t."id"), '')`;
@@ -200,7 +265,7 @@ const DERIVED_VALUE_SQL: Record<string, Prisma.Sql> = {
   tenderFiles: relationPresentSql("tender_files"),
   reportings: relationPresentSql("reportings"),
   evaluations: relationPresentSql("evaluations"),
-  costingDetails: relationPresentSql("CostingSheetDetails"),
+  costingDetails: relationPresentSql("CostingSheetDetails", true),
 };
 
 /**
@@ -757,7 +822,7 @@ function erpCategorySql(category: string): Prisma.Sql | null {
   const misses = rule.exclude.map((w) => Prisma.sql`${name} NOT LIKE ${`%${w}%`}`);
   const parts = [Prisma.sql`(${Prisma.join(hits, " OR ")})`, ...misses];
 
-  return Prisma.sql`EXISTS (SELECT 1 FROM "CostingSheetDetails" csd WHERE csd."tenderMergedId" = t."id" AND ${Prisma.join(parts, " AND ")})`;
+  return Prisma.sql`EXISTS (SELECT 1 FROM "CostingSheetDetails" csd WHERE csd."tenderMergedId" = ANY(t."docketIds") AND ${Prisma.join(parts, " AND ")})`;
 }
 
 // -------------------------------------------------------------- analytics ---
@@ -803,7 +868,7 @@ export interface BuildOptions {
   now?: Date;
 }
 
-/** WHERE body for `FROM tender_merged t`, without the WHERE keyword. */
+/** WHERE body for `FROM ${tenderSourceSql(q)}`, without the WHERE keyword. */
 export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.Sql {
   const now = opts.now ?? new Date();
   const parts: Prisma.Sql[] = [];
