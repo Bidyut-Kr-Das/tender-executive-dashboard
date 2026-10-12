@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
 
-const protectedRoutes = ["/admin"]
+const protectedRoutes = ["/admin", "/v2/admin"]
 const syncApiPaths = ["/api/sync", "/api/refresh-all"]
 const publicApiPaths = ["/api/external", "/api/sync-dockets", "/api/sync-costing-smartsheet", "/api/sync-bom", "/api/health", "/api/sync-to-merged", "/api/admin/reset-password", "/api/webhook/intelligence", "/api/webhook/ai-relevance", "/api/webhook/automation", "/api/webhook/parsing", "/api/webhook/ingestion", "/api/webhook/feedback", "/api/webhook/result"]
 const ADMIN_ROLES = ["admin", "developer"]
@@ -9,6 +9,10 @@ const ADMIN_ROLES = ["admin", "developer"]
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
   const isAuthRoute = path.startsWith("/auth")
+
+  if (path === "/") {
+    return NextResponse.redirect(new URL("/v2/tenders", req.url))
+  }
 
   if (path.startsWith("/api/")) {
     // Auth endpoints (signup, signin, session, etc.) are public

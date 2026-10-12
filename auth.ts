@@ -51,6 +51,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   session: { strategy: "jwt" },
+  // Cookies ignore ports, so the default name collides with other Auth.js apps on this host.
+  cookies: { sessionToken: { name: "tender-exec.session-token" } },
   pages: { signIn: "/auth/login" },
   trustHost: true,
 })

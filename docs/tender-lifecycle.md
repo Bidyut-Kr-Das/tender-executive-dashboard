@@ -164,7 +164,7 @@ Payload (`type` by `TenderMerged.tenderType`):
 
 Webhook `POST /api/webhook/automation` (envelope, [§8](#8-webhook-envelope)):
 
-- Success event: `file.fetched_success`. Other events are logged only.
+- Success event: `file.fetched_success`. An event with `data.error` or ending in `_failed` sets `AUTOMATION_FAILED`; any other event is logged only.
 - `data.result.files[]`: `{ name, extension, url, tag, source }`. The file name overrides `tag` (case-insensitive): contains `boq` → `boqComparativeChart`, contains `costing` → `costingAttachment`. Otherwise the worker's `tag` is kept and must be a value of `TENDER_FILE_TYPES` (`lib/tender-file-types.ts`), else `400`.
 - `TENDER_AUTOMATION_PARSING_CLIENT_ID` and `TENDER_AGENT_INGESTION_CLIENT_ID` are checked before anything is saved.
 - DB write: one `TenderFile` row per new URL. URLs already stored are skipped (retry-safe).
@@ -250,7 +250,7 @@ Payload:
 
 Webhook `POST /api/webhook/ingestion` (envelope):
 
-- Success: event ending in `_success` and `data.error` null. Other events are logged only.
+- Success: event ending in `_success` and `data.error` null. An event with `data.error` or ending in `_failed` sets `INGESTION_FAILED`; any other event is logged only.
 - Nothing is stored. Publishes stage 5 with `tenderBrief` / `itemCategory` from `TenderMerged` (`company = laser`),
   status `INTELLIGENCE_QUEUED`.
 - Worker error: status `INGESTION_FAILED`.
@@ -321,7 +321,13 @@ queue follows `AUTOMATION_VERSION` like every other tender parsing job.
 ## 6. Lifecycle status
 
 Defined in [`lib/tender-lifecycle.ts`](../lib/tender-lifecycle.ts) as `TENDER_LIFECYCLE_STATUS`.
-Not persisted yet. It needs a column on `TenderMerged` (database migration run by the team, not by tooling).
+Stored in `TenderMerged.lifecycleStatus`, with `lifecycleUpdatedAt` and `lifecycleError`, by `setLifecycleStatus`
+([`lib/tender-lifecycle-store.ts`](../lib/tender-lifecycle-store.ts)). `null` means `NEW`. Counts per stage are shown on
+`/v2/ai-analysis` (`fetchLifecycleCounts`, [`actions/tender-lifecycle.ts`](../actions/tender-lifecycle.ts)).
+
+Starting a new batch (`startAiAnalysisRun`, called once per "Queue analysis" click) resets every `RELEVANCE_REJECTED`
+tender to `null`, so rejections from an earlier batch are not counted again. The saved verdict (`aiRelevanceValid`,
+`aiRelevanceReason`) is kept.
 
 | Status | Meaning | Set by |
 |---|---|---|
@@ -345,6 +351,8 @@ Rules:
 - A publish failure sets the **next** stage to `*_FAILED`, because that stage never received its job.
 - A worker error event sets the **current** stage to `*_FAILED`.
 - Status only moves forward, except a manual retry, which resets to the retried stage's `*_QUEUED`.
+  Manual retry is `requeueFailedStage` (`actions/ai-analysis.ts`), developer role only, from the Failed column on
+  `/v2/ai-analysis`: it republishes that stage's job for every tender in the stage's `*_FAILED`.
 
 ```mermaid
 stateDiagram-v2
@@ -465,7 +473,8 @@ State of the code on 2026-10-03 compared with v2. Tick each item when done.
 - [x] `publishIngestionTask` and `/api/webhook/ingestion` added.
 - [ ] `/api/webhook/intelligence` does not use `createWebhookHandler` and does not check `client_id`.
 - [x] `publishAgentIntelligenceTask` attaches `TENDER_AGENT_INTELLIGENCE_CLIENT_ID`.
-- [ ] `TENDER_LIFECYCLE_STATUS` is not persisted. It needs a `TenderMerged` column (migration run by the team).
+- [x] `TENDER_LIFECYCLE_STATUS` is persisted in `TenderMerged.lifecycleStatus`.
+- [ ] `/api/webhook/ai-relevance` sets `RELEVANCE_FAILED` on `data.error` or an event ending in `_failed`, but the relevance agent must send that event; a job it drops silently stays `RELEVANCE_QUEUED`.
 - [ ] Parsing worker must echo `file_link` in `data` (`automation_v2/dispatch.py`).
 - [x] Queue constants `AUTOMATION_V2_TASKS`, `AUTOMATION_V2_PARSING`, `AGENT_INGESTION` added to `QUEUES`.
 - [x] `/api/webhook/agent-report` renamed to `/api/webhook/intelligence`.

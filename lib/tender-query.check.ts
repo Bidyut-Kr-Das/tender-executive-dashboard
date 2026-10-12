@@ -19,6 +19,7 @@ import {
   participationChainSql,
   participationSql,
   TENDER_COLUMNS,
+  tenderSourceSql,
   type TenderQuery,
 } from "@/lib/tender-query";
 import type { ParticipationFilter } from "@/lib/slices/filtersSlice";
@@ -545,7 +546,7 @@ check("price basis treats a blank column as Firm", () => {
     applyDefaultDeadlineFilter: false,
     priceBasis: "Firm",
   });
-  assert.match(text(sql), /coalesce\(nullif\(btrim\(t\."price"\), ''\), 'firm'\)/);
+  assert.match(text(sql), /coalesce\(nullif\(btrim\(t\."price"::text\), ''\), 'firm'\)/);
   assert.equal(sql.values.includes("firm"), true);
 });
 
@@ -566,6 +567,35 @@ check("the docket key uppercases and falls back to the row id", () => {
   const t = text(DOCKET_KEY_SQL);
   assert.match(t, /upper\(btrim\(t\."docketNo"\)\)/);
   assert.match(t, /'__row_' \|\| t\."id"::text/);
+});
+
+check("the plain source is tender_merged with a one-row docket", () => {
+  const t = text(tenderSourceSql({}));
+  assert.equal(t, `(SELECT m.*, ARRAY[m."id"] AS "docketIds" FROM "tender_merged" m) t`);
+});
+
+check("docketRollup fills blank docket-level fields from siblings", () => {
+  const t = text(tenderSourceSql({ docketRollup: true }));
+  assert.match(t, /coalesce\(m\."participated", bool_or\(m\."participated"\) OVER w\) AS "participated"/);
+  assert.match(t, /coalesce\(m\."reverseAuctionStartDate", max\(m\."reverseAuctionStartDate"\) OVER w\) AS "reverseAuctionStartDate"/);
+  assert.match(t, /IN \('', 'NOT EVALUATED'\) THEN NULL ELSE m\."currentStatus" END\) OVER w, m\."currentStatus"\) AS "currentStatus"/);
+  assert.match(t, /array_agg\(m\."id"\) OVER w AS "docketIds"/);
+  assert.match(t, /WINDOW w AS \(PARTITION BY coalesce\(nullif\(upper\(btrim\(m\."docketNo"\)\), ''\), '__row_' \|\| m\."id"::text\)\)/);
+  // Per-reference fields pass through untouched, and every column is present.
+  assert.match(t, /, m\."deadline" AS "deadline"/);
+  assert.match(t, /m\."apm" AS "apm"/);
+  for (const c of TENDER_COLUMNS) assert.ok(t.includes(` AS "${c}"`), c);
+});
+
+check("costing reads the whole docket, other relations the row", () => {
+  const t = text(where({ columnFilters: { costingFileUrl: { select: ["Not Available"] } } }));
+  assert.match(t, /tf\."tenderMergedId" = ANY\(t\."docketIds"\) AND 'costingAttachment' = ANY/);
+  assert.match(t, /ORDER BY \(tf\."tenderMergedId" = t\."id"\) DESC, tf\."id" ASC/);
+});
+
+check("the comparative chart sorts by its tagged file", () => {
+  const q: TenderQuery = { ...emptyTenderQuery(), scope: "home", sort: { column: "boqChart", direction: "desc" } };
+  assert.match(text(buildOrderBySql(q)), /^EXISTS \(SELECT 1 FROM "tender_files" tf .*'boqComparativeChart' = ANY\(tf\."tags"\).*\) DESC, t\."id" ASC$/);
 });
 
 check("every participation filter has a runtime entry", () => {

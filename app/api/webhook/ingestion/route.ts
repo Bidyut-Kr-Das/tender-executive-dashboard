@@ -1,14 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { createWebhookHandler, type WebhookEvent } from "@/lib/webhook-event";
 import { publishAgentIntelligenceTask, requireClientId } from "@/lib/queue/publisher";
+import { setLifecycleStatus } from "@/lib/tender-lifecycle-store";
 
 function httpError(message: string, status: number) {
   return Object.assign(new Error(message), { status });
 }
 
 async function handleIngestionEvent(evt: WebhookEvent) {
-  // Failure and non-success events are only logged.
-  if (!evt.event.endsWith("_success") || evt.data.error) return { handled: false };
+  if (!evt.event.endsWith("_success") || evt.data.error) {
+    // Any other event without an error is only logged.
+    if (evt.data.error || evt.event.endsWith("_failed")) {
+      await setLifecycleStatus(evt.data.referenceNo, "INGESTION_FAILED", evt.data.error ?? evt.event);
+    }
+    return { handled: false };
+  }
 
   requireClientId("TENDER_AGENT_INTELLIGENCE_CLIENT_ID");
 
@@ -30,6 +36,9 @@ async function handleIngestionEvent(evt: WebhookEvent) {
   if (!intelligenceQueued) {
     console.warn(`[ingestion] Intelligence job not queued for ${referenceNo} (RabbitMQ unavailable?)`);
   }
+  await (intelligenceQueued
+    ? setLifecycleStatus(referenceNo, "INTELLIGENCE_QUEUED")
+    : setLifecycleStatus(referenceNo, "INTELLIGENCE_FAILED", "Intelligence job not queued"));
 
   return { handled: true, intelligenceQueued };
 }

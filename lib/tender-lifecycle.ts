@@ -1,5 +1,5 @@
 // Tender lifecycle (v2). Source of truth: docs/tender-lifecycle.md — keep both in sync.
-// Not wired into the app yet; will back the live status shown per tender.
+// Stored in TenderMerged.lifecycleStatus by setLifecycleStatus (lib/tender-lifecycle-store.ts).
 import { QUEUES } from "@/lib/queue/config";
 
 export const TENDER_LIFECYCLE_STATUS = {
@@ -61,3 +61,89 @@ export const TENDER_LIFECYCLE_STAGES = [
 }[];
 
 export type TenderLifecycleStage = (typeof TENDER_LIFECYCLE_STAGES)[number]["stage"];
+
+/** One row of a `groupBy` on the status column. */
+export interface LifecycleGroup {
+  status: string | null;
+  count: number;
+  /** When the longest-waiting tender in this status got it. */
+  oldest: Date | string | null;
+}
+
+export interface LifecycleStageCount {
+  stage: Exclude<TenderLifecycleStage, "PARSING">;
+  queued: number;
+  failed: number;
+  /** ISO time the longest-waiting queued tender entered the stage; null when none is queued. */
+  oldestQueued: string | null;
+}
+
+export interface LifecycleCounts {
+  stages: LifecycleStageCount[];
+  completed: number;
+  rejected: number;
+  notStarted: number;
+  /** Per file, from TenderFile.parseStatus. */
+  parsing: { pending: number; completed: number; failed: number };
+}
+
+/** Folds grouped status counts into what the AI analysis page shows. */
+export function summarizeLifecycle(
+  tenders: LifecycleGroup[],
+  files: { status: string | null; count: number }[],
+): LifecycleCounts {
+  const by = new Map(tenders.map((g) => [g.status ?? TENDER_LIFECYCLE_STATUS.NEW, g]));
+  const count = (status: string) => by.get(status)?.count ?? 0;
+  const fileCount = (status: string) => files.find((f) => f.status === status)?.count ?? 0;
+  const known = new Set<string>(Object.values(TENDER_LIFECYCLE_STATUS));
+
+  return {
+    stages: TENDER_LIFECYCLE_STAGES.flatMap(({ stage }) => {
+      if (stage === "PARSING") return [];
+      const oldest = by.get(`${stage}_QUEUED`)?.oldest;
+      return {
+        stage,
+        queued: count(`${stage}_QUEUED`),
+        failed: count(`${stage}_FAILED`),
+        oldestQueued: oldest ? new Date(oldest).toISOString() : null,
+      };
+    }),
+    completed: count(TENDER_LIFECYCLE_STATUS.COMPLETED),
+    rejected: count(TENDER_LIFECYCLE_STATUS.RELEVANCE_REJECTED),
+    // A value this code does not know is counted here, not dropped.
+    notStarted: tenders
+      .filter((g) => !g.status || g.status === "NEW" || !known.has(g.status))
+      .reduce((sum, g) => sum + g.count, 0),
+    parsing: {
+      pending: fileCount("PENDING"),
+      completed: fileCount("COMPLETED"),
+      failed: fileCount("FAILED"),
+    },
+  };
+}
+
+export interface LifecycleFunnelRow extends LifecycleStageCount {
+  /** Tenders that left this stage as not relevant. Relevance only. */
+  rejected: number;
+  /** Tenders now in a later stage, or completed. */
+  passed: number;
+  /** Every tender that got as far as this stage. */
+  reached: number;
+}
+
+/** The stages as a funnel: how many tenders reached each one and how many moved on. */
+export function lifecycleFunnel(counts: LifecycleCounts): {
+  rows: LifecycleFunnelRow[];
+  /** Tenders queued at least once. */
+  entered: number;
+} {
+  const rows: LifecycleFunnelRow[] = [];
+  let passed = counts.completed;
+  for (const stage of [...counts.stages].reverse()) {
+    const rejected = stage.stage === "RELEVANCE" ? counts.rejected : 0;
+    const reached = stage.queued + stage.failed + rejected + passed;
+    rows.unshift({ ...stage, rejected, passed, reached });
+    passed = reached;
+  }
+  return { rows, entered: passed };
+}

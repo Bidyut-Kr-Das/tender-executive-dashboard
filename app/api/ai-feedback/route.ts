@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { publishFeedbackTask } from "@/lib/queue/publisher";
+import { setRelevanceQueued } from "@/lib/tender-lifecycle-store";
 
 export async function GET() {
   try {
@@ -63,6 +64,9 @@ async function publishFeedback(input: SaveFeedbackInput) {
       err,
     );
   }
+
+  // The feedback agent re-runs relevance, so the tender is back at that stage.
+  await setRelevanceQueued(tender.referenceNo, queued);
 
   return { referenceNo: tender.referenceNo, queued };
 }

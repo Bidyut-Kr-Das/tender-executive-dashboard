@@ -870,7 +870,12 @@ model TenderMerged {
 
   competitors     String?
   agentReport     String?
-  
+
+  // TENDER_LIFECYCLE_STATUS (lib/tender-lifecycle.ts); null = NEW, nothing published yet.
+  lifecycleStatus    String?
+  lifecycleUpdatedAt DateTime?
+  lifecycleError     String?
+
   applicableIndex String?
   publishedDate   DateTime?
 
@@ -901,6 +906,7 @@ model TenderMerged {
   @@index([fileId])
   @@index([tenderStatusId])
   @@index([utilityMappingId])
+  @@index([lifecycleStatus])
   @@map("tender_merged")
 }
 

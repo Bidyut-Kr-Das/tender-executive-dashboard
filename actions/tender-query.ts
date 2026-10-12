@@ -15,6 +15,7 @@ import {
   buildWhereSql,
   columnValueSql,
   DOCKET_KEY_SQL,
+  tenderSourceSql,
   HAS_ANY_ASSOCIATION,
   needsFacetQuery,
   PARTICIPATION_FILTERS,
@@ -69,7 +70,7 @@ async function loadPage(
           SELECT t."id" AS id,
                  ${DOCKET_KEY_SQL} AS gkey,
                  row_number() OVER (ORDER BY ${orderBy}) AS rn
-          FROM "tender_merged" t
+          FROM ${tenderSourceSql(query)}
           WHERE ${where}
         ), pages AS (
           SELECT gkey, min(rn) AS ord FROM ranked GROUP BY gkey
@@ -79,7 +80,7 @@ async function loadPage(
         ORDER BY p.ord ASC, r.rn ASC
       `
     : prisma.$queryRaw<{ id: number }[]>`
-        SELECT t."id" FROM "tender_merged" t
+        SELECT t."id" FROM ${tenderSourceSql(query)}
         WHERE ${where}
         ORDER BY ${orderBy}
         LIMIT ${pageSize} OFFSET ${offset}
@@ -92,7 +93,7 @@ async function loadPage(
   const [idRows, countRows, associations] = await Promise.all([
     idSql,
     prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT ${countExpr} AS count FROM "tender_merged" t WHERE ${where}
+      SELECT ${countExpr} AS count FROM ${tenderSourceSql(query)} WHERE ${where}
     `,
     includeMeta
       ? prisma.association.findMany({ select: { id: true, name: true, email: true } })
@@ -192,7 +193,7 @@ export async function fetchTenderFacet(
     const where = buildWhereSql(query, { skipColumn: column });
     const rows = await prisma.$queryRaw<{ value: string | null }[]>`
       SELECT DISTINCT ${expr} AS value
-      FROM "tender_merged" t
+      FROM ${tenderSourceSql(query)}
       WHERE ${where}
       ORDER BY 1
       LIMIT ${FACET_LIMIT + 1}
@@ -240,12 +241,12 @@ export async function fetchTenderSummary(query: TenderQuery): Promise<TenderSumm
           count(DISTINCT ${DOCKET_KEY_SQL}) FILTER (WHERE ${AI_YES} AND NOT ${HAS_ANY_ASSOCIATION}) AS ai_yes_unallocated,
           count(DISTINCT ${DOCKET_KEY_SQL}) FILTER (WHERE ${APM_YES} AND ${HAS_ANY_ASSOCIATION}) AS apm_yes_allocated,
           count(DISTINCT ${DOCKET_KEY_SQL}) FILTER (WHERE ${APM_YES} AND NOT ${HAS_ANY_ASSOCIATION}) AS apm_yes_unallocated
-        FROM "tender_merged" t
+        FROM ${tenderSourceSql(query)}
         WHERE ${where}
       `,
       prisma.$queryRaw<{ id: number; count: bigint }[]>`
         SELECT ta."associationId" AS id, count(DISTINCT ${DOCKET_KEY_SQL}) AS count
-        FROM "tender_merged" t
+        FROM ${tenderSourceSql(query)}
         JOIN "tender_associations" ta ON ta."tenderMergedId" = t."id"
         WHERE ${wherePersons}
         GROUP BY 1
@@ -292,12 +293,12 @@ export async function fetchParticipationCounts(
     const [totals, perPerson] = await Promise.all([
       prisma.$queryRaw<Record<string, bigint>[]>`
         SELECT ${Prisma.join(columns, ", ")}
-        FROM "tender_merged" t
+        FROM ${tenderSourceSql(query)}
         WHERE ${where}
       `,
       prisma.$queryRaw<{ id: number; count: bigint }[]>`
         SELECT ta."associationId" AS id, count(DISTINCT ${DOCKET_KEY_SQL}) AS count
-        FROM "tender_merged" t
+        FROM ${tenderSourceSql(query)}
         JOIN "tender_associations" ta ON ta."tenderMergedId" = t."id"
         WHERE ${wherePersons}
         GROUP BY 1
@@ -338,7 +339,7 @@ export async function fetchAllFilteredTenderRows(
     const orderBy = buildOrderBySql(query);
 
     const idRows = await prisma.$queryRaw<{ id: number }[]>`
-      SELECT t."id" FROM "tender_merged" t WHERE ${where} ORDER BY ${orderBy}
+      SELECT t."id" FROM ${tenderSourceSql(query)} WHERE ${where} ORDER BY ${orderBy}
     `;
     const ids = idRows.map((r) => r.id);
     const keep = columns && columns.length > 0 ? new Set([...columns, "type", "id"]) : null;

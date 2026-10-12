@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { publishTenderTask } from "@/lib/queue/publisher";
 import { TENDER_CATEGORIES } from "@/lib/tender-categories";
+import { lifecycleData, setLifecycleStatus } from "@/lib/tender-lifecycle-store";
 
 // Incoming snake_case category -> stored EPC subcategory. Unknown/missing is ignored.
 const SUBCATEGORY_BY_CATEGORY: Record<string, string> = {
@@ -41,6 +42,7 @@ async function updateAiRelevance({
     data: {
       aiRelevanceValid: valid,
       aiRelevanceReason: reason,
+      ...lifecycleData(valid ? "AUTOMATION_QUEUED" : "RELEVANCE_REJECTED"),
       ...(subCategory
         ? { category: TENDER_CATEGORIES.EPC, subCategory }
         : {}),
@@ -71,6 +73,7 @@ async function updateAiRelevance({
       console.warn(
         `[ai-relevance] Download job not queued for ${referenceNo} (RabbitMQ unavailable?)`,
       );
+      await setLifecycleStatus(referenceNo, "AUTOMATION_FAILED", "Download job not queued");
     }
   }
 
@@ -91,6 +94,23 @@ const updateAiRelevanceWithLog = withLog(
     userEmail: "ai-agent@laserpower.in",
   }),
 );
+
+async function failRelevance({ referenceNo, error }: { referenceNo: string; error: unknown }) {
+  await setLifecycleStatus(referenceNo, "RELEVANCE_FAILED", error);
+  return { success: true, referenceNo, handled: false };
+}
+
+const failRelevanceWithLog = withLog(failRelevance, (result, { error }) => ({
+  action: "UPDATE" as const,
+  tableName: "TenderMerged",
+  recordId: undefined,
+  referenceNo: result.referenceNo,
+  details: `AI relevance failed: ${typeof error === "string" ? error : JSON.stringify(error)}`,
+  // Public webhook — no auth session, so label the actor explicitly.
+  userId: null,
+  userName: "Relevance Agent",
+  userEmail: "ai-agent@laserpower.in",
+}));
 
 const COMPANIES = ["laser", "gmd"];
 
@@ -114,6 +134,13 @@ export async function POST(req: NextRequest) {
 
     if (!referenceNo) {
       return NextResponse.json({ error: "referenceNo is required" }, { status: 400 });
+    }
+    // A failure event carries no verdict; record it before the verdict checks reject it.
+    const failed = typeof body?.event === "string" && body.event.endsWith("_failed");
+    if (data.error || failed) {
+      return NextResponse.json(
+        await failRelevanceWithLog({ referenceNo, error: data.error ?? body.event }),
+      );
     }
     if (!COMPANIES.includes(company)) {
       return NextResponse.json(

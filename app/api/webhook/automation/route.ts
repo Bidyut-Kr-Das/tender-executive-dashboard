@@ -8,6 +8,7 @@ import {
   type TenderFileParsingPayload,
 } from "@/lib/queue/publisher";
 import { TENDER_FILE_TYPES, type TenderFileType } from "@/lib/tender-file-types";
+import { setLifecycleStatus } from "@/lib/tender-lifecycle-store";
 
 // Per download type: parsing job type and the only file tag sent for parsing.
 const PARSING: Record<string, { type: TenderFileParsingPayload["type"]; tag: TenderFileType }> = {
@@ -65,8 +66,13 @@ function tagFromName(name: string): TenderFileType | null {
 }
 
 async function handleAutomationEvent(evt: WebhookEvent) {
-  // Failure events are only logged.
-  if (evt.event !== "file.fetched_success" || evt.data.error) return { handled: false };
+  if (evt.event !== "file.fetched_success" || evt.data.error) {
+    // Any other event without an error is only logged.
+    if (evt.data.error || evt.event.endsWith("_failed")) {
+      await setLifecycleStatus(evt.data.referenceNo, "AUTOMATION_FAILED", evt.data.error ?? evt.event);
+    }
+    return { handled: false };
+  }
 
   const parsing = PARSING[evt.data.type];
   if (!parsing) {
@@ -140,6 +146,9 @@ async function handleAutomationEvent(evt: WebhookEvent) {
     if (!ingestionQueued) {
       console.warn(`[automation] Ingestion job not queued for ${referenceNo} (RabbitMQ unavailable?)`);
     }
+    await (ingestionQueued
+      ? setLifecycleStatus(referenceNo, "INGESTION_QUEUED")
+      : setLifecycleStatus(referenceNo, "INGESTION_FAILED", "Ingestion job not queued"));
   }
 
   return { handled: true, filesCreated: newFiles.length, parsingQueued, ingestionQueued };
