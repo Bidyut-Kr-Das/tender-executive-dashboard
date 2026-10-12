@@ -218,6 +218,7 @@ const FIELD_LIST: FieldDef[] = [
   },
   choice("applicableIndex", "Applicable index", "General", "IEEMA", "CACMAI"),
   text("contractNo", "Contract number", "General"),
+  text("quotationNo", "Quotation no", "General"),
   choice("miiPurchasePreference", "MII purchase preference", "General", "Yes", "No"),
   text("location", "Location", "General"),
 
@@ -409,9 +410,10 @@ const NEVER_EDITED = new Set([
   "reverseAuctionStartDate",
   "reverseAuctionEndDate",
   "expectedRaDate",
+  "quotationNo",
   ...FIELD_LIST.filter((f) => f.section === "Result").map((f) => f.id),
 ]);
-const KEPT_ONCE_SET = new Set(["docketNo", "contractNo"]);
+const KEPT_ONCE_SET = new Set(["docketNo", "contractNo", "quotationNo"]);
 
 export const lockedOnceSet = (fieldId: string, row: Row): boolean =>
   KEPT_ONCE_SET.has(fieldId) && !!(row[fieldId] ?? "").trim();

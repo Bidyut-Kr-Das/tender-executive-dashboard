@@ -374,7 +374,7 @@ export function buildPreParticipationColumns(
       filter: { type: "dateRange" },
     }),
     editable("expectedRaDate", "Expected RA Date", 170, { search: false }),
-    readOnly("quotationNo", "Quotation No"),
+    editable("quotationNo", "Quotation No"),
     editable("contractNo", "Contract Number"),
     longText("competitors", "Competitors"),
     editable("ourRank", "Our Rank", 130),

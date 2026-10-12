@@ -47,6 +47,7 @@ export function createWebhookHandler(
   return async function POST(req: NextRequest) {
     try {
       const body = await req.json();
+      console.log(`[${source}] webhook received: ${JSON.stringify(body)}`);
       const data = body?.data;
 
       if (typeof body?.id !== "string" || !body.id) {
