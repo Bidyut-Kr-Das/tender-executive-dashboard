@@ -259,12 +259,12 @@ const columns: DataTableColumn<Row>[] = [
   },
   {
     id: "utilityOrClient",
-    header: "Utility / Client",
+    header: "Received From Utility / Client",
     width: 210,
     filter: selectFilter(),
     text: (row) => labelOf(UTILITY_OPTIONS, row.utilityOrClient),
     cell: (row) => (
-      <ToggleCell row={row} field="utilityOrClient" label="Utility / Client" options={UTILITY_OPTIONS} />
+      <ToggleCell row={row} field="utilityOrClient" label="Received From Utility / Client" options={UTILITY_OPTIONS} />
     ),
   },
   {
