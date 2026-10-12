@@ -88,7 +88,7 @@ async function handleAutomationEvent(evt: WebhookEvent) {
 
   const tender = await prisma.tenderMerged.findUnique({
     where: { referenceNo },
-    select: { id: true },
+    select: { id: true, lifecycleStatus: true },
   });
   if (!tender) throw httpError(`Reference not found: ${referenceNo}`, 404);
 
@@ -134,21 +134,28 @@ async function handleAutomationEvent(evt: WebhookEvent) {
     });
   }
 
-  // Ingestion runs in parallel with parsing. Only when this event saved new files, so a retry does not re-publish.
+  // Ingestion runs in parallel with parsing. Published when this event saved new files, or when the tender
+  // still waits on its download: a re-analysed tender has its files stored already, so none is new.
+  // A repeated event finds the tender past AUTOMATION_QUEUED and does not re-publish.
   let ingestionQueued = false;
-  if (newFiles.length > 0) {
+  if (newFiles.length > 0 || tender.lifecycleStatus === "AUTOMATION_QUEUED") {
     const tenderFiles = await prisma.tenderFile.findMany({
       where: { tenderMergedId: tender.id },
       select: INGESTION_FILE_SELECT,
       orderBy: { id: "asc" },
     });
-    ingestionQueued = await publishIngestionTask({ referenceNo, files: tenderFiles });
-    if (!ingestionQueued) {
+    ingestionQueued =
+      tenderFiles.length > 0 && (await publishIngestionTask({ referenceNo, files: tenderFiles }));
+    if (!ingestionQueued && tenderFiles.length > 0) {
       console.warn(`[automation] Ingestion job not queued for ${referenceNo} (RabbitMQ unavailable?)`);
     }
     await (ingestionQueued
       ? setLifecycleStatus(referenceNo, "INGESTION_QUEUED")
-      : setLifecycleStatus(referenceNo, "INGESTION_FAILED", "Ingestion job not queued"));
+      : setLifecycleStatus(
+          referenceNo,
+          "INGESTION_FAILED",
+          tenderFiles.length > 0 ? "Ingestion job not queued" : "No files to ingest",
+        ));
   }
 
   return { handled: true, filesCreated: newFiles.length, parsingQueued, ingestionQueued };
