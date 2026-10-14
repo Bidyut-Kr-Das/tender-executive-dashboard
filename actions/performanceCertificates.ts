@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { requireUserAction } from "@/lib/dal";
+import { createPresignedUpload } from "@/lib/s3";
 
 export const getPerformanceCertificates = withLog(
   async () =>
@@ -60,5 +61,33 @@ export const updatePerformanceCertificateField = withLog(
     tableName: "PerformanceCertificate",
     recordId: String(id),
     details: `${field} -> ${value ?? "null"}`,
+  }),
+);
+
+/** Presigned PUT so the file goes straight to S3, not through the action. */
+export const createPerformanceCertificateUpload = withLog(
+  async (fileName: string, contentType: string) => {
+    await requireUserAction();
+    return createPresignedUpload({
+      fileName,
+      contentType,
+      folder: "performance-certificates",
+    });
+  },
+  () => null,
+);
+
+export const createPerformanceCertificate = withLog(
+  async (certificateName: string, certificateUrl: string) => {
+    await requireUserAction();
+    return prisma.performanceCertificate.create({
+      data: { certificateName, certificateUrl },
+    });
+  },
+  (result) => ({
+    action: "CREATE" as const,
+    tableName: "PerformanceCertificate",
+    recordId: result.id,
+    details: result.certificateName ?? undefined,
   }),
 );

@@ -1,57 +1,61 @@
 /**
- * Script to publish COSTING_ATTACHMENT_PARSING jobs to the "tender:parsing" queue
- * for the tenders whose referenceNo you pass in.
+ * Script to publish COSTING_ATTACHMENT_PARSING jobs to the "tender:parsing" queue.
  *
  * Usage:
- *   npx tsx scripts/publishCostingAttachmentParsingJob.ts <referenceNo> [referenceNo2 ...]
+ *   npx tsx scripts/publishCostingAttachmentParsingJob.ts                       # all tenders with a costing attachment
+ *   npx tsx scripts/publishCostingAttachmentParsingJob.ts <referenceNo> [...]    # only these tenders
  */
 import { prisma } from "../lib/prisma";
 import { publishTenderParsingTask } from "../lib/queue/publisher";
 import { describeTenderFile } from "../lib/tenderFileDescriptor";
 import { closeConnection } from "../lib/rabbitmq";
 
+const FILE_SELECT = {
+  id: true,
+  referenceNo: true,
+  tenderFiles: {
+    where: { tags: { has: "costingAttachment" } },
+    select: { source: true, url: true },
+    take: 1,
+  },
+} as const;
+
 async function main() {
   const referenceNos = process.argv.slice(2).map((r) => r.trim()).filter(Boolean);
-  if (referenceNos.length === 0) {
-    console.error("Usage: npx tsx scripts/publishCostingAttachmentParsingJob.ts <referenceNo> [referenceNo2 ...]");
-    process.exit(1);
+  const all = referenceNos.length === 0;
+
+  const tenders = await prisma.tenderMerged.findMany({
+    where: all
+      ? { tenderFiles: { some: { tags: { has: "costingAttachment" } } } }
+      : { referenceNo: { in: referenceNos } },
+    select: FILE_SELECT,
+    orderBy: { id: "asc" },
+  });
+
+  if (all) console.log(`[publishCostingAttachmentParsingJob] ${tenders.length} tenders with a costing attachment\n`);
+
+  const found = new Set(tenders.map((t) => t.referenceNo));
+  for (const ref of referenceNos) {
+    if (!found.has(ref)) console.warn(`  [SKIP] ${ref}: tender not found`);
   }
 
   let queued = 0;
   let skipped = 0;
   let failed = 0;
 
-  for (const referenceNo of referenceNos) {
+  for (const tender of tenders) {
+    const label = tender.referenceNo;
     try {
-      const tender = await prisma.tenderMerged.findUnique({
-        where: { referenceNo },
-        select: {
-          id: true,
-          referenceNo: true,
-          tenderFiles: {
-            where: { tags: { has: "costingAttachment" } },
-            select: { source: true, url: true },
-            take: 1,
-          },
-        },
-      });
-
-      if (!tender) {
-        console.warn(`  [SKIP] ${referenceNo}: tender not found`);
-        skipped++;
-        continue;
-      }
-
       const tenderFile = tender.tenderFiles[0];
       if (!tenderFile) {
-        console.warn(`  [SKIP] ${referenceNo}: no costingAttachment file`);
+        console.warn(`  [SKIP] ${label}: no costingAttachment file`);
         skipped++;
         continue;
       }
 
       const { file_type, decrypted_fileId } = describeTenderFile(tenderFile);
       if (!decrypted_fileId) {
-        console.warn(`  [SKIP] ${referenceNo}: costingAttachment has no resolvable file id`);
+        console.warn(`  [SKIP] ${label}: costingAttachment has no resolvable file id`);
         skipped++;
         continue;
       }
@@ -67,23 +71,23 @@ async function main() {
       });
 
       if (ok) {
-        console.log(`  [OK]   ${referenceNo} -> tender:parsing`);
+        console.log(`  [OK]   ${label} -> tender:parsing`);
         queued++;
       } else {
-        console.warn(`  [FAIL] ${referenceNo}: publish returned false (RabbitMQ unavailable?)`);
+        console.warn(`  [FAIL] ${label}: publish returned false (RabbitMQ unavailable?)`);
         failed++;
       }
     } catch (err) {
-      console.error(`  [ERR]  ${referenceNo}: ${(err as Error).message}`);
+      console.error(`  [ERR]  ${label}: ${(err as Error).message}`);
       failed++;
     }
   }
 
   console.log("\n--- Summary ---");
-  console.log(`  Total:  ${referenceNos.length}`);
-  console.log(`  Queued: ${queued}`);
-  console.log(`  Skipped:${skipped}`);
-  console.log(`  Failed: ${failed}`);
+  console.log(`  Found:   ${tenders.length}`);
+  console.log(`  Queued:  ${queued}`);
+  console.log(`  Skipped: ${skipped}`);
+  console.log(`  Failed:  ${failed}`);
 }
 
 main()

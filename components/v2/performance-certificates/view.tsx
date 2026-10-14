@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Eye, Pencil, X } from "lucide-react";
+import { ExternalLink, Eye, Pencil, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import type { PerformanceCertificateField } from "@/actions/performanceCertificates";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -23,6 +23,7 @@ import { toastError } from "@/components/v2/ui/errors";
 import { CheckMark, Choice, Dash, Input } from "@/components/v2/ui/field";
 import { Combobox, Popover, type SelectOption } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, PageSkeleton } from "@/components/v2/ui/page";
+import { UploadCertificateDialog } from "@/components/v2/performance-certificates/upload-dialog";
 
 /** What the cells share: the certificate shown beside the table and the pick lists. */
 const PageContext = createContext<{
@@ -340,6 +341,7 @@ export function PerformanceCertificatesView() {
   const { rows, loading, error, partyNames } = useAppSelector((s) => s.performanceCertificates);
   const itemRows = useAppSelector((s) => s.items.rows);
   const [preview, setPreview] = useState<Row | null>(null);
+  const [uploading, setUploading] = useState(false);
   const { table } = useClientTable(rows, columns);
 
   useEffect(() => {
@@ -372,6 +374,15 @@ export function PerformanceCertificatesView() {
       <PageHeader
         title="Performance Certificates"
         meta={`${table.total.toLocaleString("en-IN")} matching`}
+        actions={
+          <Button
+            variant="primary"
+            icon={<Upload className="size-3.5" />}
+            onClick={() => setUploading(true)}
+          >
+            Upload certificate
+          </Button>
+        }
       />
       <div className="flex min-h-0 flex-1 gap-3">
         <PageContext value={context}>
@@ -387,6 +398,7 @@ export function PerformanceCertificatesView() {
         </PageContext>
         {preview && <PreviewPanel row={preview} onClose={() => setPreview(null)} />}
       </div>
+      <UploadCertificateDialog open={uploading} onOpenChange={setUploading} />
     </Page>
   );
 }
