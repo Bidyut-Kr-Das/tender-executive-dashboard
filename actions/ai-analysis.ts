@@ -14,10 +14,12 @@ import {
   publishTenderTask,
 } from "@/lib/queue/publisher";
 import { requireUserAction } from "@/lib/dal";
+import { contentTypeFor } from "@/lib/s3";
 import { TENDER_LIFECYCLE_STATUS, type LifecycleStageCount } from "@/lib/tender-lifecycle";
 import { setLifecycleStatus, setRelevanceQueued } from "@/lib/tender-lifecycle-store";
 
 const model = openai("gpt-5-mini");
+const certificateModel = openai("gpt-5.6-terra");
 
 export async function analyzeContent(prompt: string) {
   const { text } = await generateText({
@@ -319,3 +321,116 @@ export async function saveAiRelevance(params: {
     details: `Set AI relevance valid=${params.valid} on tender #${params.tenderMergedId}`,
   });
 }
+
+// Performance certificates carry many dates; the prompt disambiguates the two we store.
+const CERTIFICATE_DATE_SYSTEM_PROMPT = `You extract exactly two dates from a performance certificate (often titled "Certificate of Satisfactory Performance" or similar).
+
+A certificate can carry MANY dates. Only these two matter:
+
+1. issueDate - the date the certificate itself was issued: the document date, i.e. the "Date:" line near the top/letterhead, or the seal/stamp date that belongs to the certificate as a whole.
+2. signingDate - the date the authorised signatory signed: a date written or printed next to the signature, a "Dated:" under the signature block, or the date in the company seal beside the signatory. If the signatory added no separate date, set signingDate to the same value as issueDate.
+
+Ignore these unrelated dates:
+- Purchase/work order or contract date (references like "PO No. ... dated ...")
+- Invoice / sale bill dates, dispatch, delivery, or receipt dates
+- Period of supply (e.g. "supplied during ...", a financial year), validity, or deadline dates
+- Item-level dates inside the supply table
+- CIN/registration numbers or any number that only looks like a date
+
+Rules:
+- Read the whole certificate, including the table, the sign-off block, handwriting, and any seal.
+- If several candidate issue dates exist, prefer the date attached to the title/letterhead over dates inside body sentences.
+- Return dates as ISO YYYY-MM-DD. Convert Indian DD/MM/YYYY to ISO. If a value cannot be determined, return null.
+- In "reason", quote the exact text used for each date and list the other dates you saw and rejected, so the choice is auditable.`;
+
+const certificateDateSchema = z.object({
+  issueDate: z
+    .string()
+    .nullable()
+    .describe("Certificate issue date in ISO YYYY-MM-DD, or null if not found"),
+  signingDate: z
+    .string()
+    .nullable()
+    .describe(
+      "Date the authorised signatory signed, in ISO YYYY-MM-DD, or null if not found",
+    ),
+  reason: z
+    .string()
+    .describe(
+      "Exact text used for each date, plus other dates seen and why they were rejected",
+    ),
+});
+
+/** AI returns ISO YYYY-MM-DD or null; drop anything unparseable. */
+const toDateOrNull = (value: string | null): Date | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+/**
+ * Loops every performance certificate, sends its file to the model one by one,
+ * and saves the extracted issue/signing dates. Documents that fail are logged
+ * and skipped so the rest still run.
+ */
+export const analyzePerformanceCertificateDates = withLog(
+  async () => {
+    await requireUserAction();
+    const certs = await prisma.performanceCertificate.findMany({
+      where: { certificateUrl: { not: null } },
+      select: { id: true, certificateUrl: true },
+    });
+
+    let analyzed = 0;
+    let failed = 0;
+    for (const cert of certs) {
+      if (!cert.certificateUrl) continue;
+      try {
+        const { output } = await generateText({
+          model: certificateModel,
+          system: CERTIFICATE_DATE_SYSTEM_PROMPT,
+          output: Output.object({
+            schema: certificateDateSchema,
+            name: "certificateDates",
+          }),
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "Extract the issue date and the signing date from this performance certificate.",
+                },
+                {
+                  type: "file",
+                  mediaType: contentTypeFor(cert.certificateUrl),
+                  data: new URL(cert.certificateUrl),
+                },
+              ],
+            },
+          ],
+        });
+        await prisma.performanceCertificate.update({
+          where: { id: cert.id },
+          data: {
+            issueDate: toDateOrNull(output.issueDate),
+            signingDate: toDateOrNull(output.signingDate),
+          },
+        });
+        analyzed++;
+      } catch (error) {
+        console.error(
+          `Performance certificate date analysis failed [${cert.id}]:`,
+          error,
+        );
+        failed++;
+      }
+    }
+    return { analyzed, failed, total: certs.length };
+  },
+  (result) => ({
+    action: "UPDATE" as const,
+    tableName: "PerformanceCertificate",
+    details: `Analyzed performance certificate dates: ${result.analyzed}/${result.total} updated, ${result.failed} failed`,
+  }),
+);

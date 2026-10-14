@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Eye, Pencil, Upload, X } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ExternalLink, Eye, Pencil, Sparkles, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { analyzePerformanceCertificateDates } from "@/actions/ai-analysis";
 import type { PerformanceCertificateField } from "@/actions/performanceCertificates";
+import { formatDateISTShort } from "@/lib/format-ist";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchItems } from "@/lib/slices/itemsSlice";
 import {
@@ -283,6 +285,24 @@ const columns: DataTableColumn<Row>[] = [
     text: (row) => labelOf(USE_OPTIONS, row.useNotUse),
     cell: (row) => <ToggleCell row={row} field="useNotUse" label="Use / Not Use" options={USE_OPTIONS} />,
   },
+  {
+    id: "issueDate",
+    header: "Issue Date",
+    width: 130,
+    text: (row) => formatDateISTShort(row.issueDate),
+    cell: (row) => (
+      <span className="tabular-nums">{formatDateISTShort(row.issueDate)}</span>
+    ),
+  },
+  {
+    id: "signingDate",
+    header: "Signing Date",
+    width: 130,
+    text: (row) => formatDateISTShort(row.signingDate),
+    cell: (row) => (
+      <span className="tabular-nums">{formatDateISTShort(row.signingDate)}</span>
+    ),
+  },
 ];
 
 const getRowId = (row: Row) => row.id;
@@ -342,7 +362,8 @@ export function PerformanceCertificatesView() {
   const itemRows = useAppSelector((s) => s.items.rows);
   const [preview, setPreview] = useState<Row | null>(null);
   const [uploading, setUploading] = useState(false);
-  const { table } = useClientTable(rows, columns);
+  const [analyzing, setAnalyzing] = useState(false);
+  const { table, filtered } = useClientTable(rows, columns);
 
   useEffect(() => {
     if (rows.length === 0) dispatch(fetchPerformanceCertificates());
@@ -367,6 +388,50 @@ export function PerformanceCertificatesView() {
     [preview, partyOptions, itemOptions],
   );
 
+  // The previewed row's place in the filtered list, so a row that drops out of
+  // the filter can hand the preview to the row that takes its place.
+  const previewIndex = useRef(-1);
+
+  const closePreview = () =>
+    setPreview((current) => {
+      if (!current) return null;
+      const index = filtered.findIndex((r) => r.id === current.id);
+      return index < 0 ? null : (filtered.slice(index + 1).find((r) => r.certificateUrl) ?? null);
+    });
+
+  // A filter or a cell edit can drop the previewed row; open the next one.
+  useEffect(() => {
+    if (!preview) {
+      previewIndex.current = -1;
+      return;
+    }
+    const index = filtered.findIndex((r) => r.id === preview.id);
+    if (index >= 0) {
+      previewIndex.current = index;
+      return;
+    }
+    setPreview(
+      previewIndex.current < 0
+        ? null
+        : (filtered.slice(previewIndex.current).find((r) => r.certificateUrl) ?? null),
+    );
+  }, [preview, filtered]);
+
+  const analyzeDates = async () => {
+    setAnalyzing(true);
+    try {
+      const { analyzed, total, failed } = await analyzePerformanceCertificateDates();
+      toast.success(
+        `Analyzed ${analyzed}/${total} certificates${failed ? `, ${failed} failed` : ""}`,
+      );
+      dispatch(fetchPerformanceCertificates());
+    } catch (err) {
+      toastError("Analysis failed", err);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   if (loading && rows.length === 0) return <PageSkeleton label="certificates" />;
 
   return (
@@ -375,13 +440,23 @@ export function PerformanceCertificatesView() {
         title="Performance Certificates"
         meta={`${table.total.toLocaleString("en-IN")} matching`}
         actions={
-          <Button
-            variant="primary"
-            icon={<Upload className="size-3.5" />}
-            onClick={() => setUploading(true)}
-          >
-            Upload certificate
-          </Button>
+          <>
+            <Button
+              variant="secondary"
+              icon={<Sparkles className="size-3.5" />}
+              loading={analyzing}
+              onClick={analyzeDates}
+            >
+              Analyze dates
+            </Button>
+            <Button
+              variant="primary"
+              icon={<Upload className="size-3.5" />}
+              onClick={() => setUploading(true)}
+            >
+              Upload certificate
+            </Button>
+          </>
         }
       />
       <div className="flex min-h-0 flex-1 gap-3">
@@ -396,7 +471,7 @@ export function PerformanceCertificatesView() {
             {...table}
           />
         </PageContext>
-        {preview && <PreviewPanel row={preview} onClose={() => setPreview(null)} />}
+        {preview && <PreviewPanel row={preview} onClose={closePreview} />}
       </div>
       <UploadCertificateDialog open={uploading} onOpenChange={setUploading} />
     </Page>

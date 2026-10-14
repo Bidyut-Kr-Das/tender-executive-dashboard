@@ -1135,8 +1135,13 @@ model PerformanceCertificate {
   certificateUrl  String?
   partyName       String?
   utilityOrClient String?
+  utilityNames    String?
   itemSchedule    String?
   useNotUse       String?
+
+  // AI-extracted from the certificate document.
+  issueDate   DateTime?
+  signingDate DateTime?
 
   @@map("performance_certificates")
 }
