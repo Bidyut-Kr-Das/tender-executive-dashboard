@@ -3,6 +3,7 @@ import type { PerformanceCertificateModel } from "@/generated/prisma/models/Perf
 import {
   getPerformanceCertificates,
   getSupplyPartyNames,
+  getUtilityPartyNames,
   updatePerformanceCertificatePartyName as updatePartyNameAction,
   updatePerformanceCertificateField as updateFieldAction,
   type PerformanceCertificateField,
@@ -14,6 +15,7 @@ export type PerformanceCertificateRow = PerformanceCertificateModel &
 interface PerformanceCertificatesState {
   rows: PerformanceCertificateRow[];
   partyNames: string[];
+  utilityNames: string[];
   saving: Record<string, boolean>;
   loading: boolean;
   error: string | null;
@@ -22,6 +24,7 @@ interface PerformanceCertificatesState {
 const initialState: PerformanceCertificatesState = {
   rows: [],
   partyNames: [],
+  utilityNames: [],
   saving: {},
   loading: false,
   error: null,
@@ -35,6 +38,11 @@ export const fetchPerformanceCertificates = createAsyncThunk(
 export const fetchSupplyPartyNames = createAsyncThunk(
   "performanceCertificates/fetchPartyNames",
   async () => await getSupplyPartyNames(),
+);
+
+export const fetchUtilityPartyNames = createAsyncThunk(
+  "performanceCertificates/fetchUtilityNames",
+  async () => await getUtilityPartyNames(),
 );
 
 export const updatePerformanceCertificatePartyName = createAsyncThunk(
@@ -78,6 +86,9 @@ export const performanceCertificatesSlice = createSlice({
       })
       .addCase(fetchSupplyPartyNames.fulfilled, (state, action) => {
         state.partyNames = action.payload;
+      })
+      .addCase(fetchUtilityPartyNames.fulfilled, (state, action) => {
+        state.utilityNames = action.payload;
       })
       .addCase(updatePerformanceCertificatePartyName.fulfilled, (state, action) => {
         const { id, partyName } = action.payload;

@@ -11,6 +11,7 @@ import { fetchItems } from "@/lib/slices/itemsSlice";
 import {
   fetchPerformanceCertificates,
   fetchSupplyPartyNames,
+  fetchUtilityPartyNames,
   updatePerformanceCertificateField,
   updatePerformanceCertificatePartyName,
   type PerformanceCertificateRow as Row,
@@ -32,8 +33,9 @@ const PageContext = createContext<{
   preview: Row | null;
   setPreview: (row: Row | null) => void;
   partyOptions: SelectOption[];
+  utilityOptions: SelectOption[];
   itemOptions: SelectOption[];
-}>({ preview: null, setPreview: () => {}, partyOptions: [], itemOptions: [] });
+}>({ preview: null, setPreview: () => {}, partyOptions: [], utilityOptions: [], itemOptions: [] });
 
 const NEW_TAB_LINK =
   "inline-flex size-6 shrink-0 items-center justify-center rounded-md text-ink-2 hover:bg-hover";
@@ -70,6 +72,22 @@ function LinkCell({ row }: { row: Row }) {
       </Button>
       <NewTabLink url={row.certificateUrl} />
     </div>
+  );
+}
+
+function UtilityNameCell({ row }: { row: Row }) {
+  const { utilityOptions } = useContext(PageContext);
+  const { pending, save } = useFieldSave(row, "utilityNames", "Utility name");
+  return (
+    <Combobox
+      size="sm"
+      label="Utility name"
+      placeholder="Not set"
+      value={row.utilityNames}
+      disabled={pending}
+      options={utilityOptions}
+      onChange={save}
+    />
   );
 }
 
@@ -261,6 +279,13 @@ const columns: DataTableColumn<Row>[] = [
     cell: (row) => <PartyCell row={row} />,
   },
   {
+    id: "utilityNames",
+    header: "Utility Name",
+    width: 220,
+    filter: selectFilter(),
+    cell: (row) => <UtilityNameCell row={row} />,
+  },
+  {
     id: "utilityOrClient",
     header: "Received From Utility / Client",
     width: 210,
@@ -358,7 +383,9 @@ function PreviewPanel({ row, onClose }: { row: Row; onClose: () => void }) {
 
 export function PerformanceCertificatesView() {
   const dispatch = useAppDispatch();
-  const { rows, loading, error, partyNames } = useAppSelector((s) => s.performanceCertificates);
+  const { rows, loading, error, partyNames, utilityNames } = useAppSelector(
+    (s) => s.performanceCertificates,
+  );
   const itemRows = useAppSelector((s) => s.items.rows);
   const [preview, setPreview] = useState<Row | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -368,12 +395,17 @@ export function PerformanceCertificatesView() {
   useEffect(() => {
     if (rows.length === 0) dispatch(fetchPerformanceCertificates());
     if (partyNames.length === 0) dispatch(fetchSupplyPartyNames());
+    if (utilityNames.length === 0) dispatch(fetchUtilityPartyNames());
     if (itemRows.length === 0) dispatch(fetchItems());
-  }, [dispatch, rows.length, partyNames.length, itemRows.length]);
+  }, [dispatch, rows.length, partyNames.length, utilityNames.length, itemRows.length]);
 
   const partyOptions = useMemo(
     () => partyNames.map((name) => ({ value: name, label: name })),
     [partyNames],
+  );
+  const utilityOptions = useMemo(
+    () => utilityNames.map((name) => ({ value: name, label: name })),
+    [utilityNames],
   );
   const itemOptions = useMemo(() => {
     const schedules = new Set<string>();
@@ -384,8 +416,8 @@ export function PerformanceCertificatesView() {
     return [...schedules].map((value) => ({ value, label: value }));
   }, [itemRows]);
   const context = useMemo(
-    () => ({ preview, setPreview, partyOptions, itemOptions }),
-    [preview, partyOptions, itemOptions],
+    () => ({ preview, setPreview, partyOptions, utilityOptions, itemOptions }),
+    [preview, partyOptions, utilityOptions, itemOptions],
   );
 
   // The previewed row's place in the filtered list, so a row that drops out of

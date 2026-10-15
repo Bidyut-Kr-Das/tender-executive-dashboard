@@ -23,6 +23,18 @@ export const getSupplyPartyNames = withLog(async () => {
     .filter((v): v is string => Boolean(v)) as string[];
 }, () => null);
 
+export const getUtilityPartyNames = withLog(async () => {
+  const rows = await prisma.tenderMerged.findMany({
+    distinct: ["erpPartyName"],
+    select: { erpPartyName: true },
+    where: { erpPartyName: { not: null } },
+    orderBy: { erpPartyName: "asc" },
+  });
+  return rows
+    .map((r) => r.erpPartyName?.trim())
+    .filter((v): v is string => Boolean(v)) as string[];
+}, () => null);
+
 export const updatePerformanceCertificatePartyName = withLog(
   async (id: string, partyName: string | null) => {
     await requireUserAction();
@@ -42,7 +54,8 @@ export const updatePerformanceCertificatePartyName = withLog(
 export type PerformanceCertificateField =
   | "utilityOrClient"
   | "useNotUse"
-  | "itemSchedule";
+  | "itemSchedule"
+  | "utilityNames";
 
 export const updatePerformanceCertificateField = withLog(
   async (
