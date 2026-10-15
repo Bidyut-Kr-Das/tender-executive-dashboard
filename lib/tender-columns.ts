@@ -501,6 +501,14 @@ export function mapRowToTender(
         const raw = rawValue == null ? "" : String(rawValue);
         const val = raw.trim().toLowerCase();
         knownFields[mappedField] = val === "yes" ? "YES" : val === "no" ? "NO" : "NOT_DECIDED";
+      } else if (
+        mappedField === "participated" ||
+        mappedField === "reverseAuctionApplicable" ||
+        mappedField === "bidValidityExpired"
+      ) {
+        const raw = rawValue == null ? "" : String(rawValue).trim().toLowerCase();
+        if (raw === "true" || raw === "yes") knownFields[mappedField] = true;
+        else if (raw === "false" || raw === "no") knownFields[mappedField] = false;
       } else if (mappedField === "statusCategory") {
         const raw = rawValue == null ? "" : String(rawValue);
         const val = raw.trim().toUpperCase();

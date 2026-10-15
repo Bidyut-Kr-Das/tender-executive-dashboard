@@ -386,6 +386,14 @@ export const analyzePerformanceCertificateDates = withLog(
     for (const cert of certs) {
       if (!cert.certificateUrl) continue;
       try {
+        // OpenAI cannot reach the S3 URL directly (proxy returns 407); fetch
+        // server-side and hand the model the bytes.
+        const response = await fetch(cert.certificateUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch certificate (${response.status})`);
+        }
+        const fileData = Buffer.from(await response.arrayBuffer());
+
         const { output } = await generateText({
           model: certificateModel,
           system: CERTIFICATE_DATE_SYSTEM_PROMPT,
@@ -404,7 +412,7 @@ export const analyzePerformanceCertificateDates = withLog(
                 {
                   type: "file",
                   mediaType: contentTypeFor(cert.certificateUrl),
-                  data: new URL(cert.certificateUrl),
+                  data: fileData,
                 },
               ],
             },
