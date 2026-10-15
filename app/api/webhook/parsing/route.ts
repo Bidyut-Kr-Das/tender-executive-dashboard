@@ -1,14 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import { createWebhookHandler, type WebhookEvent } from "@/lib/webhook-event";
+import { createWebhookHandler, httpError, type WebhookEvent } from "@/lib/webhook-event";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 
 const SUCCESS_EVENT = "file.parsed_success";
 const FAILED_EVENT = "file.parsed_failed";
-
-function httpError(message: string, status: number) {
-  return Object.assign(new Error(message), { status });
-}
 
 // Shape of the costing worker's COSTING_ATTACHMENT_PARSING result.
 interface CostingResult {

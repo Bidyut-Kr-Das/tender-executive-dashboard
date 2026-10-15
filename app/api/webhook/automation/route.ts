@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { createWebhookHandler, type WebhookEvent } from "@/lib/webhook-event";
+import { createWebhookHandler, httpError, type WebhookEvent } from "@/lib/webhook-event";
 import {
   INGESTION_FILE_SELECT,
   publishIngestionTask,
@@ -26,10 +26,6 @@ interface FetchedFile {
 }
 
 const VALID_TAGS = new Set<string>(Object.values(TENDER_FILE_TYPES));
-
-function httpError(message: string, status: number) {
-  return Object.assign(new Error(message), { status });
-}
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";

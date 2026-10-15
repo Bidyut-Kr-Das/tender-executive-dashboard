@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import { buildCountsQuery, buildEpcQueryFilters } from "@/lib/epc-table-query";
 import type { TenderQuery } from "@/lib/tender-query";
-import type { EpcTableFilters } from "@/components/TenderTable";
+import type { EpcTableFilters } from "./epc-table-query";
 
 const NOW = new Date("2026-09-24T06:00:00.000Z"); // 11:30 IST, Thu 24 Sep 2026
 
