@@ -55,7 +55,8 @@ export type PerformanceCertificateField =
   | "utilityOrClient"
   | "useNotUse"
   | "itemSchedule"
-  | "utilityNames";
+  | "utilityNames"
+  | "duplicateOfId";
 
 export const updatePerformanceCertificateField = withLog(
   async (

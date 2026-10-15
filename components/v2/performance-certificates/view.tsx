@@ -261,8 +261,50 @@ function ItemScheduleCell({ row }: { row: Row }) {
   );
 }
 
+const certId = (serial: number) => `PERF-CERT-${String(serial).padStart(4, "0")}`;
+
+function DuplicateCell({ row }: { row: Row }) {
+  const rows = useAppSelector((s) => s.performanceCertificates.rows);
+  const { pending, save } = useFieldSave(row, "duplicateOfId", "Duplicate link");
+  const options = rows
+    .filter((r) => r.id !== row.id)
+    .map((r) => ({ value: r.id, label: certId(r.serial) }));
+  const original = rows.find((r) => r.id === row.duplicateOfId) ?? null;
+  return (
+    <div className="flex items-center gap-1">
+      <Combobox
+        size="sm"
+        label="Duplicate of"
+        placeholder="Not a duplicate"
+        value={row.duplicateOfId}
+        disabled={pending}
+        options={options}
+        onChange={save}
+      />
+      {original?.certificateUrl && <NewTabLink url={original.certificateUrl} />}
+    </div>
+  );
+}
+
 const columns: DataTableColumn<Row>[] = [
+  {
+    id: "serial",
+    header: "ID",
+    width: 130,
+    text: (row) => certId(row.serial),
+    cell: (row) => (
+      <span className="font-mono tabular-nums">{certId(row.serial)}</span>
+    ),
+  },
   { id: "certificateName", header: "Certificate Name", width: 300, filter: selectFilter() },
+  {
+    id: "duplicateOfId",
+    header: "Duplicate Of",
+    width: 260,
+    search: false,
+    sortable: false,
+    cell: (row) => <DuplicateCell row={row} />,
+  },
   {
     id: "certificateUrl",
     header: "Certificate Link",

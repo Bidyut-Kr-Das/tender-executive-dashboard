@@ -1128,6 +1128,7 @@ model TypeTest {
 
 model PerformanceCertificate {
   id        String   @id @default(uuid())
+  serial    Int      @unique @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1143,6 +1144,12 @@ model PerformanceCertificate {
   issueDate   DateTime?
   signingDate DateTime?
 
+  // Set when this certificate is a duplicate; points at the original.
+  duplicateOfId String?
+  duplicateOf   PerformanceCertificate?  @relation("CertDuplicate", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates    PerformanceCertificate[] @relation("CertDuplicate")
+
+  @@index([duplicateOfId])
   @@map("performance_certificates")
 }
 

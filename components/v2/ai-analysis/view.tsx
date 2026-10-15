@@ -335,6 +335,7 @@ export function AiAnalysisView() {
   const { counts: loaded, updatedAt, error, loading, live, setLive, load } = useLifecycleCounts();
   const developer = useSession().data?.user?.role === "developer";
   const [requeuing, setRequeuing] = useState<LifecycleFunnelRow["stage"] | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const requeue = (stage: LifecycleFunnelRow["stage"]) => {
     setRequeuing(stage);
@@ -352,6 +353,13 @@ export function AiAnalysisView() {
         error: async (err) => `Requeue failed: ${await describeError(err)}`,
       },
     );
+  };
+
+  // Hold the spinner for five seconds so a fast refresh is still visible.
+  const refresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 5_000);
+    load();
   };
 
   if (!loaded || !updatedAt) {
@@ -417,8 +425,8 @@ export function AiAnalysisView() {
             <Button
               icon={<RefreshCw className="size-3.5" />}
               // Live ticks would flicker the spinner every five seconds.
-              loading={loading && !live}
-              onClick={load}
+              loading={refreshing || (loading && !live)}
+              onClick={refresh}
             >
               Refresh
             </Button>
