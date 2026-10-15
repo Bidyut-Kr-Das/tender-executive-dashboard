@@ -1,10 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Eye, Pencil, Sparkles, Upload, X } from "lucide-react";
+import { ExternalLink, Eye, Pencil, Scissors, Sparkles, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { analyzePerformanceCertificateDates } from "@/actions/ai-analysis";
-import type { PerformanceCertificateField } from "@/actions/performanceCertificates";
+import {
+  publishPerformanceCertificateJobs,
+  splitPerformanceCertificatePages,
+  type PerformanceCertificateField,
+} from "@/actions/performanceCertificates";
 import { formatDateISTShort } from "@/lib/format-ist";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchItems } from "@/lib/slices/itemsSlice";
@@ -71,7 +74,35 @@ function LinkCell({ row }: { row: Row }) {
         Preview
       </Button>
       <NewTabLink url={row.certificateUrl} />
+      {extensionOf(row.certificateUrl) === ".pdf" && <SplitPagesButton row={row} />}
     </div>
+  );
+}
+
+/** Splits the row's PDF into a new row per page, then refreshes the table. */
+function SplitPagesButton({ row }: { row: Row }) {
+  const dispatch = useAppDispatch();
+  const [pending, setPending] = useState(false);
+  return (
+    <IconButton
+      size="sm"
+      label="Split PDF into page rows"
+      disabled={pending}
+      onClick={() => {
+        setPending(true);
+        splitPerformanceCertificatePages(row.id)
+          .then(({ pages }) =>
+            toast.success(`Split into ${pages} page row${pages === 1 ? "" : "s"}`),
+          )
+          .catch((err: unknown) => toastError("Split failed", err))
+          .finally(() => {
+            setPending(false);
+            dispatch(fetchPerformanceCertificates());
+          });
+      }}
+    >
+      <Scissors className="size-3.5" />
+    </IconButton>
   );
 }
 
@@ -308,7 +339,7 @@ const columns: DataTableColumn<Row>[] = [
   {
     id: "certificateUrl",
     header: "Certificate Link",
-    width: 150,
+    width: 200,
     search: false,
     sortable: false,
     cell: (row) => <LinkCell row={row} />,
@@ -494,10 +525,8 @@ export function PerformanceCertificatesView() {
   const analyzeDates = async () => {
     setAnalyzing(true);
     try {
-      const { analyzed, total, failed } = await analyzePerformanceCertificateDates();
-      toast.success(
-        `Analyzed ${analyzed}/${total} certificates${failed ? `, ${failed} failed` : ""}`,
-      );
+      const { jobs, files } = await publishPerformanceCertificateJobs();
+      toast.success(`Published ${jobs} job(s) (${files} files)`);
       dispatch(fetchPerformanceCertificates());
     } catch (err) {
       toastError("Analysis failed", err);
@@ -521,7 +550,7 @@ export function PerformanceCertificatesView() {
               loading={analyzing}
               onClick={analyzeDates}
             >
-              Analyze dates
+              Analyze Certificate
             </Button>
             <Button
               variant="primary"

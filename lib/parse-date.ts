@@ -27,9 +27,11 @@ const DATE_FORMATS = [
   "d.M.yyyy-hh:mm a",
   "d.M.yyyy-HH:mm",
   "d.M.yyyy",
+  "d.M.yy",
   // date-only
   "d-M-yyyy",
   "d/M/yyyy",
+  "d/M/yy",
   // month name, dash
   "d-MMM-yyyy-hh:mm a",
   "d-MMM-yyyy-HH:mm",

@@ -197,6 +197,8 @@ model SupplyHistory {
 
   lastSyncedAt DateTime @default(now())
 
+  performanceCertificates PerformanceCertificate[] @relation("CertSupplyHistory")
+
   @@unique([saleBillNumber, itemCode])
 }
 
@@ -1144,10 +1146,16 @@ model PerformanceCertificate {
   issueDate   DateTime?
   signingDate DateTime?
 
+  // Party reference printed on the certificate; also links the matching SupplyHistory rows.
+  partyReferenceNo String?
+
   // Set when this certificate is a duplicate; points at the original.
   duplicateOfId String?
   duplicateOf   PerformanceCertificate?  @relation("CertDuplicate", fields: [duplicateOfId], references: [id], onDelete: SetNull)
   duplicates    PerformanceCertificate[] @relation("CertDuplicate")
+
+  // SupplyHistory rows whose partyRefNo matches this certificate's partyReferenceNo.
+  supplyHistories SupplyHistory[] @relation("CertSupplyHistory")
 
   @@index([duplicateOfId])
   @@map("performance_certificates")

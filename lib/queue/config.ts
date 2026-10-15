@@ -5,6 +5,7 @@ export const QUEUES = {
   AGENT_INTELLIGENCE: "agent:intelligence",
   AGENT_RELEVANCE: "agent:relevance",
   AGENT_INGESTION: "agent:ingestion",
+  AGENT_PERFORMANCE_CERT: "agent:performance_cert",
   // Automation v2 — see docs/tender-lifecycle.md
   AUTOMATION_V2_TASKS: "automation-v2:tasks",
   AUTOMATION_V2_PARSING: "automation-v2:parsing",
