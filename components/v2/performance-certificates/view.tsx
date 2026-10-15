@@ -1,14 +1,20 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Eye, Pencil, X } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ExternalLink, Eye, Pencil, Scissors, Sparkles, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import type { PerformanceCertificateField } from "@/actions/performanceCertificates";
+import {
+  publishPerformanceCertificateJobs,
+  splitPerformanceCertificatePages,
+  type PerformanceCertificateField,
+} from "@/actions/performanceCertificates";
+import { formatDateISTShort } from "@/lib/format-ist";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchItems } from "@/lib/slices/itemsSlice";
 import {
   fetchPerformanceCertificates,
   fetchSupplyPartyNames,
+  fetchUtilityPartyNames,
   updatePerformanceCertificateField,
   updatePerformanceCertificatePartyName,
   type PerformanceCertificateRow as Row,
@@ -23,14 +29,16 @@ import { toastError } from "@/components/v2/ui/errors";
 import { CheckMark, Choice, Dash, Input } from "@/components/v2/ui/field";
 import { Combobox, Popover, type SelectOption } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, PageSkeleton } from "@/components/v2/ui/page";
+import { UploadCertificateDialog } from "@/components/v2/performance-certificates/upload-dialog";
 
 /** What the cells share: the certificate shown beside the table and the pick lists. */
 const PageContext = createContext<{
   preview: Row | null;
   setPreview: (row: Row | null) => void;
   partyOptions: SelectOption[];
+  utilityOptions: SelectOption[];
   itemOptions: SelectOption[];
-}>({ preview: null, setPreview: () => {}, partyOptions: [], itemOptions: [] });
+}>({ preview: null, setPreview: () => {}, partyOptions: [], utilityOptions: [], itemOptions: [] });
 
 const NEW_TAB_LINK =
   "inline-flex size-6 shrink-0 items-center justify-center rounded-md text-ink-2 hover:bg-hover";
@@ -66,7 +74,51 @@ function LinkCell({ row }: { row: Row }) {
         Preview
       </Button>
       <NewTabLink url={row.certificateUrl} />
+      {extensionOf(row.certificateUrl) === ".pdf" && <SplitPagesButton row={row} />}
     </div>
+  );
+}
+
+/** Splits the row's PDF into a new row per page, then refreshes the table. */
+function SplitPagesButton({ row }: { row: Row }) {
+  const dispatch = useAppDispatch();
+  const [pending, setPending] = useState(false);
+  return (
+    <IconButton
+      size="sm"
+      label="Split PDF into page rows"
+      disabled={pending}
+      onClick={() => {
+        setPending(true);
+        splitPerformanceCertificatePages(row.id)
+          .then(({ pages }) =>
+            toast.success(`Split into ${pages} page row${pages === 1 ? "" : "s"}`),
+          )
+          .catch((err: unknown) => toastError("Split failed", err))
+          .finally(() => {
+            setPending(false);
+            dispatch(fetchPerformanceCertificates());
+          });
+      }}
+    >
+      <Scissors className="size-3.5" />
+    </IconButton>
+  );
+}
+
+function UtilityNameCell({ row }: { row: Row }) {
+  const { utilityOptions } = useContext(PageContext);
+  const { pending, save } = useFieldSave(row, "utilityNames", "Utility name");
+  return (
+    <Combobox
+      size="sm"
+      label="Utility name"
+      placeholder="Not set"
+      value={row.utilityNames}
+      disabled={pending}
+      options={utilityOptions}
+      onChange={save}
+    />
   );
 }
 
@@ -240,12 +292,54 @@ function ItemScheduleCell({ row }: { row: Row }) {
   );
 }
 
+const certId = (serial: number) => `PERF-CERT-${String(serial).padStart(4, "0")}`;
+
+function DuplicateCell({ row }: { row: Row }) {
+  const rows = useAppSelector((s) => s.performanceCertificates.rows);
+  const { pending, save } = useFieldSave(row, "duplicateOfId", "Duplicate link");
+  const options = rows
+    .filter((r) => r.id !== row.id)
+    .map((r) => ({ value: r.id, label: certId(r.serial) }));
+  const original = rows.find((r) => r.id === row.duplicateOfId) ?? null;
+  return (
+    <div className="flex items-center gap-1">
+      <Combobox
+        size="sm"
+        label="Duplicate of"
+        placeholder="Not a duplicate"
+        value={row.duplicateOfId}
+        disabled={pending}
+        options={options}
+        onChange={save}
+      />
+      {original?.certificateUrl && <NewTabLink url={original.certificateUrl} />}
+    </div>
+  );
+}
+
 const columns: DataTableColumn<Row>[] = [
+  {
+    id: "serial",
+    header: "ID",
+    width: 130,
+    text: (row) => certId(row.serial),
+    cell: (row) => (
+      <span className="font-mono tabular-nums">{certId(row.serial)}</span>
+    ),
+  },
   { id: "certificateName", header: "Certificate Name", width: 300, filter: selectFilter() },
+  {
+    id: "duplicateOfId",
+    header: "Duplicate Of",
+    width: 260,
+    search: false,
+    sortable: false,
+    cell: (row) => <DuplicateCell row={row} />,
+  },
   {
     id: "certificateUrl",
     header: "Certificate Link",
-    width: 150,
+    width: 200,
     search: false,
     sortable: false,
     cell: (row) => <LinkCell row={row} />,
@@ -256,6 +350,13 @@ const columns: DataTableColumn<Row>[] = [
     width: 220,
     filter: selectFilter(),
     cell: (row) => <PartyCell row={row} />,
+  },
+  {
+    id: "utilityNames",
+    header: "Utility Name",
+    width: 220,
+    filter: selectFilter(),
+    cell: (row) => <UtilityNameCell row={row} />,
   },
   {
     id: "utilityOrClient",
@@ -281,6 +382,24 @@ const columns: DataTableColumn<Row>[] = [
     filter: selectFilter(),
     text: (row) => labelOf(USE_OPTIONS, row.useNotUse),
     cell: (row) => <ToggleCell row={row} field="useNotUse" label="Use / Not Use" options={USE_OPTIONS} />,
+  },
+  {
+    id: "issueDate",
+    header: "Issue Date",
+    width: 130,
+    text: (row) => formatDateISTShort(row.issueDate),
+    cell: (row) => (
+      <span className="tabular-nums">{formatDateISTShort(row.issueDate)}</span>
+    ),
+  },
+  {
+    id: "signingDate",
+    header: "Signing Date",
+    width: 130,
+    text: (row) => formatDateISTShort(row.signingDate),
+    cell: (row) => (
+      <span className="tabular-nums">{formatDateISTShort(row.signingDate)}</span>
+    ),
   },
 ];
 
@@ -337,20 +456,29 @@ function PreviewPanel({ row, onClose }: { row: Row; onClose: () => void }) {
 
 export function PerformanceCertificatesView() {
   const dispatch = useAppDispatch();
-  const { rows, loading, error, partyNames } = useAppSelector((s) => s.performanceCertificates);
+  const { rows, loading, error, partyNames, utilityNames } = useAppSelector(
+    (s) => s.performanceCertificates,
+  );
   const itemRows = useAppSelector((s) => s.items.rows);
   const [preview, setPreview] = useState<Row | null>(null);
-  const { table } = useClientTable(rows, columns);
+  const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const { table, filtered } = useClientTable(rows, columns);
 
   useEffect(() => {
     if (rows.length === 0) dispatch(fetchPerformanceCertificates());
     if (partyNames.length === 0) dispatch(fetchSupplyPartyNames());
+    if (utilityNames.length === 0) dispatch(fetchUtilityPartyNames());
     if (itemRows.length === 0) dispatch(fetchItems());
-  }, [dispatch, rows.length, partyNames.length, itemRows.length]);
+  }, [dispatch, rows.length, partyNames.length, utilityNames.length, itemRows.length]);
 
   const partyOptions = useMemo(
     () => partyNames.map((name) => ({ value: name, label: name })),
     [partyNames],
+  );
+  const utilityOptions = useMemo(
+    () => utilityNames.map((name) => ({ value: name, label: name })),
+    [utilityNames],
   );
   const itemOptions = useMemo(() => {
     const schedules = new Set<string>();
@@ -361,9 +489,51 @@ export function PerformanceCertificatesView() {
     return [...schedules].map((value) => ({ value, label: value }));
   }, [itemRows]);
   const context = useMemo(
-    () => ({ preview, setPreview, partyOptions, itemOptions }),
-    [preview, partyOptions, itemOptions],
+    () => ({ preview, setPreview, partyOptions, utilityOptions, itemOptions }),
+    [preview, partyOptions, utilityOptions, itemOptions],
   );
+
+  // The previewed row's place in the filtered list, so a row that drops out of
+  // the filter can hand the preview to the row that takes its place.
+  const previewIndex = useRef(-1);
+
+  const closePreview = () =>
+    setPreview((current) => {
+      if (!current) return null;
+      const index = filtered.findIndex((r) => r.id === current.id);
+      return index < 0 ? null : (filtered.slice(index + 1).find((r) => r.certificateUrl) ?? null);
+    });
+
+  // A filter or a cell edit can drop the previewed row; open the next one.
+  useEffect(() => {
+    if (!preview) {
+      previewIndex.current = -1;
+      return;
+    }
+    const index = filtered.findIndex((r) => r.id === preview.id);
+    if (index >= 0) {
+      previewIndex.current = index;
+      return;
+    }
+    setPreview(
+      previewIndex.current < 0
+        ? null
+        : (filtered.slice(previewIndex.current).find((r) => r.certificateUrl) ?? null),
+    );
+  }, [preview, filtered]);
+
+  const analyzeDates = async () => {
+    setAnalyzing(true);
+    try {
+      const { jobs, files } = await publishPerformanceCertificateJobs();
+      toast.success(`Published ${jobs} job(s) (${files} files)`);
+      dispatch(fetchPerformanceCertificates());
+    } catch (err) {
+      toastError("Analysis failed", err);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   if (loading && rows.length === 0) return <PageSkeleton label="certificates" />;
 
@@ -372,6 +542,25 @@ export function PerformanceCertificatesView() {
       <PageHeader
         title="Performance Certificates"
         meta={`${table.total.toLocaleString("en-IN")} matching`}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              icon={<Sparkles className="size-3.5" />}
+              loading={analyzing}
+              onClick={analyzeDates}
+            >
+              Analyze Certificate
+            </Button>
+            <Button
+              variant="primary"
+              icon={<Upload className="size-3.5" />}
+              onClick={() => setUploading(true)}
+            >
+              Upload certificate
+            </Button>
+          </>
+        }
       />
       <div className="flex min-h-0 flex-1 gap-3">
         <PageContext value={context}>
@@ -385,8 +574,9 @@ export function PerformanceCertificatesView() {
             {...table}
           />
         </PageContext>
-        {preview && <PreviewPanel row={preview} onClose={() => setPreview(null)} />}
+        {preview && <PreviewPanel row={preview} onClose={closePreview} />}
       </div>
+      <UploadCertificateDialog open={uploading} onOpenChange={setUploading} />
     </Page>
   );
 }

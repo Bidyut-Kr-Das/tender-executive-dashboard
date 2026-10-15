@@ -213,3 +213,24 @@ export async function publishAgentIntelligenceTask(
     withClientId("TENDER_AGENT_INTELLIGENCE_CLIENT_ID", payload),
   );
 }
+
+export type PerformanceCertFile = {
+  performanceCertificateId: string;
+  fileUrl: string;
+  fileName: string;
+  fileTag: string;
+};
+
+export type PerformanceCertPayload = {
+  jobId: string;
+  files: PerformanceCertFile[];
+};
+
+export async function publishPerformanceCertTask(
+  payload: PerformanceCertPayload,
+): Promise<boolean> {
+  return publishToQueue(
+    QUEUES.AGENT_PERFORMANCE_CERT,
+    withClientId("TENDER_AGENT_PERFORMANCE_CERT_CLIENT_ID", payload),
+  );
+}
