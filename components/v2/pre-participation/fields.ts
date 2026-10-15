@@ -257,6 +257,8 @@ const FIELD_LIST: FieldDef[] = [
         }),
       ).unwrap(),
   },
+  text("bgNoUtrNo", "BG / UTR No", "EMD and BG"),
+  text("issuingBank", "Issuing Bank", "EMD and BG"),
   text("ePbgDurationMonths", "e-PBG duration (months)", "EMD and BG"),
   text("ePbgPercentage", "e-PBG percentage", "EMD and BG"),
 
