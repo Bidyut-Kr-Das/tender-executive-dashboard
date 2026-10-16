@@ -62,6 +62,10 @@ export const TENDER_LIFECYCLE_STAGES = [
 
 export type TenderLifecycleStage = (typeof TENDER_LIFECYCLE_STAGES)[number]["stage"];
 
+// A tender queued longer than this is shown as slow, and may be requeued by hand.
+// ponytail: one threshold for every stage; make it per stage if their normal waits differ.
+export const LIFECYCLE_SLOW_MS = 60 * 60 * 1000;
+
 /** One row of a `groupBy` on the status column. */
 export interface LifecycleGroup {
   status: string | null;

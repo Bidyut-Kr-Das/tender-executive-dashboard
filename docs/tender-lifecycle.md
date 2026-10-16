@@ -172,8 +172,11 @@ Webhook `POST /api/webhook/automation` (envelope, [§8](#8-webhook-envelope)):
   `GEM_DOWNLOAD` / `RA_GEM_DOWNLOAD` → tag `tenderDocument`; `NON_GEM_DOWNLOAD` → tag `boqComparativeChart`.
   Other files keep `parseStatus = null`. If a parsing job is not published, that file is set to
   `parseStatus = FAILED` (`parseError = "Parsing job not queued"`).
-- Ingestion: if the event saved at least one new file, publish stage 4 once with all `TenderFile` rows of the
-  tender, status `INGESTION_QUEUED`. It does not wait for parsing. A retry that saves no new file publishes nothing.
+- Ingestion: if the event saved at least one new file, or the tender is still `AUTOMATION_QUEUED` (a re-analysed
+  tender has its files stored already), publish stage 4 once with all `TenderFile` rows of the tender, status
+  `INGESTION_QUEUED`. It does not wait for parsing. A repeated event finds the tender past `AUTOMATION_QUEUED`,
+  saves no new file and publishes nothing. A tender with no file at all is set to `INGESTION_FAILED`
+  (`"No files to ingest"`).
 - Worker error: status `AUTOMATION_FAILED`.
 
 Parsing type mapping:
@@ -351,8 +354,9 @@ Rules:
 - A publish failure sets the **next** stage to `*_FAILED`, because that stage never received its job.
 - A worker error event sets the **current** stage to `*_FAILED`.
 - Status only moves forward, except a manual retry, which resets to the retried stage's `*_QUEUED`.
-  Manual retry is `requeueFailedStage` (`actions/ai-analysis.ts`), developer role only, from the Failed column on
-  `/v2/ai-analysis`: it republishes that stage's job for every tender in the stage's `*_FAILED`.
+  Manual retry is `requeueStage` (`actions/ai-analysis.ts`), developer role only, from the Failed and Waiting
+  columns on `/v2/ai-analysis`: it republishes that stage's job for every tender in the stage's `*_FAILED`, or in
+  its `*_QUEUED` for longer than `LIFECYCLE_SLOW_MS` (one hour).
 
 ```mermaid
 stateDiagram-v2

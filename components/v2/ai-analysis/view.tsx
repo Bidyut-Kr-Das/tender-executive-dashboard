@@ -5,9 +5,10 @@ import { formatDistanceStrict } from "date-fns";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { AlertTriangle, Check, Clock, Radio, RefreshCw, RotateCcw } from "lucide-react";
-import { requeueFailedStage } from "@/actions/ai-analysis";
+import { requeueStage } from "@/actions/ai-analysis";
 import { fetchLifecycleCounts } from "@/actions/tender-lifecycle";
 import {
+  LIFECYCLE_SLOW_MS as SLOW_MS,
   lifecycleFunnel,
   type LifecycleCounts,
   type LifecycleFunnelRow,
@@ -19,8 +20,8 @@ import { Badge, Dash } from "@/components/v2/ui/field";
 import { EmptyState, Page, PageHeader, PageSkeleton } from "@/components/v2/ui/page";
 
 const POLL_MS = 5_000;
-// ponytail: one threshold for every stage; make it per stage if their normal waits differ.
-const SLOW_MS = 60 * 60 * 1000;
+
+type RequeueFrom = Parameters<typeof requeueStage>[1];
 
 const STAGES: Record<LifecycleFunnelRow["stage"], { label: string; detail: string }> = {
   RELEVANCE: { label: "Relevance", detail: "AI checks the tender is relevant" },
@@ -174,10 +175,29 @@ function Pipeline({
   entered: number;
   completed: number;
   now: Date;
-  /** Developers only: send a stage's failed tenders through it again. */
-  onRequeue?: (stage: LifecycleFunnelRow["stage"]) => void;
-  requeuing: LifecycleFunnelRow["stage"] | null;
+  /** Developers only: send a stage's failed or slow tenders through it again. */
+  onRequeue?: (stage: LifecycleFunnelRow["stage"], from: RequeueFrom) => void;
+  /** `${stage}_${from}` of the requeue in flight. */
+  requeuing: string | null;
 }) {
+  const requeueButton = (row: LifecycleFunnelRow, from: RequeueFrom, label: string) =>
+    onRequeue && (
+      <IconButton
+        size="sm"
+        label={label}
+        disabled={requeuing !== null}
+        onClick={() => onRequeue(row.stage, from)}
+      >
+        <RotateCcw
+          className={cn(
+            "size-3.5",
+            requeuing === `${row.stage}_${from}` &&
+              "animate-spin [animation-direction:reverse] motion-reduce:animate-none",
+          )}
+        />
+      </IconButton>
+    );
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[46rem] border-separate border-spacing-0">
@@ -247,28 +267,25 @@ function Pipeline({
                   </div>
                 </td>
                 <td className={cn(TD, "border-t text-md font-semibold")}>
-                  {row.queued > 0 ? fmt(row.queued) : <span className="font-normal text-ink-3">0</span>}
+                  {row.queued > 0 ? (
+                    <span className="inline-flex items-center gap-1">
+                      {fmt(row.queued)}
+                      {slow &&
+                        requeueButton(
+                          row,
+                          "QUEUED",
+                          `Requeue tenders waiting over ${formatDistanceStrict(0, SLOW_MS)} in ${label}`,
+                        )}
+                    </span>
+                  ) : (
+                    <span className="font-normal text-ink-3">0</span>
+                  )}
                 </td>
                 <td className={cn(TD, "border-t")}>
                   {row.failed > 0 ? (
                     <span className="inline-flex items-center gap-1">
                       <Badge tone="bad">{fmt(row.failed)}</Badge>
-                      {onRequeue && (
-                        <IconButton
-                          size="sm"
-                          label={`Requeue ${fmt(row.failed)} failed in ${label}`}
-                          disabled={requeuing !== null}
-                          onClick={() => onRequeue(row.stage)}
-                        >
-                          <RotateCcw
-                            className={cn(
-                              "size-3.5",
-                              requeuing === row.stage &&
-                                "animate-spin [animation-direction:reverse] motion-reduce:animate-none",
-                            )}
-                          />
-                        </IconButton>
-                      )}
+                      {requeueButton(row, "FAILED", `Requeue ${fmt(row.failed)} failed in ${label}`)}
                     </span>
                   ) : (
                     <span className="text-ink-3">0</span>
@@ -334,18 +351,18 @@ function Pipeline({
 export function AiAnalysisView() {
   const { counts: loaded, updatedAt, error, loading, live, setLive, load } = useLifecycleCounts();
   const developer = useSession().data?.user?.role === "developer";
-  const [requeuing, setRequeuing] = useState<LifecycleFunnelRow["stage"] | null>(null);
+  const [requeuing, setRequeuing] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const requeue = (stage: LifecycleFunnelRow["stage"]) => {
-    setRequeuing(stage);
+  const requeue = (stage: LifecycleFunnelRow["stage"], from: RequeueFrom) => {
+    setRequeuing(`${stage}_${from}`);
     toast.promise(
-      requeueFailedStage(stage).finally(() => {
+      requeueStage(stage, from).finally(() => {
         setRequeuing(null);
         load();
       }),
       {
-        loading: `Requeueing failed tenders in ${STAGES[stage].label}...`,
+        loading: `Requeueing ${from === "FAILED" ? "failed" : "slow"} tenders in ${STAGES[stage].label}...`,
         success: ({ queued, notQueued }) =>
           notQueued > 0
             ? `${fmt(queued)} requeued, ${fmt(notQueued)} could not be queued`

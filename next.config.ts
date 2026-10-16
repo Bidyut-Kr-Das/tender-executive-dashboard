@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
     "@prisma/client",
     "@prisma/adapter-pg",
     "pg",
-    "smartsheet",
   ],
   output: "standalone", 
   experimental: {

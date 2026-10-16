@@ -1,6 +1,6 @@
 import fs from "fs";
 import Handlebars from "handlebars";
-import puppeteer, { PDFOptions } from "puppeteer";
+import puppeteer, { PDFOptions } from "puppeteer-core";
 import { CertificateTemplateData } from "@/app/types/certificate";
 
 /**
@@ -19,22 +19,25 @@ function registerHelpers(): void {
 }
 
 /**
- * Common install locations for a system Chrome/Chromium on Windows.
- * Used as a fallback when Puppeteer's bundled Chromium isn't available.
+ * Common install locations for a system Chrome/Chromium. puppeteer-core ships
+ * no browser, so one of these (or CHROME_PATH) must exist.
  */
-const WINDOWS_CHROME_PATHS = [
+const CHROME_PATHS = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files\\Chromium\\Application\\chrome.exe",
+  // Debian chromium package installed by the Dockerfile.
+  "/usr/bin/chromium",
+  "/usr/bin/chromium-browser",
+  "/usr/bin/google-chrome",
 ];
 
 /**
  * Resolves which Chrome/Chromium executable to launch.
- * Priority: explicit override -> CHROME_PATH env -> first existing Windows
- * Chrome install -> undefined (undefined tells Puppeteer to use its own
- * bundled Chromium).
+ * Priority: explicit override -> CHROME_PATH env -> first existing known
+ * Chrome install. Throws when none is found.
  */
-function resolveChromePath(executablePathOverride?: string): string | undefined {
+function resolveChromePath(executablePathOverride?: string): string {
   if (executablePathOverride) return executablePathOverride;
 
   const envPath = process.env.CHROME_PATH;
@@ -43,13 +46,13 @@ function resolveChromePath(executablePathOverride?: string): string | undefined 
     envPath,
   )) return envPath;
 
-  for (const candidate of WINDOWS_CHROME_PATHS) {
+  for (const candidate of CHROME_PATHS) {
     if (fs.existsSync(
       /* turbopackIgnore: true */
       candidate,
     )) return candidate;
   }
-  return undefined; // undefined if none of the candidates exist on this machine
+  throw new Error("No Chrome/Chromium executable found. Set CHROME_PATH.");
 }
 
 export interface GeneratePdfOptions {
@@ -61,8 +64,8 @@ export interface GeneratePdfOptions {
 
   /**
    * Optional explicit path to a Chromium/Chrome executable. Takes priority
-   * over everything else. If omitted, falls back to a system Chrome install
-   * at the usual Windows locations, then to Puppeteer's bundled Chromium.
+   * over everything else. If omitted, falls back to CHROME_PATH, then to a
+   * system Chrome install at the usual Windows/Linux locations.
    */
   executablePath?: string;
 }

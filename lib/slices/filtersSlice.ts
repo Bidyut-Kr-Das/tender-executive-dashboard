@@ -1,6 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { SortingState, ColumnSizingState, VisibilityState } from "@tanstack/react-table";
+type SortingState = { id: string; desc: boolean }[];
+type VisibilityState = Record<string, boolean>;
+type ColumnSizingState = Record<string, number>;
 import type { ColumnFilterState, ColumnFilterType } from "@/lib/types";
 
 type DeadlinePreset = "thisWeek" | "thisMonth" | "thisYear";

@@ -1,4 +1,3 @@
-import type { EpcTableFilters } from "@/components/TenderTable";
 import type { ColumnFilterState } from "@/lib/types";
 // Type-only: a value import from lib/tender-query drags Prisma into the client bundle.
 import type { TenderQuery } from "@/lib/tender-query";
@@ -14,6 +13,23 @@ import {
  * SQL layer reads. One copy, shared by the three EPC dashboards, so a filter
  * cannot mean one thing on / and another on /not-participated.
  */
+
+/** Every filter the EPC table owns, as the page needs to see it. */
+export interface EpcTableFilters {
+  multiSelectFilters: Record<string, string[]>;
+  columnSearchText: Record<string, string>;
+  startDate: string;
+  endDate: string;
+  datePreset: "" | "thisWeek" | "thisMonth" | "thisYear";
+  raStartFrom: string;
+  raStartTo: string;
+  raEndFrom: string;
+  raEndTo: string;
+  remarksTextFilter: string;
+  remarksDropdownFilter: string;
+  proposedErpItemTextFilter: string;
+  proposedErpItemCategoryFilter: string;
+}
 
 export interface EpcQueryFilterInput {
   table: EpcTableFilters | null;

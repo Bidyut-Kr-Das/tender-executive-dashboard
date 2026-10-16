@@ -15,7 +15,11 @@ import {
 } from "@/lib/queue/publisher";
 import { requireUserAction } from "@/lib/dal";
 import { contentTypeFor } from "@/lib/s3";
-import { TENDER_LIFECYCLE_STATUS, type LifecycleStageCount } from "@/lib/tender-lifecycle";
+import {
+  LIFECYCLE_SLOW_MS,
+  TENDER_LIFECYCLE_STATUS,
+  type LifecycleStageCount,
+} from "@/lib/tender-lifecycle";
 import { setLifecycleStatus, setRelevanceQueued } from "@/lib/tender-lifecycle-store";
 
 const model = openai("gpt-5-mini");
@@ -195,17 +199,26 @@ const REQUEUE_STAGES: RequeueStage[] = ["RELEVANCE", "AUTOMATION", "INGESTION", 
 const REQUEUE_LIMIT = 500;
 
 /**
- * Publishes the failed stage's job again for every tender stuck on it, the same
- * job the stage before would have published. A tender whose job is sent moves to
- * that stage's QUEUED; one that still cannot be sent stays FAILED.
+ * Publishes the stage's job again for every tender stuck on it, the same job the
+ * stage before would have published. `from` picks the stuck tenders: FAILED, or
+ * QUEUED for longer than LIFECYCLE_SLOW_MS (a younger job may still be in the queue).
+ * A tender whose job is sent moves to that stage's QUEUED with a fresh wait time;
+ * one that still cannot be sent keeps its status.
  */
-async function requeueFailedStageFn(stage: RequeueStage) {
+async function requeueStageFn(stage: RequeueStage, from: "FAILED" | "QUEUED") {
   const user = await requireUserAction();
   if (user.role !== "developer") throw new Error("Forbidden: developer role required");
   if (!REQUEUE_STAGES.includes(stage)) throw new Error(`Unknown stage: ${stage}`);
+  if (from !== "FAILED" && from !== "QUEUED") throw new Error(`Unknown status: ${from}`);
 
   const tenders = await prisma.tenderMerged.findMany({
-    where: { lifecycleStatus: `${stage}_FAILED` },
+    where:
+      from === "FAILED"
+        ? { lifecycleStatus: `${stage}_FAILED` }
+        : {
+            lifecycleStatus: `${stage}_QUEUED`,
+            lifecycleUpdatedAt: { lt: new Date(Date.now() - LIFECYCLE_SLOW_MS) },
+          },
     select: {
       id: true,
       referenceNo: true,
@@ -254,13 +267,13 @@ async function requeueFailedStageFn(stage: RequeueStage) {
     queued++;
   }
 
-  return { stage, queued, notQueued: tenders.length - queued };
+  return { stage, from, queued, notQueued: tenders.length - queued };
 }
 
-export const requeueFailedStage = withLog(requeueFailedStageFn, (result) => ({
+export const requeueStage = withLog(requeueStageFn, (result) => ({
   action: "UPDATE" as const,
   tableName: "TenderMerged",
-  details: `Requeued failed ${result.stage}: ${result.queued} queued, ${result.notQueued} not queued`,
+  details: `Requeued ${result.stage} from ${result.from}: ${result.queued} queued, ${result.notQueued} not queued`,
 }));
 
 // A new batch starts a fresh count: tenders an earlier batch rejected go back to

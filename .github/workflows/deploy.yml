@@ -12,6 +12,7 @@ permissions:
 jobs:
   build-and-push:
     name: Build & Push Docker Image
+    if: github.repository_owner == 'laser-power-infra'
     runs-on: ubuntu-latest
     outputs:
       short_sha: ${{ steps.vars.outputs.short_sha }}

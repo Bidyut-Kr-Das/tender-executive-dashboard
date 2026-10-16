@@ -2,7 +2,6 @@
 
 import { memo, useState } from "react";
 import { format } from "date-fns";
-import Handlebars from "handlebars";
 import { Eye, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { EMD_MAIL_TEMPLATE, type EMD_MAIL_TYPE } from "@/emails/emd-mail-template";
@@ -133,7 +132,19 @@ function EditChoice({
 
 /* ----------------------------------- Email --------------------------------- */
 
-const compileMail = Handlebars.compile(EMD_MAIL_TEMPLATE);
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#x27;",
+};
+
+// The template only uses plain {{field}} slots, so a regex fill replaces Handlebars here.
+const compileMail = (data: EMD_MAIL_TYPE) =>
+  EMD_MAIL_TEMPLATE.replace(/{{(\w+)}}/g, (_, key: string) =>
+    String(data[key as keyof EMD_MAIL_TYPE] ?? "").replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]),
+  );
 
 const mailDate = (value: string | null) => {
   if (!value) return "-";
@@ -182,13 +193,7 @@ function SendEmailForm({ row, onDone }: { row: Row; onDone: () => void }) {
   const dispatch = useAppDispatch();
   const [mail] = useState(() => buildMail(row));
   const [subject, setSubject] = useState(mail.subject);
-  const [html, setHtml] = useState(() => {
-    try {
-      return compileMail(mail.mailData);
-    } catch {
-      return EMD_MAIL_TEMPLATE;
-    }
-  });
+  const [html, setHtml] = useState(() => compileMail(mail.mailData));
   const [preview, setPreview] = useState(true);
   const [sending, setSending] = useState(false);
 

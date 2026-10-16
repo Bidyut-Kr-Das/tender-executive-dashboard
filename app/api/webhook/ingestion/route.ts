@@ -1,11 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { createWebhookHandler, type WebhookEvent } from "@/lib/webhook-event";
+import { createWebhookHandler, httpError, type WebhookEvent } from "@/lib/webhook-event";
 import { publishAgentIntelligenceTask, requireClientId } from "@/lib/queue/publisher";
 import { setLifecycleStatus } from "@/lib/tender-lifecycle-store";
-
-function httpError(message: string, status: number) {
-  return Object.assign(new Error(message), { status });
-}
 
 async function handleIngestionEvent(evt: WebhookEvent) {
   if (!evt.event.endsWith("_success") || evt.data.error) {

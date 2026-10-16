@@ -18,6 +18,11 @@ export interface WebhookEvent {
 
 type EventHandler = (evt: WebhookEvent) => Promise<Record<string, unknown>>;
 
+/** An Error the handler answers with this HTTP status. */
+export function httpError(message: string, status: number) {
+  return Object.assign(new Error(message), { status });
+}
+
 // Builds a POST handler for workers that report back with the shared event envelope.
 // Without onEvent the event is only logged.
 // requireReferenceNo=false is for batch events whose rows carry their own referenceNo.

@@ -1,12 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { createWebhookHandler, type WebhookEvent } from "@/lib/webhook-event";
+import { createWebhookHandler, httpError, type WebhookEvent } from "@/lib/webhook-event";
 import { buildResultUpdate, parseResultRows } from "@/lib/result-sync";
 
 const RESULT_TYPES = new Set(["TENDER_TIGER_RESULT", "TENDER247_RESULT"]);
-
-function httpError(message: string, status: number) {
-  return Object.assign(new Error(message), { status });
-}
 
 async function handleResultEvent(evt: WebhookEvent) {
   // Failure events are only logged.
