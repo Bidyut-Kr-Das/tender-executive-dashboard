@@ -387,6 +387,8 @@ const columns: DataTableColumn<Row>[] = [
     id: "issueDate",
     header: "Issue Date",
     width: 130,
+    search: false,
+    filter: { type: "dateRange" },
     text: (row) => formatDateISTShort(row.issueDate),
     cell: (row) => (
       <span className="tabular-nums">{formatDateISTShort(row.issueDate)}</span>
@@ -396,6 +398,8 @@ const columns: DataTableColumn<Row>[] = [
     id: "signingDate",
     header: "Signing Date",
     width: 130,
+    search: false,
+    filter: { type: "dateRange" },
     text: (row) => formatDateISTShort(row.signingDate),
     cell: (row) => (
       <span className="tabular-nums">{formatDateISTShort(row.signingDate)}</span>
