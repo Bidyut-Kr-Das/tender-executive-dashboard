@@ -1,8 +1,8 @@
 /**
  * Log Type Test Ledger.xlsx content from TYPE_TEST_FILES_PATH
  * Usage:
- *   npx tsx scripts/logTypeTestLedger.ts
- *   npx tsx scripts/logTypeTestLedger.ts --file="W:\\Updated TTR\\Type Test Ledger.xlsx"
+ *   pnpm exec tsx scripts/logTypeTestLedger.ts
+ *   pnpm exec tsx scripts/logTypeTestLedger.ts --file="W:\\Updated TTR\\Type Test Ledger.xlsx"
  */
 import "dotenv/config";
 import { readTypeTestLedger } from "../services/typeTestLedgerService";

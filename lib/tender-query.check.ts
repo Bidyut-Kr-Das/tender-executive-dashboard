@@ -1,7 +1,7 @@
 /**
  * Self-check for the filter -> SQL translator. Run it with:
  *
- *   npx tsx lib/tender-query.check.ts
+ *   pnpm exec tsx lib/tender-query.check.ts
  *
  * No database is touched: buildWhereSql is pure, so the assertions look at the
  * SQL text and the bound parameters it produces.

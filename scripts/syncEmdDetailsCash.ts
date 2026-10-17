@@ -2,7 +2,7 @@
  * Sync EMD DETAILS - CASH sheet to EmdDetailsCash table (append-only)
  * Spreadsheet: 1GTwzxMgViohbCimXqfiBZBJsKbCSr7hCgbcHF_En1VE
  * Tab: EMD DETAILS - CASH
- * Usage: npx tsx scripts/syncEmdDetailsCash.ts
+ * Usage: pnpm exec tsx scripts/syncEmdDetailsCash.ts
  */
 import "dotenv/config";
 import { sheets as googleSheets } from "@googleapis/sheets";

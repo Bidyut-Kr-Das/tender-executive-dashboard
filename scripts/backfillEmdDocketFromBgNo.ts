@@ -8,7 +8,7 @@
  *              tender_merged.bgDate -> emd_merged.bgDate
  *              tender_merged.bgExpiryDate -> emd_merged.expiryDate
  * Policy: exact match (trim only, no normalization), fill blanks only - never overwrite
- * Usage: npx tsx scripts/backfillEmdDocketFromBgNo.ts [--dryRun] [--verbose]
+ * Usage: pnpm exec tsx scripts/backfillEmdDocketFromBgNo.ts [--dryRun] [--verbose]
  */
 import "dotenv/config";
 import { prisma } from "../lib/prisma";

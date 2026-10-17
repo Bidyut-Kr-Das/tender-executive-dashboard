@@ -200,19 +200,19 @@ Full contract (payloads, client IDs, statuses, webhook envelope): [`docs/tender-
 
 ```bash
 # 1. Install dependencies
-npm install
+pnpm install
 
 # 2. Create your env file and fill in the values
 cp .env.example .env
 
 # 3. Apply migrations to your database (ask the maintainer before running against a shared database)
-npx prisma migrate deploy
+pnpm exec prisma migrate deploy
 
 # 4. Optional: seed reference data
-npx prisma db seed
+pnpm exec prisma db seed
 
 # 5. Start the dev server (runs prisma generate first)
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3125](http://localhost:3125). You are redirected to `/v2/tenders` and then to `/auth/login` if you have no session.
@@ -246,24 +246,24 @@ Production reads `.env.production` through `docker-compose.yml`. Do not commit r
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Generate the Prisma client and start the dev server on port **3125** |
-| `npm run build` | Production build (standalone output); `postbuild` copies `public` and `.next/static` into `.next/standalone` |
-| `npm run start` | Start the built app on port **3126** |
-| `npm run build-start` | Generate, build and start in one step |
-| `npm run start-prod` | Run the standalone server (`node .next/standalone/server.js`) |
-| `npm run prisma:generate` | Generate the Prisma client into `generated/` |
-| `npm run typecheck` | `tsc --noEmit` |
+| `pnpm dev` | Generate the Prisma client and start the dev server on port **3125** |
+| `pnpm build` | Production build (standalone output); `postbuild` copies `public` and `.next/static` into `.next/standalone` |
+| `pnpm start` | Start the built app on port **3126** |
+| `pnpm build-start` | Generate, build and start in one step |
+| `pnpm start-prod` | Run the standalone server (`node .next/standalone/server.js`) |
+| `pnpm prisma:generate` | Generate the Prisma client into `generated/` |
+| `pnpm typecheck` | `tsc --noEmit` |
 
 One-off maintenance scripts live in [`scripts/`](scripts) and run with `tsx`:
 
 ```bash
-npx tsx scripts/syncBgDetails.ts
+pnpm exec tsx scripts/syncBgDetails.ts
 ```
 
 Self-checks for core logic live next to the code as `lib/*.check.ts`:
 
 ```bash
-npx tsx lib/tender-query.check.ts
+pnpm exec tsx lib/tender-query.check.ts
 ```
 
 ## Database
@@ -271,7 +271,7 @@ npx tsx lib/tender-query.check.ts
 - Schema: [`prisma/schema.prisma`](prisma/schema.prisma). Migrations: [`prisma/migrations`](prisma/migrations).
 - Main models: `TenderMerged` (single source for tenders), `GemTender`, `NonGemTender`, `TenderFile`, `SupplyHistory`, `EmdMerged`, `PerformanceCertificate`, `Railways`, `Items`, `Bom`, `TypeTest`, `ActivityLog`, `User`, `Credential`.
 - Column configuration: `ColumnIndex`, `ColumnMapping`, `ColumnGroup` drive the configurable table columns.
-- Prisma client output is `generated/`. Regenerate after every schema change with `npm run prisma:generate`.
+- Prisma client output is `generated/`. Regenerate after every schema change with `pnpm prisma:generate`.
 
 ## API
 

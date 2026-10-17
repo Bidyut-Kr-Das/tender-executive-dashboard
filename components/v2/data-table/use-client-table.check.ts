@@ -1,7 +1,7 @@
 /**
  * Self-check for in-browser filtering and sorting. Run it with:
  *
- *   npx tsx components/v2/data-table/use-client-table.check.ts
+ *   pnpm exec tsx components/v2/data-table/use-client-table.check.ts
  */
 import assert from "node:assert/strict";
 import { BLANK } from "./types";

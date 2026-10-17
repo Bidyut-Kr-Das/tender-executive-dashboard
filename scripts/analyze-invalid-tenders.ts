@@ -18,8 +18,8 @@
  *   - Losers are deleted. The whole merge runs in a single transaction.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/analyze-invalid-tenders.ts
- *   cd v2 && npx tsx scripts/analyze-invalid-tenders.ts --apply
+ *   cd v2 && pnpm exec tsx scripts/analyze-invalid-tenders.ts
+ *   cd v2 && pnpm exec tsx scripts/analyze-invalid-tenders.ts --apply
  */
 import { writeFileSync } from "node:fs";
 import path from "node:path";

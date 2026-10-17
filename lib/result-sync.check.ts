@@ -1,7 +1,7 @@
 /**
  * Self-check for the result sync row mapping. Run it with:
  *
- *   npx tsx lib/result-sync.check.ts
+ *   pnpm exec tsx lib/result-sync.check.ts
  */
 import assert from "node:assert/strict";
 import { buildResultUpdate, mergeCompetitors, parseResultRows } from "./result-sync";

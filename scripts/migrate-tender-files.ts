@@ -1,7 +1,7 @@
 /**
  * Migration Script: Create TenderFile entries from TenderMerged.tenderFileUrl
  *
- * Usage: cd v2 && npx tsx scripts/migrate-tender-files.ts
+ * Usage: cd v2 && pnpm exec tsx scripts/migrate-tender-files.ts
  *
  * For every TenderMerged record with a non-empty tenderFileUrl,
  * create a TenderFile entry linked to it.

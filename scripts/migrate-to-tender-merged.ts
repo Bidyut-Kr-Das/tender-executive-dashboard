@@ -1,7 +1,7 @@
 /**
  * Migration Script: Merge GemTender and NonGemTender into TenderMerged
  *
- * Usage: cd v2 && npx tsx scripts/migrate-to-tender-merged.ts
+ * Usage: cd v2 && pnpm exec tsx scripts/migrate-to-tender-merged.ts
  *
  * This script:
  * 1. Creates TenderMerged records from GemTender and NonGemTender data

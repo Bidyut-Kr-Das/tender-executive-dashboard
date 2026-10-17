@@ -11,9 +11,9 @@
  * - Validates email/contactNo; invalid skipped
  *
  * Usage:
- *   npx tsx scripts/syncSupplyPartyContacts.ts --dry-run --verbose
- *   npx tsx scripts/syncSupplyPartyContacts.ts --verbose
- *   npx tsx scripts/syncSupplyPartyContacts.ts --dry-run --sheetId=...
+ *   pnpm exec tsx scripts/syncSupplyPartyContacts.ts --dry-run --verbose
+ *   pnpm exec tsx scripts/syncSupplyPartyContacts.ts --verbose
+ *   pnpm exec tsx scripts/syncSupplyPartyContacts.ts --dry-run --sheetId=...
  */
 
 import "dotenv/config";
@@ -36,7 +36,7 @@ async function main() {
   if (help) {
     console.log(`
 ONE-TIME: Sync SupplyHistory.email/contactNo from Party Master sheet (ACC_NAME → EMAIL/MOBILE)
-Usage: npx tsx scripts/syncSupplyPartyContacts.ts [options]
+Usage: pnpm exec tsx scripts/syncSupplyPartyContacts.ts [options]
 Options:
   --dry-run            Simulate without DB writes
   --verbose            Log header check, lookup, per-row would-update

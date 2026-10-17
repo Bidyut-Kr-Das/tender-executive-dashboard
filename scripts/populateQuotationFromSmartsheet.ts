@@ -3,7 +3,7 @@
  * from the primary Smartsheet. Matches docketNo against Docket No column.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/populateQuotationFromSmartsheet.ts
+ *   cd v2 && pnpm exec tsx scripts/populateQuotationFromSmartsheet.ts
  */
 import "dotenv/config";
 import { syncQuotationFromSmartsheet } from "../services/smartsheetQuotationSync";

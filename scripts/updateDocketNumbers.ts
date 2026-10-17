@@ -3,7 +3,7 @@
  * column in the Google Sheet (LASER_Master_Tender_List).
  *
  * Usage:
- *   cd v2 && npx tsx scripts/updateDocketNumbers.ts
+ *   cd v2 && pnpm exec tsx scripts/updateDocketNumbers.ts
  */
 import { prisma } from "../lib/prisma";
 import { GoogleSheetService } from "../services/googleSheetService";

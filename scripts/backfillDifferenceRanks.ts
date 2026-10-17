@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // Rule: only where ourRank != "1" (strict trim check), ourValue + L price not null/empty and parseable, L price != 0
 // Formula: ((ourValue - Lx) / Lx) * 100 -> toFixed(2) + "%"
 // Target: TenderMerged.differenceBetweenRank1 / differenceBetweenRank2 only - overwrites existing
-// Usage: npx tsx scripts/backfillDifferenceRanks.ts [--dryRun] [--limit=100]
+// Usage: pnpm exec tsx scripts/backfillDifferenceRanks.ts [--dryRun] [--limit=100]
 // Note: Rank check is STRICT: String(ourRank).trim() !== "1"  (not "L1", per user instruction)
 
 const args = process.argv.slice(2);

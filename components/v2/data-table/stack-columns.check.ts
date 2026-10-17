@@ -1,7 +1,7 @@
 /**
  * Self-check for stacked columns. Run it with:
  *
- *   npx tsx components/v2/data-table/stack-columns.check.ts
+ *   pnpm exec tsx components/v2/data-table/stack-columns.check.ts
  */
 import assert from "node:assert/strict";
 import { filterIds, leafColumns, stackColumns, type DataTableColumn } from "./types";

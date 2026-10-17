@@ -6,11 +6,11 @@
  * Pass --publish to actually publish to RabbitMQ.
  *
  * Usage:
- *   npx tsx scripts/publishTenderTasksByAssociationDate.ts
- *   npx tsx scripts/publishTenderTasksByAssociationDate.ts --date=2026-08-22
- *   npx tsx scripts/publishTenderTasksByAssociationDate.ts --date=2026-08-22 --utc
- *   npx tsx scripts/publishTenderTasksByAssociationDate.ts --publish
- *   npx tsx scripts/publishTenderTasksByAssociationDate.ts --date=2026-08-22 --publish
+ *   pnpm exec tsx scripts/publishTenderTasksByAssociationDate.ts
+ *   pnpm exec tsx scripts/publishTenderTasksByAssociationDate.ts --date=2026-08-22
+ *   pnpm exec tsx scripts/publishTenderTasksByAssociationDate.ts --date=2026-08-22 --utc
+ *   pnpm exec tsx scripts/publishTenderTasksByAssociationDate.ts --publish
+ *   pnpm exec tsx scripts/publishTenderTasksByAssociationDate.ts --date=2026-08-22 --publish
  */
 import { prisma } from "../lib/prisma";
 import { publishTenderTask } from "../lib/queue/publisher";

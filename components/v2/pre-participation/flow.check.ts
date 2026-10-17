@@ -1,7 +1,7 @@
 /**
  * Self-check for the flow band's path rules. Run it with:
  *
- *   npx tsx --tsconfig tsconfig.json components/v2/pre-participation/flow.check.ts
+ *   pnpm exec tsx --tsconfig tsconfig.json components/v2/pre-participation/flow.check.ts
  */
 import assert from "node:assert/strict";
 import {

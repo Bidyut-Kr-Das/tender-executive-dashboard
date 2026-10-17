@@ -13,11 +13,11 @@
  *  - Multiple contracts for same quotation -> joined with ", " (comma+space)
  *
  * Usage:
- *   npx tsx scripts/syncContractFromXlsByQuotation.ts
- *   npx tsx scripts/syncContractFromXlsByQuotation.ts --dry-run
- *   npx tsx scripts/syncContractFromXlsByQuotation.ts --dry-run --verbose
- *   npx tsx scripts/syncContractFromXlsByQuotation.ts --verbose
- *   npx tsx scripts/syncContractFromXlsByQuotation.ts --dry-run --file="custom.xls"
+ *   pnpm exec tsx scripts/syncContractFromXlsByQuotation.ts
+ *   pnpm exec tsx scripts/syncContractFromXlsByQuotation.ts --dry-run
+ *   pnpm exec tsx scripts/syncContractFromXlsByQuotation.ts --dry-run --verbose
+ *   pnpm exec tsx scripts/syncContractFromXlsByQuotation.ts --verbose
+ *   pnpm exec tsx scripts/syncContractFromXlsByQuotation.ts --dry-run --file="custom.xls"
  */
 import "dotenv/config";
 import { prisma } from "../lib/prisma";
@@ -40,7 +40,7 @@ async function main() {
     console.log(`
 ONE-TIME: Sync contractNo from XLS (QUOTATION_VRNO -> VRNO_Sales_Contract) -> TenderMerged.contractNo
 
-Usage: npx tsx scripts/syncContractFromXlsByQuotation.ts [options]
+Usage: pnpm exec tsx scripts/syncContractFromXlsByQuotation.ts [options]
 
 Options:
   --dry-run          Simulate without DB writes

@@ -12,9 +12,9 @@
  *   S3_PUBLIC_BASE_URL   (optional, e.g. https://cdn.example.com or a bucket URL)
  *
  * Usage:
- *   npx tsx scripts/sync-performance-certificates.ts
- *   npx tsx scripts/sync-performance-certificates.ts "D:\\folder1" "D:\\folder2"
- *   npx tsx scripts/sync-performance-certificates.ts --dry-run
+ *   pnpm exec tsx scripts/sync-performance-certificates.ts
+ *   pnpm exec tsx scripts/sync-performance-certificates.ts "D:\\folder1" "D:\\folder2"
+ *   pnpm exec tsx scripts/sync-performance-certificates.ts --dry-run
  */
 import fs from "fs";
 import path from "path";

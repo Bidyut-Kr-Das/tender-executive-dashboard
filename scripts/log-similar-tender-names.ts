@@ -4,7 +4,7 @@
  * e.g. "GEM/2026/B/7796547" is contained in "-GEM/2026/B/7796547".
  *
  * Console-only report. Usage:
- *   cd v2 && npx tsx scripts/log-similar-tender-names.ts
+ *   cd v2 && pnpm exec tsx scripts/log-similar-tender-names.ts
  */
 import { prisma } from "../lib/prisma";
 

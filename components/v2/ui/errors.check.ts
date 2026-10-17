@@ -1,4 +1,4 @@
-// Run: npx tsx components/v2/ui/errors.check.ts
+// Run: pnpm exec tsx components/v2/ui/errors.check.ts
 import assert from "node:assert/strict";
 import { describeError } from "./errors";
 

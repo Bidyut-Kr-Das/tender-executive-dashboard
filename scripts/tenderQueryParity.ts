@@ -1,7 +1,7 @@
 /**
  * Row-count parity between the old in-memory filtering and the new SQL.
  *
- *   npx tsx scripts/tenderQueryParity.ts
+ *   pnpm exec tsx scripts/tenderQueryParity.ts
  *
  * Loads every tender through the same flattening the client used to receive,
  * counts matches in JS, then counts the same query in Postgres through

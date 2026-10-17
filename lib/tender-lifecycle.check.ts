@@ -1,7 +1,7 @@
 /**
  * Self-check for the lifecycle counts. Run it with:
  *
- *   npx tsx lib/tender-lifecycle.check.ts
+ *   pnpm exec tsx lib/tender-lifecycle.check.ts
  */
 import assert from "node:assert/strict";
 import { lifecycleFunnel, summarizeLifecycle } from "./tender-lifecycle";
