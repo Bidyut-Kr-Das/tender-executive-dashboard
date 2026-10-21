@@ -7,6 +7,7 @@ import { AttachmentJoinService } from "./attachmentJoinService";
 import { prisma } from "@/lib/prisma";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { getAccessToken, getCleanCredentials } from "@/lib/googleDrive";
+import { parseRupees } from "@/lib/rupees";
 
 /**
  * Loads tender records from TenderMerged and joins costing attachment links
@@ -118,9 +119,9 @@ export class GoogleSheetService {
       nameOfTheClient: tm.organization ?? "",
       lastDateOfSubmission: tm.deadline,
       tenderOpeningDate: tm.tenderOpeningDate,
-      costOfTenderFeeRs: parseNum(tm.documentFees),
-      emdAmountRs: parseNum(tm.emd),
-      estimatedCostRs: parseNum(tm.estimatedBidValue),
+      costOfTenderFeeRs: parseRupees(tm.documentFees),
+      emdAmountRs: parseRupees(tm.emd),
+      estimatedCostRs: parseRupees(tm.value),
       bidValidityDays: tm.bidValidityDays,
       contractPeriodDays: tm.contractPeriodDays,
       managementDecision: apmToDecision(tm.apm),

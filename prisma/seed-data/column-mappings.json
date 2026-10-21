@@ -18,13 +18,13 @@
     "status": "active"
   },
   {
-    "excelHeader": "apm",
+    "excelHeader": "Management Decision",
     "dbField": "apm",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Management Decision",
+    "excelHeader": "apm",
     "dbField": "apm",
     "displayName": null,
     "status": "active"
@@ -66,14 +66,20 @@
     "status": "active"
   },
   {
+    "excelHeader": "Bid Offer Validity (From End Date)",
+    "dbField": "bidOfferValidity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "bidOfferValidity",
     "dbField": "bidOfferValidity",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Bid Offer Validity (From End Date)",
-    "dbField": "bidOfferValidity",
+    "excelHeader": "Bid Opening Date/Time",
+    "dbField": "bidOpeningDateTime",
     "displayName": null,
     "status": "active"
   },
@@ -85,12 +91,6 @@
   },
   {
     "excelHeader": "bidOpeningDateTime",
-    "dbField": "bidOpeningDateTime",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Bid Opening Date/Time",
     "dbField": "bidOpeningDateTime",
     "displayName": null,
     "status": "active"
@@ -144,13 +144,13 @@
     "status": "active"
   },
   {
-    "excelHeader": "consigneesReportingOfficer",
+    "excelHeader": "Consignees Reporting Officer",
     "dbField": "consigneesReportingOfficer",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Consignees Reporting Officer",
+    "excelHeader": "consigneesReportingOfficer",
     "dbField": "consigneesReportingOfficer",
     "displayName": null,
     "status": "active"
@@ -176,6 +176,24 @@
   {
     "excelHeader": "currency",
     "dbField": "currency",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Deadline",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "End Submission date",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Tender Submitted Date",
+    "dbField": "deadline",
     "displayName": null,
     "status": "active"
   },
@@ -210,19 +228,7 @@
     "status": "active"
   },
   {
-    "excelHeader": "Deadline",
-    "dbField": "deadline",
-    "displayName": null,
-    "status": "active"
-  },
-  {
     "excelHeader": "dueDate",
-    "dbField": "deadline",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "End Submission date",
     "dbField": "deadline",
     "displayName": null,
     "status": "active"
@@ -235,12 +241,6 @@
   },
   {
     "excelHeader": "submissionDeadline",
-    "dbField": "deadline",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Tender Submitted Date",
     "dbField": "deadline",
     "displayName": null,
     "status": "active"
@@ -294,6 +294,36 @@
     "status": "active"
   },
   {
+    "excelHeader": "ePbgDurationMonths",
+    "dbField": "ePbgDurationMonths",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "epbgDuration",
+    "dbField": "ePbgDurationMonths",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ePbgPercentage",
+    "dbField": "ePbgPercentage",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "epbgPercentage",
+    "dbField": "ePbgPercentage",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "performanceBankGuarantee",
+    "dbField": "ePbgPercentage",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "bidSecurity",
     "dbField": "emd",
     "displayName": null,
@@ -314,54 +344,6 @@
   {
     "excelHeader": "emd",
     "dbField": "emd",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "epbgDuration",
-    "dbField": "ePbgDurationMonths",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "ePbgDurationMonths",
-    "dbField": "ePbgDurationMonths",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "epbgPercentage",
-    "dbField": "ePbgPercentage",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "ePbgPercentage",
-    "dbField": "ePbgPercentage",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "performanceBankGuarantee",
-    "dbField": "ePbgPercentage",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "estimatedBidValue",
-    "dbField": "estimatedBidValue",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "estimatedCost",
-    "dbField": "estimatedBidValue",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "tenderAmount",
-    "dbField": "estimatedBidValue",
     "displayName": null,
     "status": "active"
   },
@@ -390,19 +372,19 @@
     "status": "active"
   },
   {
-    "excelHeader": "inspectionRequired",
-    "dbField": "inspectionRequired",
-    "displayName": null,
-    "status": "active"
-  },
-  {
     "excelHeader": "Inspection Required (By Empanelled Inspection Authority / Agencies pre registered with GeM)",
     "dbField": "inspectionRequired",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "itemcategory",
+    "excelHeader": "inspectionRequired",
+    "dbField": "inspectionRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Item Category",
     "dbField": "itemCategory",
     "displayName": null,
     "status": "active"
@@ -414,8 +396,14 @@
     "status": "active"
   },
   {
-    "excelHeader": "Item Category",
+    "excelHeader": "itemcategory",
     "dbField": "itemCategory",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Location",
+    "dbField": "location",
     "displayName": null,
     "status": "active"
   },
@@ -439,12 +427,6 @@
   },
   {
     "excelHeader": "location",
-    "dbField": "location",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Location",
     "dbField": "location",
     "displayName": null,
     "status": "active"
@@ -498,6 +480,12 @@
     "status": "active"
   },
   {
+    "excelHeader": "Minimum Average Annual Turnover of the bidder",
+    "dbField": "minimumAverageAnnualTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "averageTurnover",
     "dbField": "minimumAverageAnnualTurnover",
     "displayName": null,
@@ -516,19 +504,13 @@
     "status": "active"
   },
   {
-    "excelHeader": "Minimum Average Annual Turnover of the bidder",
-    "dbField": "minimumAverageAnnualTurnover",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "ministryStateName",
+    "excelHeader": "Ministry State Name",
     "dbField": "ministryStateName",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Ministry State Name",
+    "excelHeader": "ministryStateName",
     "dbField": "ministryStateName",
     "displayName": null,
     "status": "active"
@@ -576,14 +558,26 @@
     "status": "active"
   },
   {
+    "excelHeader": "Office Name",
+    "dbField": "officeName",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "officeName",
     "dbField": "officeName",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Office Name",
-    "dbField": "officeName",
+    "excelHeader": "Organization @ Department Name",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Organization@Department Name",
+    "dbField": "organization",
     "displayName": null,
     "status": "active"
   },
@@ -607,18 +601,6 @@
   },
   {
     "excelHeader": "organization",
-    "dbField": "organization",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Organization @ Department Name",
-    "dbField": "organization",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Organization@Department Name",
     "dbField": "organization",
     "displayName": null,
     "status": "active"
@@ -726,6 +708,12 @@
     "status": "active"
   },
   {
+    "excelHeader": "refNo",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "referenceNo",
     "dbField": "referenceNo",
     "displayName": null,
@@ -733,12 +721,6 @@
   },
   {
     "excelHeader": "referenceNumber",
-    "dbField": "referenceNo",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "refNo",
     "dbField": "referenceNo",
     "displayName": null,
     "status": "active"
@@ -846,14 +828,38 @@
     "status": "active"
   },
   {
+    "excelHeader": "Time allowed for Technical Clarifications during technical evaluation",
+    "dbField": "technicalClarificationTimeAllowed",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "technicalClarificationTimeAllowed",
     "dbField": "technicalClarificationTimeAllowed",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Time allowed for Technical Clarifications during technical evaluation",
-    "dbField": "technicalClarificationTimeAllowed",
+    "excelHeader": "Fit assessment",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Name Of Work Description",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "TENDER RESULT BRIEF",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "deleted"
+  },
+  {
+    "excelHeader": "Tender Brief",
+    "dbField": "tenderBrief",
     "displayName": null,
     "status": "active"
   },
@@ -876,31 +882,13 @@
     "status": "active"
   },
   {
-    "excelHeader": "Fit assessment",
-    "dbField": "tenderBrief",
-    "displayName": null,
-    "status": "active"
-  },
-  {
     "excelHeader": "itemName",
     "dbField": "tenderBrief",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Name Of Work Description",
-    "dbField": "tenderBrief",
-    "displayName": null,
-    "status": "active"
-  },
-  {
     "excelHeader": "tenderBrief",
-    "dbField": "tenderBrief",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Tender Brief",
     "dbField": "tenderBrief",
     "displayName": null,
     "status": "active"
@@ -918,12 +906,6 @@
     "status": "active"
   },
   {
-    "excelHeader": "TENDER RESULT BRIEF",
-    "dbField": "tenderBrief",
-    "displayName": null,
-    "status": "deleted"
-  },
-  {
     "excelHeader": "title",
     "dbField": "tenderBrief",
     "displayName": null,
@@ -936,7 +918,7 @@
     "status": "active"
   },
   {
-    "excelHeader": "totalqty",
+    "excelHeader": "Total Quantity",
     "dbField": "totalQuantity",
     "displayName": null,
     "status": "active"
@@ -948,19 +930,19 @@
     "status": "active"
   },
   {
-    "excelHeader": "totalquantity",
-    "dbField": "totalQuantity",
-    "displayName": null,
-    "status": "active"
-  },
-  {
     "excelHeader": "totalQuantity",
     "dbField": "totalQuantity",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "Total Quantity",
+    "excelHeader": "totalqty",
+    "dbField": "totalQuantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "totalquantity",
     "dbField": "totalQuantity",
     "displayName": null,
     "status": "active"
@@ -978,7 +960,25 @@
     "status": "active"
   },
   {
+    "excelHeader": "ESTIMATED COST",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
     "excelHeader": "Estimated Bid Value",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Tender  Value in  Rs",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "estimatedBidValue",
     "dbField": "value",
     "displayName": null,
     "status": "active"
@@ -990,13 +990,13 @@
     "status": "active"
   },
   {
-    "excelHeader": "ESTIMATED COST",
+    "excelHeader": "estimatedValue",
     "dbField": "value",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "estimatedValue",
+    "excelHeader": "tenderAmount",
     "dbField": "value",
     "displayName": null,
     "status": "active"
@@ -1014,14 +1014,14 @@
     "status": "active"
   },
   {
-    "excelHeader": "Tender  Value in  Rs",
+    "excelHeader": "value",
     "dbField": "value",
     "displayName": null,
     "status": "active"
   },
   {
-    "excelHeader": "value",
-    "dbField": "value",
+    "excelHeader": "Years of Past Experience Required for same/similar service",
+    "dbField": "yearsOfPastExperience",
     "displayName": null,
     "status": "active"
   },
@@ -1033,12 +1033,6 @@
   },
   {
     "excelHeader": "yearsOfPastExperience",
-    "dbField": "yearsOfPastExperience",
-    "displayName": null,
-    "status": "active"
-  },
-  {
-    "excelHeader": "Years of Past Experience Required for same/similar service",
     "dbField": "yearsOfPastExperience",
     "displayName": null,
     "status": "active"

@@ -16,18 +16,12 @@ import {
   type LifecycleStageCount,
 } from "@/lib/tender-lifecycle";
 import { setLifecycleStatus, setRelevanceQueued } from "@/lib/tender-lifecycle-store";
+import { parseRupees } from "@/lib/rupees";
 
 // "Power Distribution" -> "power_distribution", "Cables & Conductors" -> "cables_conductors"
 function toSnakeCase(label: string | null | undefined): string | null {
   if (!label) return null;
   return label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-}
-
-// Amounts are stored as free text (e.g. "6,50,00,000"); strip separators before parsing.
-function parseAmount(raw: string | null | undefined): number | null {
-  if (!raw) return null;
-  const match = raw.replace(/,/g, "").match(/\d+(\.\d+)?/);
-  return match ? Number(match[0]) : null;
 }
 
 async function publishAiAnalysisJobFn(params: {
@@ -38,7 +32,7 @@ async function publishAiAnalysisJobFn(params: {
   await requireUserAction();
   const tender = await prisma.tenderMerged.findUnique({
     where: { referenceNo: params.referenceNo },
-    select: { subCategory: true, value: true, estimatedBidValue: true },
+    select: { subCategory: true, value: true },
   });
   const sent = await publishRelevance({ ...tender, ...params });
   await setRelevanceQueued(params.referenceNo, sent);
@@ -51,7 +45,6 @@ function publishRelevance(tender: {
   itemCategory?: string | null;
   subCategory?: string | null;
   value?: string | null;
-  estimatedBidValue?: string | null;
 }) {
   return publishAiRelevanceTask({
     payloadType: "analysis",
@@ -60,7 +53,7 @@ function publishRelevance(tender: {
     tenderbrief: tender.tenderBrief ?? "",
     itemcategory: tender.itemCategory ?? "",
     category: toSnakeCase(tender.subCategory),
-    tenderAmount: parseAmount(tender.value ?? tender.estimatedBidValue),
+    tenderAmount: parseRupees(tender.value),
   });
 }
 
@@ -99,7 +92,6 @@ async function requeueStageFn(stage: RequeueStage, from: "FAILED" | "QUEUED") {
       itemCategory: true,
       subCategory: true,
       value: true,
-      estimatedBidValue: true,
     },
     orderBy: { lifecycleUpdatedAt: "asc" },
     take: REQUEUE_LIMIT,

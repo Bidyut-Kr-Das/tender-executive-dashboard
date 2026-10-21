@@ -17,6 +17,7 @@ import { sendTenderWebhook } from "@/lib/webhook";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { format } from "date-fns";
 import { withLog } from "@/lib/activity-logger";
+import { parseRupees } from "@/lib/rupees";
 import {
   isValidCategorySelection,
   resolveEpcSubCategory,
@@ -258,8 +259,6 @@ function parseSheetData(
     const excludedCategory =
       excludedCategories.length > 0 ? excludedCategories.join(",") : null;
 
-    if (excludedCategory !== null) excludedCount++;
-
     const { refNo: r, tenderType, createData } = buildCreateData(
       row,
       headers,
@@ -280,10 +279,19 @@ function parseSheetData(
           }
         : categoryFields;
     Object.assign(createData, rowCategoryFields);
+    // Value is stored as plain rupees so it filters and sorts as a number.
+    // Text that is not an amount ("NA", "Not visible", PDF text) is dropped,
+    // not the tender: the row still imports with no value.
+    if (createData.value != null) {
+      const amount = parseRupees(createData.value);
+      if (amount === null) delete createData.value;
+      else createData.value = String(amount);
+    }
     console.log(
       `[UPLOAD] Deadline for ${r}:`,
       createData.deadline ? format(createData.deadline as Date, "do MMM yyyy") : "null",
     );
+    if (excludedCategory !== null) excludedCount++;
     prepared.push({ refNo: r, tenderType, createData, originalRow: row });
   }
 

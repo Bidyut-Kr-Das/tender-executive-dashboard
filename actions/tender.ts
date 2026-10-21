@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { parseDate } from "@/lib/parse-date";
 import { toISTDateKey } from "@/lib/format-ist";
 import { calcDiffDecimal, calcDiffString } from "@/lib/diffCalculator";
+import { parseRupees } from "@/lib/rupees";
 
 export const updateTenderAssignmentsAction = withLog(
   async (params: {
@@ -377,7 +378,17 @@ export async function updateTenderMergedStringField(params: {
   value: string;
 }): Promise<{ ok: boolean; error?: string; diffPercentFromL1?: number | null; diffPercentFromL2?: number | null; differenceBetweenRank1?: string | null; differenceBetweenRank2?: string | null }> {
   await requireUserAction();
-  const { tenderMergedId, field, value } = params;
+  const { tenderMergedId, field } = params;
+  let { value } = params;
+
+  // Value is stored as plain rupees, the same as an uploaded sheet.
+  if (field === "value" && value.trim() !== "") {
+    const amount = parseRupees(value);
+    if (amount === null) {
+      return { ok: false, error: `"${value.trim()}" is not an amount. Use a number, e.g. 1234567, 12.5 L or 1.5 Cr.` };
+    }
+    value = String(amount);
+  }
 
   if (
     field === "emdPaymentMode" &&

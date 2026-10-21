@@ -144,8 +144,10 @@ export const COLUMN_MAP: ColumnMap = {
   tenderValue: "value",
   estimatedValue: "value",
   tenderValueInRs: "value",
-
-  estimatedCost: "estimatedBidValue",
+  // estimatedBidValue is scrapped: every amount header lands in value.
+  estimatedCost: "value",
+  estimatedBidValue: "value",
+  tenderAmount: "value",
 
   deadline: "deadline",
   bidDeadline: "deadline",
@@ -225,9 +227,6 @@ export const COLUMN_MAP: ColumnMap = {
   boqTitle: "boqTitle",
 
   bidDetails: "bidDetails",
-
-  estimatedBidValue: "estimatedBidValue",
-  tenderAmount: "estimatedBidValue",
 
   evaluationMethod: "evaluationMethod",
 
