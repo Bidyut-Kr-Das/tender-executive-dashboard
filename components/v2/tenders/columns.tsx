@@ -3,7 +3,7 @@ import { formatDateISTLong } from "@/lib/format-ist";
 import { REASON_FOR_NOT_APM_OPTIONS } from "@/lib/reason-for-not-apm";
 import type { MergedGroup } from "@/lib/tender-query";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
-import { Chips, Clamp, StackedCell } from "@/components/v2/data-table/cells";
+import { Chips, Clamp, StackedCell, rupeeRangeFilter } from "@/components/v2/data-table/cells";
 import { BLANK, selectFilter } from "@/components/v2/data-table/types";
 import type { DataTableColumn, FilterOption } from "@/components/v2/data-table/types";
 import { Badge, Dash, Field, Input } from "@/components/v2/ui/field";
@@ -442,6 +442,9 @@ export function buildTenderColumns({
         cell: (row) => <RawMaterialsCell row={row} />,
       };
     }
+    if (col === "value") {
+      return { ...base, search: false, filter: rupeeRangeFilter };
+    }
     if (isDate) {
       return {
         ...base,
@@ -489,7 +492,10 @@ export function buildTenderColumns({
         : (displayNameMap[first] ?? formatColumnName(first)),
       width: 250,
       frozen: orgAndDept || briefAndCategory || hasSize || undefined,
-      filter: selectFilter(),
+      // A blank separator shows the first field alone, so an amount stays an amount.
+      ...(!concatenated && first === "value"
+        ? { search: false, filter: rupeeRangeFilter }
+        : { filter: selectFilter() }),
       badges: getProvenanceForFields(g.fields).map((p) => PROVENANCE_LABEL[p]),
       text,
       cell: orgAndDept

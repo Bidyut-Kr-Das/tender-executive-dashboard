@@ -6,7 +6,8 @@
  */
 
 /** Columns the table never offers data-derived dropdown values for. */
-export const UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
+const UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
+  "value",
   "reportings",
   "tenderFiles",
   "itemSchedules",
@@ -29,7 +30,7 @@ export const UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
 ]);
 
 /** Columns whose dropdown values are hardcoded and must not be pruned. */
-export const STATIC_SELECT_SKIP: ReadonlySet<string> = new Set([
+const STATIC_SELECT_SKIP: ReadonlySet<string> = new Set([
   "app",
   "aps",
   "apm",
@@ -46,7 +47,7 @@ export const STATIC_SELECT_SKIP: ReadonlySet<string> = new Set([
  * a real tender_merged scalar, which is why they need their own SQL and why
  * none of them is a useful facet.
  */
-export const DERIVED_ACCESSORS: ReadonlySet<string> = new Set([
+const DERIVED_ACCESSORS: ReadonlySet<string> = new Set([
   "type",
   "assignedTo",
   "assignedDate",

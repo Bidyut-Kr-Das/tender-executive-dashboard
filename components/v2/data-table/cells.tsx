@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Slider } from "@base-ui/react/slider";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Dash, Field, Input } from "@/components/v2/ui/field";
@@ -126,6 +127,91 @@ export const numberRangeFilter: ColumnFilter = {
   summary: (value) => {
     const r = value as NumberRange | undefined;
     return r && (r.min || r.max) ? `${r.min || "0"}–${r.max || "any"}` : null;
+  },
+};
+
+// ponytail: fixed rupee stops sized to tender values (median about 5 L, top
+// about 1,600 Cr). Derive them from the data if another column needs a slider.
+const RUPEE_STOPS = [0, 1e5, 2e5, 5e5, 1e6, 2.5e6, 5e6, 1e7, 2e7, 5e7, 1e8, 2.5e8, 5e8, 1e9, Infinity];
+const LAST = RUPEE_STOPS.length - 1;
+
+function rupees(n: number): string {
+  if (n === Infinity) return "No limit";
+  if (n >= 1e7) return `₹${n / 1e7} Cr`;
+  if (n >= 1e5) return `₹${n / 1e5} L`;
+  return `₹${n}`;
+}
+
+/** Nearest stop at or above a stored bound; typed formulas may fall between stops. */
+const stopIndex = (value: string, fallback: number) => {
+  if (!value) return fallback;
+  const i = RUPEE_STOPS.findIndex((s) => s >= Number(value));
+  return i < 0 ? LAST : i;
+};
+
+function RupeeRange({
+  value,
+  onChange,
+}: {
+  value: NumberRange | undefined;
+  onChange: (value: unknown | undefined) => void;
+}) {
+  const committed: [number, number] = [stopIndex(value?.min ?? "", 0), stopIndex(value?.max ?? "", LAST)];
+  // Moves with the thumbs; the filter (and the query) changes on release only.
+  const [range, setRange] = useState(committed);
+  const key = committed.join();
+  useEffect(() => setRange(committed), [key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Slider.Root
+      value={range}
+      min={0}
+      max={LAST}
+      step={1}
+      minStepsBetweenValues={1}
+      onValueChange={(v) => setRange(v as [number, number])}
+      onValueCommitted={(v) => {
+        const [lo, hi] = v as [number, number];
+        onChange(
+          lo === 0 && hi === LAST
+            ? undefined
+            : { min: lo === 0 ? "" : String(RUPEE_STOPS[lo]), max: hi === LAST ? "" : String(RUPEE_STOPS[hi]) },
+        );
+      }}
+      className="flex flex-col gap-2 px-1.5"
+    >
+      <div className="flex justify-between text-xs tabular-nums">
+        <span>{rupees(RUPEE_STOPS[range[0]])}</span>
+        <span>{rupees(RUPEE_STOPS[range[1]])}</span>
+      </div>
+      <Slider.Control className="flex h-5 items-center">
+        <Slider.Track className="relative h-1 w-full rounded-full bg-line">
+          <Slider.Indicator className="h-full rounded-full bg-accent" />
+          {[0, 1].map((i) => (
+            <Slider.Thumb
+              key={i}
+              index={i}
+              aria-label={i === 0 ? "Minimum value" : "Maximum value"}
+              className="size-4 rounded-full border-2 border-accent bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+            />
+          ))}
+        </Slider.Track>
+      </Slider.Control>
+    </Slider.Root>
+  );
+}
+
+/** Rupee amount between two stops, picked with a two-thumb slider. */
+export const rupeeRangeFilter: ColumnFilter = {
+  type: "custom",
+  stateKey: "numberRange",
+  render: ({ value, onChange }) => (
+    <RupeeRange value={value as NumberRange | undefined} onChange={onChange} />
+  ),
+  summary: (value) => {
+    const r = value as NumberRange | undefined;
+    if (!r || !(r.min || r.max)) return null;
+    return `${rupees(Number(r.min || 0))} – ${r.max ? rupees(Number(r.max)) : "No limit"}`;
   },
 };
 

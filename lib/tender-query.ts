@@ -2,7 +2,6 @@ import { Prisma } from "@/generated/prisma/client";
 import type { ColumnFilterState } from "@/lib/types";
 import type {
   AnalyticsFilter,
-  DeadlinePreset,
   ParticipationFilter,
 } from "@/lib/slices/filtersSlice";
 import {
@@ -342,10 +341,6 @@ export function columnValueSql(
   return null;
 }
 
-export function isQueryableColumn(accessor: string, q: TenderQuery): boolean {
-  return columnValueSql(accessor, q) !== null;
-}
-
 /**
  * Whether a dropdown should hit the database for its values.
  *
@@ -381,7 +376,7 @@ export function istDateKeyToUtcRange(key: string): {
   return { start, endExclusive: new Date(start.getTime() + DAY_MS) };
 }
 
-export function todayISTKey(now: Date = new Date()): string {
+function todayISTKey(now: Date = new Date()): string {
   return toISTDateKey(now) as string;
 }
 
@@ -444,12 +439,6 @@ function dateKeyRangeSql(
   if (toKey) parts.push(Prisma.sql`${key} <= ${toKey}`);
   return Prisma.sql`(${expr} !~ ${ISO_DATE_PREFIX} OR (${Prisma.join(parts, " AND ")}))`;
 }
-
-export const DEADLINE_PRESETS: readonly DeadlinePreset[] = [
-  "thisWeek",
-  "thisMonth",
-  "thisYear",
-];
 
 function presetRange(
   preset: string,
@@ -578,6 +567,23 @@ function rawMaterialRangeSql(
     ? Prisma.sql` AND lower(btrim(kv.k)) !~ ${exclude}`
     : Prisma.empty;
   return Prisma.sql`EXISTS (SELECT 1 FROM jsonb_each_text(${RAW_MATERIALS_JSON}) AS kv(k, v) WHERE lower(btrim(kv.k)) ~ ${pattern}${veto} AND btrim(kv.v) ~ ${NUMERIC_TEXT}${bound})`;
+}
+
+/** Amount stored as text; a value that is not a plain number never matches. */
+function numberRangeSql(
+  expr: Prisma.Sql,
+  range: NonNullable<ColumnFilterState["numberRange"]>,
+): Prisma.Sql | null {
+  const min = num(range.min);
+  const max = num(range.max);
+  if (min === null && max === null) return null;
+  // CASE keeps the cast away from non-numeric text; Postgres does not promise
+  // to evaluate a sibling guard first.
+  const n = Prisma.sql`(CASE WHEN btrim(${expr}) ~ ${NUMERIC_TEXT} THEN btrim(${expr})::numeric END)`;
+  const bounds: Prisma.Sql[] = [];
+  if (min !== null) bounds.push(Prisma.sql`${n} >= ${min}`);
+  if (max !== null) bounds.push(Prisma.sql`${n} <= ${max}`);
+  return Prisma.join(bounds, " AND ");
 }
 
 function num(value: string | undefined): number | null {
@@ -764,7 +770,7 @@ export function participationChainSql(
  * local midnight; IST is the intent everywhere else here and is the only choice
  * that behaves identically on the server.
  */
-export function scopeSql(scope: TenderScope, now: Date): Prisma.Sql | null {
+function scopeSql(scope: TenderScope, now: Date): Prisma.Sql | null {
   const today = todayStart(now);
   const HAS_DEADLINE = Prisma.sql`t."deadline" IS NOT NULL`;
 
@@ -933,6 +939,11 @@ export function buildWhereSql(q: TenderQuery, opts: BuildOptions = {}): Prisma.S
 
     if (state.rawMaterials) {
       const sql = rawMaterialsSql(state.rawMaterials);
+      if (sql) parts.push(sql);
+    }
+
+    if (state.numberRange) {
+      const sql = numberRangeSql(expr, state.numberRange);
       if (sql) parts.push(sql);
     }
   }
