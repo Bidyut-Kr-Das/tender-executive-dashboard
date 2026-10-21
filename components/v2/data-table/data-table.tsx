@@ -591,7 +591,7 @@ function FormulaBar<Row>({
         <Textarea
           aria-label="Filter formula"
           autoFocus
-          rows={1}
+          rows={2}
           spellCheck={false}
           className="min-h-8 flex-1 font-mono text-xs"
           placeholder={'[Status] IN ("Open", "Closed") AND [Party] CONTAINS "abc"'}
