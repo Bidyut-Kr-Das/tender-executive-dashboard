@@ -736,7 +736,7 @@ model TenderMerged {
   location          String?
   organization      String?
   documentFees      String?
-  emd               String?
+  emd               String?         @default("0")
   msmeExemption     String?
   startupExemption  String?
   quantity          String?

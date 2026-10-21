@@ -15,8 +15,6 @@ const COLUMNS: { columnName: string; displayName?: string; displayOrder: number;
   { columnName: "officeName", displayName: "Office Name", displayOrder: 7 },
   { columnName: "consigneesReportingOfficer", displayName: "Consignees Reporting Officer", displayOrder: 7 },
   { columnName: "value", displayName: "Value", displayOrder: 8 },
-  { columnName: "estimatedBidValue", displayName: "Estimated Bid Value", displayOrder: 8 },
-  { columnName: "estimatedCostRs", displayName: "Tender Value in Rs", displayOrder: 8 },
   { columnName: "reason", displayName: "Reason", displayOrder: 9 },
   { columnName: "quantity", displayName: "Size", displayOrder: 10 },
   { columnName: "emd", displayName: "Emd", displayOrder: 11 },

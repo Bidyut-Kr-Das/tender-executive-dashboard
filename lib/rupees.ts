@@ -34,3 +34,25 @@ export function parseRupees(input: unknown): number | null {
   // Whole paise: "7.42 L" is 742000, not 741999.9999999999.
   return Math.round(Number(m[1]) * unit * 100) / 100;
 }
+
+/**
+ * EMD cell text. GeM sheets write "Advisory Bank: SBI | EMD Amount: 80000";
+ * only the amount is taken. A bank alone or "EXEMPTION-BIS" is not an amount.
+ */
+export function parseEmd(input: unknown): number | null {
+  const amount = typeof input === "string" ? /EMD Amount:(.*)$/i.exec(input)?.[1] : undefined;
+  return parseRupees(amount ?? input);
+}
+
+const INR = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+/** "₹12,34,567" for display; null for 0 or no amount, which mean the same. */
+export function formatRupees(input: unknown): string | null {
+  const n = parseRupees(input);
+  return n ? INR.format(n) : null;
+}

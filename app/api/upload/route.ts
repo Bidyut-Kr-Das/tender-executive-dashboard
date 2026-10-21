@@ -17,7 +17,7 @@ import { sendTenderWebhook } from "@/lib/webhook";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { format } from "date-fns";
 import { withLog } from "@/lib/activity-logger";
-import { parseRupees } from "@/lib/rupees";
+import { parseEmd, parseRupees } from "@/lib/rupees";
 import {
   isValidCategorySelection,
   resolveEpcSubCategory,
@@ -285,6 +285,9 @@ function parseSheetData(
     if (createData.value != null) {
       createData.value = String(parseRupees(createData.value) ?? 0);
     }
+    if (createData.emd != null) {
+      createData.emd = String(parseEmd(createData.emd) ?? 0);
+    }
     console.log(
       `[UPLOAD] Deadline for ${r}:`,
       createData.deadline ? format(createData.deadline as Date, "do MMM yyyy") : "null",
@@ -381,9 +384,10 @@ async function insertTenderMerged(
         }
 
         const oldVal = (old as any)[key];
-        // value defaults to "0", which means "no amount yet" and can be filled.
-        const isEmpty = oldVal == null || oldVal === "" || (key === "value" && oldVal === "0");
-        if (isEmpty && value != null && value !== "" && !(key === "value" && value === "0")) {
+        // value and emd default to "0", which means "no amount yet" and can be filled.
+        const amount = key === "value" || key === "emd";
+        const isEmpty = oldVal == null || oldVal === "" || (amount && oldVal === "0");
+        if (isEmpty && value != null && value !== "" && !(amount && value === "0")) {
           updateData[key] = value;
         }
       }

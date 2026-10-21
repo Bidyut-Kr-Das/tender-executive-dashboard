@@ -4,7 +4,7 @@
  *   pnpm exec tsx lib/rupees.check.ts
  */
 import assert from "node:assert/strict";
-import { parseRupees } from "./rupees";
+import { formatRupees, parseEmd, parseRupees } from "./rupees";
 
 const cases: [unknown, number | null][] = [
   ["1.5 Cr", 15000000],
@@ -51,4 +51,18 @@ const cases: [unknown, number | null][] = [
 for (const [input, expected] of cases) {
   assert.equal(parseRupees(input), expected, `parseRupees(${JSON.stringify(input)})`);
 }
-console.log(`rupees: ${cases.length} checks passed`);
+assert.equal(formatRupees("1234567"), "₹12,34,567");
+assert.equal(formatRupees("48399.99"), "₹48,399.99");
+assert.equal(formatRupees("1.5 Cr"), "₹1,50,00,000");
+assert.equal(formatRupees("0"), null);
+assert.equal(formatRupees(null), null);
+assert.equal(formatRupees("NA"), null);
+
+assert.equal(parseEmd("Advisory Bank: State Bank of India | EMD Amount: 80000"), 80000);
+assert.equal(parseEmd("Advisory Bank: ICICI | EMD Amount: 2,50,000"), 250000);
+assert.equal(parseEmd("23,08,384.00"), 2308384);
+assert.equal(parseEmd(5000), 5000);
+assert.equal(parseEmd("Advisory Bank: ICICI"), null);
+assert.equal(parseEmd("EXEMPTION-BIS"), null);
+
+console.log(`rupees: ${cases.length + 12} checks passed`);

@@ -8,6 +8,7 @@
 /** Columns the table never offers data-derived dropdown values for. */
 const UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
   "value",
+  "emd",
   "reportings",
   "tenderFiles",
   "itemSchedules",

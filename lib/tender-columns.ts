@@ -51,7 +51,6 @@ const MERGED_FIELDS = new Set([
   "emdValidity",
   "ePbgDurationMonths",
   "ePbgPercentage",
-  "estimatedBidValue",
   "evaluationMethod",
   "evaluationTableData",
   "excludedCategory",

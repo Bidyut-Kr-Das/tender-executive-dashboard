@@ -130,33 +130,36 @@ export const numberRangeFilter: ColumnFilter = {
   },
 };
 
-// ponytail: fixed rupee stops sized to tender values (median about 5 L, top
-// about 1,600 Cr). Derive them from the data if another column needs a slider.
-const RUPEE_STOPS = [0, 1e5, 2e5, 5e5, 1e6, 2.5e6, 5e6, 1e7, 2e7, 5e7, 1e8, 2.5e8, 5e8, 1e9, Infinity];
-const LAST = RUPEE_STOPS.length - 1;
+// ponytail: fixed rupee stops sized to the data (tender value median about
+// 5 L, top about 1,600 Cr; EMD median about 7k, 99th percentile about 1.3 Cr).
+// Derive them from the data if more columns need a slider.
+const VALUE_STOPS = [0, 1e5, 2e5, 5e5, 1e6, 2.5e6, 5e6, 1e7, 2e7, 5e7, 1e8, 2.5e8, 5e8, 1e9, Infinity];
+const EMD_STOPS = [0, 1e3, 5e3, 1e4, 2.5e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2.5e6, 5e6, 1e7, Infinity];
 
 function rupees(n: number): string {
   if (n === Infinity) return "No limit";
   if (n >= 1e7) return `₹${n / 1e7} Cr`;
   if (n >= 1e5) return `₹${n / 1e5} L`;
-  return `₹${n}`;
+  return `₹${n.toLocaleString("en-IN")}`;
 }
 
-/** Nearest stop at or above a stored bound; typed formulas may fall between stops. */
-const stopIndex = (value: string, fallback: number) => {
-  if (!value) return fallback;
-  const i = RUPEE_STOPS.findIndex((s) => s >= Number(value));
-  return i < 0 ? LAST : i;
-};
-
 function RupeeRange({
+  stops,
   value,
   onChange,
 }: {
+  stops: number[];
   value: NumberRange | undefined;
   onChange: (value: unknown | undefined) => void;
 }) {
-  const committed: [number, number] = [stopIndex(value?.min ?? "", 0), stopIndex(value?.max ?? "", LAST)];
+  const last = stops.length - 1;
+  // Nearest stop at or above a stored bound; typed formulas may fall between stops.
+  const stopIndex = (bound: string, fallback: number) => {
+    if (!bound) return fallback;
+    const i = stops.findIndex((s) => s >= Number(bound));
+    return i < 0 ? last : i;
+  };
+  const committed: [number, number] = [stopIndex(value?.min ?? "", 0), stopIndex(value?.max ?? "", last)];
   // Moves with the thumbs; the filter (and the query) changes on release only.
   const [range, setRange] = useState(committed);
   const key = committed.join();
@@ -166,23 +169,23 @@ function RupeeRange({
     <Slider.Root
       value={range}
       min={0}
-      max={LAST}
+      max={last}
       step={1}
       minStepsBetweenValues={1}
       onValueChange={(v) => setRange(v as [number, number])}
       onValueCommitted={(v) => {
         const [lo, hi] = v as [number, number];
         onChange(
-          lo === 0 && hi === LAST
+          lo === 0 && hi === last
             ? undefined
-            : { min: lo === 0 ? "" : String(RUPEE_STOPS[lo]), max: hi === LAST ? "" : String(RUPEE_STOPS[hi]) },
+            : { min: lo === 0 ? "" : String(stops[lo]), max: hi === last ? "" : String(stops[hi]) },
         );
       }}
       className="flex flex-col gap-2 px-1.5"
     >
       <div className="flex justify-between text-xs tabular-nums">
-        <span>{rupees(RUPEE_STOPS[range[0]])}</span>
-        <span>{rupees(RUPEE_STOPS[range[1]])}</span>
+        <span>{rupees(stops[range[0]])}</span>
+        <span>{rupees(stops[range[1]])}</span>
       </div>
       <Slider.Control className="flex h-5 items-center">
         <Slider.Track className="relative h-1 w-full rounded-full bg-line">
@@ -202,18 +205,21 @@ function RupeeRange({
 }
 
 /** Rupee amount between two stops, picked with a two-thumb slider. */
-export const rupeeRangeFilter: ColumnFilter = {
+const rupeeRangeFilter = (stops: number[]): ColumnFilter => ({
   type: "custom",
   stateKey: "numberRange",
   render: ({ value, onChange }) => (
-    <RupeeRange value={value as NumberRange | undefined} onChange={onChange} />
+    <RupeeRange stops={stops} value={value as NumberRange | undefined} onChange={onChange} />
   ),
   summary: (value) => {
     const r = value as NumberRange | undefined;
     if (!r || !(r.min || r.max)) return null;
     return `${rupees(Number(r.min || 0))} – ${r.max ? rupees(Number(r.max)) : "No limit"}`;
   },
-};
+});
+
+export const valueRangeFilter = rupeeRangeFilter(VALUE_STOPS);
+export const emdRangeFilter = rupeeRangeFilter(EMD_STOPS);
 
 /** A date as text for a column's `text`; empty when there is none. */
 export function dateText(value: unknown, pattern = "dd/MM/yyyy"): string {

@@ -1,9 +1,10 @@
 import { getProvenance, getProvenanceForFields } from "@/lib/columnProvenance";
 import { formatDateISTLong } from "@/lib/format-ist";
+import { formatRupees } from "@/lib/rupees";
 import { REASON_FOR_NOT_APM_OPTIONS } from "@/lib/reason-for-not-apm";
 import type { MergedGroup } from "@/lib/tender-query";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
-import { Chips, Clamp, StackedCell, rupeeRangeFilter } from "@/components/v2/data-table/cells";
+import { Chips, Clamp, StackedCell, emdRangeFilter, valueRangeFilter } from "@/components/v2/data-table/cells";
 import { BLANK, selectFilter } from "@/components/v2/data-table/types";
 import type { DataTableColumn, FilterOption } from "@/components/v2/data-table/types";
 import { Badge, Dash, Field, Input } from "@/components/v2/ui/field";
@@ -60,6 +61,12 @@ const SKIP_COLUMNS = new Set([
 ]);
 
 const FROZEN = new Set(["organization", "tenderBrief", "itemCategory", "size"]);
+
+/** Amount cell: "₹12,34,567", or a dash for 0 (no amount). */
+const rupeeCell = (field: string) => (row: Row) => {
+  const amount = formatRupees(row[field]);
+  return amount ? <span className="tabular-nums">{amount}</span> : <Dash />;
+};
 
 const PROVENANCE_LABEL = {
   PRE: "Pre",
@@ -442,8 +449,11 @@ export function buildTenderColumns({
         cell: (row) => <RawMaterialsCell row={row} />,
       };
     }
+    if (col === "emd") {
+      return { ...base, search: false, filter: emdRangeFilter, cell: rupeeCell(col) };
+    }
     if (col === "value") {
-      return { ...base, search: false, filter: rupeeRangeFilter };
+      return { ...base, search: false, filter: valueRangeFilter, cell: rupeeCell(col) };
     }
     if (isDate) {
       return {
@@ -477,6 +487,7 @@ export function buildTenderColumns({
     const orgAndDept = g.fields.includes("organization") && g.fields.includes("departmentName");
     const briefAndCategory = g.fields.includes("tenderBrief") && g.fields.includes("itemCategory");
     const hasSize = g.fields.includes("size");
+    const isAmount = !concatenated && first === "value";
     const text = (row: Row) =>
       concatenated
         ? g.fields
@@ -493,9 +504,7 @@ export function buildTenderColumns({
       width: 250,
       frozen: orgAndDept || briefAndCategory || hasSize || undefined,
       // A blank separator shows the first field alone, so an amount stays an amount.
-      ...(!concatenated && first === "value"
-        ? { search: false, filter: rupeeRangeFilter }
-        : { filter: selectFilter() }),
+      ...(isAmount ? { search: false, filter: valueRangeFilter } : { filter: selectFilter() }),
       badges: getProvenanceForFields(g.fields).map((p) => PROVENANCE_LABEL[p]),
       text,
       cell: orgAndDept
@@ -504,7 +513,9 @@ export function buildTenderColumns({
           )
         : hasSize
           ? (row) => <SizeCell row={row} field={first} />
-          : (row) => (text(row) ? <Clamp>{text(row)}</Clamp> : <Dash />),
+          : isAmount
+            ? rupeeCell(first)
+            : (row) => (text(row) ? <Clamp>{text(row)}</Clamp> : <Dash />),
     };
   };
 
