@@ -1,15 +1,13 @@
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { syncMasterWebsites } from "../lib/google-sheets";
 import bcrypt from "bcryptjs";
+import columnMappings from "./seed-data/column-mappings.json";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL!),
 });
 
 async function main() {
-  // await prisma.exlusionKeywords.deleteMany();
-  // await prisma.exlusionKeywords.deleteMany();
   await prisma.exlusionKeywords.createMany({
     data: [
       {
@@ -61,33 +59,22 @@ async function main() {
         email: "lasertender.four@gmail.com",
       },
       {
-        name: "Pritikana Maity",
-        email:"laserentry.eight@gmail.com"
+        name: "Sujib Goswami",
+        email: "sujib@laserpowerinfra.com",
       },
-      {
-        name: "Ritwick Dutta",
-        email:"laserentery.two@gmail.com"
-      }
     ]
 
     
-  Associates.map(async (a)=>{
-
+  // Insert-only: never delete or rewrite associates. Their ids anchor
+  // tender_associations, so rerunning the seed must leave them alone.
+  for (const a of Associates) {
+    const email = a.email.trim().toLowerCase();
     await prisma.association.upsert({
-      where: {
-        email: a.email
-      },
-      create:{
-        email: a.email,
-        name: a.name,
-      },
-      update:{
-        email: a.email,
-        name: a.name
-      }
-      // skipDuplicates: true,
+      where: { email },
+      create: { name: a.name, email },
+      update: {},
     });
-  })
+  }
 
 
 
@@ -99,6 +86,32 @@ async function main() {
   // console.log(
   //   `✅ Synced ${result.total} tender status records from Google Sheets.`,
   // );
+
+  // Excel header -> DB field mappings, exported from a known-good database.
+  // Insert-only on (excelHeader, dbField): mappings an admin added, renamed or
+  // deleted since are left as they are.
+  const mapped = await prisma.columnMapping.createMany({
+    data: columnMappings,
+    skipDuplicates: true,
+  });
+  console.log(`✅ Column mappings: ${mapped.count} added, ${columnMappings.length - mapped.count} already present.`);
+
+  // Global saved filters (userId null), offered to every user. Insert-only by
+  // page + name: rerunning never duplicates or overwrites one.
+  // Formulas follow components/v2/data-table/filter-formula.ts.
+  const globalFilters = [
+    {
+      page: "/v2/tenders",
+      name: "Uploaded today, AI relevant",
+      formula: '[Uploaded] = TODAY AND [AI Relevance] IN ("true")',
+    },
+  ];
+  for (const f of globalFilters) {
+    const exists = await prisma.savedFilter.findFirst({
+      where: { page: f.page, name: f.name, userId: null },
+    });
+    if (!exists) await prisma.savedFilter.create({ data: f });
+  }
 
   const adminPassword = await bcrypt.hash("admin123", 10);
   await prisma.user.upsert({

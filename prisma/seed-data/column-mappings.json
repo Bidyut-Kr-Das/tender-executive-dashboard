@@ -1,0 +1,1046 @@
+[
+  {
+    "excelHeader": "advisory bank",
+    "dbField": "advisoryBank",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "advisoryBank",
+    "dbField": "advisoryBank",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bank",
+    "dbField": "advisoryBank",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "apm",
+    "dbField": "apm",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Management Decision",
+    "dbField": "apm",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "app",
+    "dbField": "app",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "aps",
+    "dbField": "aps",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "arbitrationClause",
+    "dbField": "arbitrationClause",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "assignedTo",
+    "dbField": "assignedTo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderPrepareBy",
+    "dbField": "assignedTo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidDetails",
+    "dbField": "bidDetails",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidOfferValidity",
+    "dbField": "bidOfferValidity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Bid Offer Validity (From End Date)",
+    "dbField": "bidOfferValidity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidOpeningDate",
+    "dbField": "bidOpeningDateTime",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidOpeningDateTime",
+    "dbField": "bidOpeningDateTime",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Bid Opening Date/Time",
+    "dbField": "bidOpeningDateTime",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidToRaEnabled",
+    "dbField": "bidToRaEnabled",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "raEnabled",
+    "dbField": "bidToRaEnabled",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "boqTitle",
+    "dbField": "boqTitle",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "checklist",
+    "dbField": "checklist",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "requirementChecklist",
+    "dbField": "checklist",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Participator Bidders",
+    "dbField": "competitors",
+    "displayName": "Competitors",
+    "status": "active"
+  },
+  {
+    "excelHeader": "comprehensiveMaintenanceChargesRequired",
+    "dbField": "comprehensiveMaintenanceChargesRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "maintenanceCharges",
+    "dbField": "comprehensiveMaintenanceChargesRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "consigneesReportingOfficer",
+    "dbField": "consigneesReportingOfficer",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Consignees Reporting Officer",
+    "dbField": "consigneesReportingOfficer",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "reportingOfficer",
+    "dbField": "consigneesReportingOfficer",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "contractPeriod",
+    "dbField": "contractPeriod",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "periodOfContract",
+    "dbField": "contractPeriod",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "currency",
+    "dbField": "currency",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidDeadline",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidEndDate",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidSubmissionEndDate",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "closingDate",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "deadline",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Deadline",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "dueDate",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "End Submission date",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "lastDate",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "submissionDeadline",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Tender Submitted Date",
+    "dbField": "deadline",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "departmentName",
+    "dbField": "departmentName",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "costOfDocument",
+    "dbField": "documentFees",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "docFees",
+    "dbField": "documentFees",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "documentFees",
+    "dbField": "documentFees",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderDocumentFees",
+    "dbField": "documentFees",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderFee",
+    "dbField": "documentFees",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "documentRequiredFromSeller",
+    "dbField": "documentRequiredFromSeller",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "downloadLink",
+    "dbField": "downloadLink",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidSecurity",
+    "dbField": "emd",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "earnestMoney",
+    "dbField": "emd",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "earnestMoneyDeposit",
+    "dbField": "emd",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "emd",
+    "dbField": "emd",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "epbgDuration",
+    "dbField": "ePbgDurationMonths",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ePbgDurationMonths",
+    "dbField": "ePbgDurationMonths",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "epbgPercentage",
+    "dbField": "ePbgPercentage",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ePbgPercentage",
+    "dbField": "ePbgPercentage",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "performanceBankGuarantee",
+    "dbField": "ePbgPercentage",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "estimatedBidValue",
+    "dbField": "estimatedBidValue",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "estimatedCost",
+    "dbField": "estimatedBidValue",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderAmount",
+    "dbField": "estimatedBidValue",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "evaluationMethod",
+    "dbField": "evaluationMethod",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Financial Document Indicating Price Breakup Required",
+    "dbField": "financialDocumentPriceBreakupRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "financialDocumentPriceBreakupRequired",
+    "dbField": "financialDocumentPriceBreakupRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "priceBreakupRequired",
+    "dbField": "financialDocumentPriceBreakupRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "inspectionRequired",
+    "dbField": "inspectionRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Inspection Required (By Empanelled Inspection Authority / Agencies pre registered with GeM)",
+    "dbField": "inspectionRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "itemcategory",
+    "dbField": "itemCategory",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "itemCategory",
+    "dbField": "itemCategory",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Item Category",
+    "dbField": "itemCategory",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "address",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "city",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "country",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "location",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Location",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "placeOfWork",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "region",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "state",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "workLocation",
+    "dbField": "location",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "markedStatus",
+    "dbField": "markedStatus",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "mediationClause",
+    "dbField": "mediationClause",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "miiPreference",
+    "dbField": "miiPurchasePreference",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "miiPurchasePreference",
+    "dbField": "miiPurchasePreference",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "averageTurnover",
+    "dbField": "minimumAverageAnnualTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "avgAnnualTurnover",
+    "dbField": "minimumAverageAnnualTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "minimumAverageAnnualTurnover",
+    "dbField": "minimumAverageAnnualTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Minimum Average Annual Turnover of the bidder",
+    "dbField": "minimumAverageAnnualTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ministryStateName",
+    "dbField": "ministryStateName",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Ministry State Name",
+    "dbField": "ministryStateName",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "msePreference",
+    "dbField": "msePurchasePreference",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "msePurchasePreference",
+    "dbField": "msePurchasePreference",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "msmeExemption",
+    "dbField": "msmeExemption",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "L1",
+    "dbField": "nameOfRank1",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Winner bidder",
+    "dbField": "nameOfRank1",
+    "displayName": "L1",
+    "status": "active"
+  },
+  {
+    "excelHeader": "oemAverageTurnover",
+    "dbField": "oemAverageTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "oemTurnover",
+    "dbField": "oemAverageTurnover",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "officeName",
+    "dbField": "officeName",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Office Name",
+    "dbField": "officeName",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "buyer",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "department",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "organisation",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "organization",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Organization @ Department Name",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Organization@Department Name",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "procuringEntity",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderAuthority",
+    "dbField": "organization",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Price quoted",
+    "dbField": "ourValue",
+    "displayName": "Our Value",
+    "status": "active"
+  },
+  {
+    "excelHeader": "Past Experience of Similar Services",
+    "dbField": "pastExperienceSimilarServicesRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "pastExperienceSimilarServicesRequired",
+    "dbField": "pastExperienceSimilarServicesRequired",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "pastPerformance",
+    "dbField": "pastPerformance",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Bill of Quantities",
+    "dbField": "quantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "quantity",
+    "dbField": "quantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "quantity/size",
+    "dbField": "quantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "size",
+    "dbField": "quantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "raQualificationRule",
+    "dbField": "raQualificationRule",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ready",
+    "dbField": "ready",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Actual Tender Number",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "deptTender",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "deptTenderNumber",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "portalId",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ref",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "referenceNo",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "referenceNumber",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "refNo",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "t247id",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "deleted"
+  },
+  {
+    "excelHeader": "tenderId",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderReference",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderReferenceNo",
+    "dbField": "referenceNo",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "publicationDate",
+    "dbField": "scrapedDate",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "scrapedDate",
+    "dbField": "scrapedDate",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "searchKey",
+    "dbField": "searchKey",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderClassifiedIn",
+    "dbField": "searchKey",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "sheetStatus",
+    "dbField": "sheetStatus",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "similarCategory",
+    "dbField": "similarCategory",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Bill of Quantities",
+    "dbField": "size",
+    "displayName": null,
+    "status": "deleted"
+  },
+  {
+    "excelHeader": "originalSource",
+    "dbField": "source",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "source",
+    "dbField": "source",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "startupExemption",
+    "dbField": "startupExemption",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Tender Stage",
+    "dbField": "statusCategory",
+    "displayName": "Status Category",
+    "status": "active"
+  },
+  {
+    "excelHeader": "t247Id",
+    "dbField": "t247Id",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tidNo",
+    "dbField": "t247Id",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "technicalClarificationTimeAllowed",
+    "dbField": "technicalClarificationTimeAllowed",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Time allowed for Technical Clarifications during technical evaluation",
+    "dbField": "technicalClarificationTimeAllowed",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "brief",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "description",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "fitAssessment",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Fit assessment",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "itemName",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Name Of Work Description",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderBrief",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Tender Brief",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderDescription",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderDetails",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "TENDER RESULT BRIEF",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "deleted"
+  },
+  {
+    "excelHeader": "title",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "deleted"
+  },
+  {
+    "excelHeader": "workDescription",
+    "dbField": "tenderBrief",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "totalqty",
+    "dbField": "totalQuantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "totalQty",
+    "dbField": "totalQuantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "totalquantity",
+    "dbField": "totalQuantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "totalQuantity",
+    "dbField": "totalQuantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Total Quantity",
+    "dbField": "totalQuantity",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "bidType",
+    "dbField": "typeOfBid",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "typeOfBid",
+    "dbField": "typeOfBid",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Estimated Bid Value",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "estimatedCost",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "ESTIMATED COST",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "estimatedValue",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderValue",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "tenderValueInRs",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Tender  Value in  Rs",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "value",
+    "dbField": "value",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "pastExperience",
+    "dbField": "yearsOfPastExperience",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "yearsOfPastExperience",
+    "dbField": "yearsOfPastExperience",
+    "displayName": null,
+    "status": "active"
+  },
+  {
+    "excelHeader": "Years of Past Experience Required for same/similar service",
+    "dbField": "yearsOfPastExperience",
+    "displayName": null,
+    "status": "active"
+  }
+]
