@@ -242,6 +242,18 @@ export function buildTenderColumns({
             <DecisionCell row={row} field={col} rowIndex={rowIndex} />
           ),
         };
+      case "participated":
+        return {
+          id: col,
+          header: label ?? "Participated",
+          width: index?.width ?? 120,
+          hidden: byIndex,
+          sortable: false,
+          filter: selectFilter(),
+          cell: (row, { rowIndex }) => (
+            <DecisionCell row={row} field={col} rowIndex={rowIndex} />
+          ),
+        };
       case "aiRelevanceValid":
         return {
           id: col,
