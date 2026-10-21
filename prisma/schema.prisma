@@ -808,7 +808,7 @@ model TenderMerged {
   quotationNo          String?
   rawMaterials         String?
 
-  value                                   String?
+  value                                   String? @default("0")
   bidOpeningDateTime                      String?
   bidOfferValidity                        String?
   ministryStateName                       String?

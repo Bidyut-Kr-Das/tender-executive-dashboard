@@ -6,7 +6,7 @@ import { parseRupees } from "@/lib/rupees";
 // Excel upload (lib/rupees.ts).
 // Rule: a readable amount becomes plain rupees ("1.5 Cr" -> "15000000",
 // "1,00,000 Rs" -> "100000"); anything else ("NA", "Not visible", PDF text)
-// becomes null. Rows already in plain form are left alone.
+// becomes "0", the same as an upload. Rows already in plain form are left alone.
 // Usage: pnpm exec tsx scripts/sanitize-tender-values.ts          (dry run: prints the changes)
 //        pnpm exec tsx scripts/sanitize-tender-values.ts --apply  (writes them)
 
@@ -21,15 +21,15 @@ async function main() {
 
   const changes = rows.flatMap((r) => {
     const amount = parseRupees(r.value);
-    const next = amount === null ? null : String(amount);
-    return next === r.value ? [] : [{ ...r, next }];
+    const next = String(amount ?? 0);
+    return next === r.value ? [] : [{ ...r, next, unreadable: amount === null }];
   });
-  const cleared = changes.filter((c) => c.next === null);
+  const zeroed = changes.filter((c) => c.unreadable).length;
 
-  console.log(`Checked ${rows.length} values: ${changes.length - cleared.length} to convert, ${cleared.length} to clear.`);
+  console.log(`Checked ${rows.length} values: ${changes.length - zeroed} to convert, ${zeroed} unreadable to set to 0.`);
   for (const c of changes) {
     const before = JSON.stringify(c.value).slice(0, 60);
-    console.log(`  #${c.id} ${c.referenceNo}: ${before} -> ${c.next ?? "null"}`);
+    console.log(`  #${c.id} ${c.referenceNo}: ${before} -> ${c.next}`);
   }
 
   if (!APPLY) {

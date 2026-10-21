@@ -280,12 +280,10 @@ function parseSheetData(
         : categoryFields;
     Object.assign(createData, rowCategoryFields);
     // Value is stored as plain rupees so it filters and sorts as a number.
-    // Text that is not an amount ("NA", "Not visible", PDF text) is dropped,
-    // not the tender: the row still imports with no value.
+    // Text that is not an amount ("NA", "Not visible", PDF text) becomes "0",
+    // so the column stays all numbers; the tender still imports.
     if (createData.value != null) {
-      const amount = parseRupees(createData.value);
-      if (amount === null) delete createData.value;
-      else createData.value = String(amount);
+      createData.value = String(parseRupees(createData.value) ?? 0);
     }
     console.log(
       `[UPLOAD] Deadline for ${r}:`,
@@ -383,7 +381,9 @@ async function insertTenderMerged(
         }
 
         const oldVal = (old as any)[key];
-        if ((oldVal == null || oldVal === "") && value != null && value !== "") {
+        // value defaults to "0", which means "no amount yet" and can be filled.
+        const isEmpty = oldVal == null || oldVal === "" || (key === "value" && oldVal === "0");
+        if (isEmpty && value != null && value !== "" && !(key === "value" && value === "0")) {
           updateData[key] = value;
         }
       }
