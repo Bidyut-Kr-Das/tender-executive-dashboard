@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowDown,
   ArrowUp,
@@ -18,23 +19,31 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  CircleCheck,
   Columns3,
+  Copy,
   ListFilter,
   SearchX,
+  SquareFunction,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button, IconButton } from "@/components/v2/ui/button";
-import { Dash, Input } from "@/components/v2/ui/field";
+import { Dash, Input, Textarea } from "@/components/v2/ui/field";
 import { Menu, MenuCheckItem, Popover, Select } from "@/components/v2/ui/overlay";
 import { EmptyState } from "@/components/v2/ui/page";
 import { Clamp } from "./cells";
 import { ColumnFilterPanel, summarizeFilter } from "./column-filter";
+import { filterRefs, formatFilters, parseFilters } from "./filter-formula";
+import { SaveFilterButton, SavedFiltersMenu } from "./saved-filters";
+import type { SavedFilterRow } from "@/actions/saved-filters";
 import {
   filterIds,
   groupRows,
   isFilterActive,
   leafColumns,
+  type ColumnFilterState,
   type ColumnFilterType,
   type DataTableColumn,
   type DataTableProps,
@@ -501,6 +510,132 @@ function ColumnPicker<Row>({
   );
 }
 
+/**
+ * Column filters as one editable formula: paste or type one to set every
+ * column at once, copy it, or save it. The chips stay the view of what is set.
+ */
+function FormulaBar<Row>({
+  columns,
+  filters,
+  onFilterChange,
+  onResetFilters,
+  formulaFilters = [],
+}: Pick<
+  DataTableProps<Row>,
+  "columns" | "filters" | "onFilterChange" | "onResetFilters" | "formulaFilters"
+>) {
+  // null follows the live filters; typing or pasting starts a draft.
+  const [draft, setDraft] = useState<string | null>(null);
+  // This page's saved filters, loaded when the Saved menu first opens.
+  const [saved, setSaved] = useState<SavedFilterRow[] | null>(null);
+  // Page filters first: they sit above the columns on screen too.
+  const refs = useMemo(
+    () => [
+      ...formulaFilters.map((f) => ({ id: f.id, name: f.name, filter: f.filter, search: false, check: f.check })),
+      ...filterRefs(columns),
+    ],
+    [formulaFilters, columns],
+  );
+  const allFilters = useMemo(() => {
+    const out = { ...filters };
+    for (const f of formulaFilters) if (f.value) out[f.id] = f.value;
+    return out;
+  }, [filters, formulaFilters]);
+  const current = useMemo(() => formatFilters(allFilters, refs), [allFilters, refs]);
+  const text = draft ?? current;
+  const dirty = draft !== null && draft.trim() !== current;
+  const parsed = useMemo(
+    () => (dirty && draft.trim() ? parseFilters(draft, refs) : null),
+    [dirty, draft, refs],
+  );
+  const ready = !!parsed && parsed.errors.length === 0;
+  const valid = !!text.trim() && (!parsed || ready);
+
+  // Replace, not merge: the formula is the whole filter.
+  const replaceFilters = (next: Record<string, ColumnFilterState>) => {
+    onResetFilters();
+    const page = new Set(formulaFilters.map((f) => f.id));
+    for (const f of formulaFilters) f.onChange(next[f.id]);
+    for (const [id, state] of Object.entries(next)) {
+      if (page.has(id)) continue;
+      for (const [type, value] of Object.entries(state)) {
+        onFilterChange(id, type as ColumnFilterType, value);
+      }
+    }
+  };
+
+  const apply = () => {
+    if (!ready) return;
+    replaceFilters(parsed.filters);
+    setDraft(null);
+  };
+
+  const applySaved = (formula: string) => {
+    const result = parseFilters(formula, refs);
+    if (result.errors.length === 0) {
+      replaceFilters(result.filters);
+      setDraft(null);
+    }
+    return result.errors;
+  };
+
+  const copy = () =>
+    navigator.clipboard.writeText(text).then(
+      () => toast.success("Filter formula copied"),
+      () => toast.error("Could not copy the filter formula"),
+    );
+
+  return (
+    <div className="flex shrink-0 flex-col gap-1.5 border-b bg-sunken px-3 py-2">
+      <div className="flex items-start gap-2">
+        <Textarea
+          aria-label="Filter formula"
+          autoFocus
+          rows={1}
+          spellCheck={false}
+          className="min-h-8 flex-1 font-mono text-xs"
+          placeholder={'[Status] IN ("Open", "Closed") AND [Party] CONTAINS "abc"'}
+          value={text}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              apply();
+            } else if (e.key === "Escape" && draft !== null) {
+              e.stopPropagation();
+              setDraft(null);
+            }
+          }}
+        />
+        <Button variant="primary" disabled={!ready} onClick={apply} title="Apply (Ctrl+Enter)">
+          Apply
+        </Button>
+        <IconButton label="Copy filter formula" disabled={!text.trim()} onClick={copy}>
+          <Copy className="size-4" />
+        </IconButton>
+        <SavedFiltersMenu list={saved} setList={setSaved} onApply={applySaved} />
+        <SaveFilterButton list={saved} setList={setSaved} formula={valid ? text.trim() : ""} />
+      </div>
+      {parsed && !ready && (
+        <ul className="flex flex-col gap-1 text-xs text-bad">
+          {parsed.errors.map((e, i) => (
+            <li key={i} className="flex items-start gap-1.5">
+              <AlertCircle className="mt-px size-3.5 shrink-0" aria-hidden />
+              <span>{e}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {ready && (
+        <p className="flex items-center gap-1.5 text-xs text-ink-2">
+          <CircleCheck className="size-3.5 shrink-0 text-good" aria-hidden />
+          {Object.keys(parsed.filters).length} column filter(s) ready. Apply or press Ctrl+Enter; Esc discards.
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ---------------------------------- Table ---------------------------------- */
 
 export function DataTable<Row>({
@@ -527,6 +662,7 @@ export function DataTable<Row>({
   error = null,
   onRetry,
   extraChips = [],
+  formulaFilters,
   actions,
   noun = "rows",
 }: DataTableProps<Row>) {
@@ -637,6 +773,8 @@ export function DataTable<Row>({
 
   const hasColumnFilters = Object.values(filters).some(isFilterActive);
 
+  const [formulaOpen, setFormulaOpen] = useState(false);
+
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-surface card">
       <div className="flex shrink-0 items-start gap-3 border-b px-3 py-2">
@@ -657,6 +795,14 @@ export function DataTable<Row>({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {actions}
+          <Button
+            icon={<SquareFunction className="size-3.5" />}
+            aria-pressed={formulaOpen}
+            className={cn(formulaOpen && "bg-accent-soft text-accent-ink")}
+            onClick={() => setFormulaOpen(!formulaOpen)}
+          >
+            Formula
+          </Button>
           <ColumnPicker
             columns={columns}
             columnVisibility={columnVisibility}
@@ -664,6 +810,15 @@ export function DataTable<Row>({
           />
         </div>
       </div>
+      {formulaOpen && (
+        <FormulaBar
+          columns={columns}
+          filters={filters}
+          onFilterChange={onFilterChange}
+          onResetFilters={onResetFilters}
+          formulaFilters={formulaFilters}
+        />
+      )}
 
       <div className="relative min-h-0 flex-1">
         {loading && (
