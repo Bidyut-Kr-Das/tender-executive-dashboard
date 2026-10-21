@@ -16,6 +16,15 @@ export async function requireUserAction() {
   return session.user
 }
 
+/** For server actions of the developer tools. */
+export async function requireDeveloperAction() {
+  const user = await requireUserAction()
+  if (user.role !== "developer") {
+    throw new Error("Forbidden: developers only")
+  }
+  return user
+}
+
 export async function requireAdminApi() {
   const session = await auth()
 

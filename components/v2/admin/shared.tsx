@@ -20,7 +20,7 @@ export async function request<T>(url: string, method = "GET", body?: unknown): P
  * with `upsert` and `remove`, so the list is never fetched again after an edit.
  * `load` must be a stable function.
  */
-export function useRows<T extends { id: number }>(load: () => Promise<T[]>) {
+export function useRows<T extends { id: number | string }>(load: () => Promise<T[]>) {
   const [rows, setRows] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export function useRows<T extends { id: number }>(load: () => Promise<T[]>) {
     });
   }, []);
 
-  const remove = useCallback((id: number) => {
+  const remove = useCallback((id: T["id"]) => {
     setRows((prev) => prev.filter((r) => r.id !== id));
   }, []);
 

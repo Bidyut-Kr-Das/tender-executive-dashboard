@@ -60,6 +60,8 @@ model User {
   email        String        @unique
   passwordHash String?
   role         String        @default("user")
+  /// False blocks sign-in and ends the user's open sessions.
+  active       Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   activityLogs ActivityLog[]
