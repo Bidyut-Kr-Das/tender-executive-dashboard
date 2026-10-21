@@ -1,30 +1,41 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceStrict } from "date-fns";
 import { signIn, useSession } from "next-auth/react";
 import { useIsDeveloper } from "@/components/v2/providers";
 import { toast } from "sonner";
-import { AlertTriangle, Check, Clock, LogIn, Radio, RefreshCw, RotateCcw } from "lucide-react";
+import { AlertTriangle, Ban, Check, Circle, Clock, LogIn, Radio, RefreshCw, RotateCcw, X } from "lucide-react";
 import { requeueStage } from "@/actions/ai-analysis";
-import { fetchLifecycleCounts } from "@/actions/tender-lifecycle";
 import {
+  fetchLifecycleCounts,
+  fetchLifecycleTenders,
+  type LifecycleTender,
+  type LifecycleTenderFilter,
+} from "@/actions/tender-lifecycle";
+import {
+  LIFECYCLE_MAIN_STAGES,
   LIFECYCLE_SLOW_MS as SLOW_MS,
-  lifecycleFunnel,
+  TENDER_LIFECYCLE_STATUS,
   type LifecycleCounts,
-  type LifecycleFunnelRow,
+  type LifecycleMainStage,
+  type LifecycleStageCount,
 } from "@/lib/tender-lifecycle";
 import { cn } from "@/lib/utils";
+import { DataTable } from "@/components/v2/data-table/data-table";
+import type { ColumnFilterType, DataTableColumn } from "@/components/v2/data-table/types";
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { describeError } from "@/components/v2/ui/errors";
 import { Badge, Dash } from "@/components/v2/ui/field";
-import { EmptyState, Page, PageHeader, PageSkeleton } from "@/components/v2/ui/page";
+import { EmptyState, Page, PageHeader, PageSkeleton, StatTile } from "@/components/v2/ui/page";
 
 const POLL_MS = 5_000;
+const PAGE_SIZE = 50;
+const PAGE_SIZES = [PAGE_SIZE];
 
 type RequeueFrom = Parameters<typeof requeueStage>[1];
 
-const STAGES: Record<LifecycleFunnelRow["stage"], { label: string; detail: string }> = {
+const STAGES: Record<LifecycleMainStage, { label: string; detail: string }> = {
   RELEVANCE: { label: "Relevance", detail: "AI checks the tender is relevant" },
   AUTOMATION: { label: "Documents", detail: "Tender files are downloaded" },
   INGESTION: { label: "Ingestion", detail: "The agent reads the files" },
@@ -32,33 +43,28 @@ const STAGES: Record<LifecycleFunnelRow["stage"], { label: string; detail: strin
 };
 
 const fmt = (n: number) => n.toLocaleString("en-IN");
-const percent = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
-// Shown while no tender has been queued, so the layout can be judged.
-// Delete with `sample` below once real statuses exist.
-function sampleCounts(now: Date): LifecycleCounts {
-  const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString();
-  return {
-    stages: [
-      { stage: "RELEVANCE", queued: 46, failed: 2, oldestQueued: ago(4) },
-      { stage: "AUTOMATION", queued: 31, failed: 4, oldestQueued: ago(22) },
-      { stage: "INGESTION", queued: 18, failed: 1, oldestQueued: ago(95) },
-      { stage: "INTELLIGENCE", queued: 12, failed: 3, oldestQueued: ago(38) },
-    ],
-    completed: 214,
-    rejected: 389,
-    notStarted: 12_840,
-    parsing: { pending: 27, completed: 512, failed: 9 },
-  };
+/** A status in words, e.g. "Waiting for Documents". */
+function statusLabel(status: string | null): string {
+  if (!status || status === "NEW") return "Not started";
+  if (status === "COMPLETED") return "Completed";
+  if (status === "RELEVANCE_REJECTED") return "Rejected as not relevant";
+  const [stage, state] = status.split("_") as [LifecycleMainStage, string];
+  const label = STAGES[stage]?.label ?? stage;
+  return state === "QUEUED" ? `Waiting for ${label}` : `Failed at ${label}`;
 }
 
-/** Loads once signed in; with `live` on, again every five seconds. */
+const FILTER_OPTIONS = Object.values(TENDER_LIFECYCLE_STATUS).map((value) => ({
+  value,
+  label: statusLabel(value),
+}));
+
+/** Loads once signed in, then again on demand. */
 function useLifecycleCounts(signedIn: boolean) {
   const [counts, setCounts] = useState<LifecycleCounts | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [live, setLive] = useState(false);
   const busy = useRef(false);
 
   const load = useCallback(async () => {
@@ -83,13 +89,37 @@ function useLifecycleCounts(signedIn: boolean) {
     if (signedIn) load();
   }, [signedIn, load]);
 
-  useEffect(() => {
-    if (!live || !signedIn) return;
-    const interval = setInterval(load, POLL_MS);
-    return () => clearInterval(interval);
-  }, [live, signedIn, load]);
+  return { counts, updatedAt, error, loading, load };
+}
 
-  return { counts, updatedAt, error, loading, live, setLive, load };
+/** One page of tenders with the picked status; reloads when `tick` moves. */
+function useLifecycleTenders(signedIn: boolean, filter: LifecycleTenderFilter, page: number, tick: number) {
+  const [tenders, setTenders] = useState<LifecycleTender[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const latest = useRef(0);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    const id = ++latest.current;
+    setLoading(true);
+    fetchLifecycleTenders(filter, page)
+      .then((res) => {
+        if (id !== latest.current) return;
+        setTenders(res.tenders);
+        setTotal(res.total);
+        setError(null);
+      })
+      .catch(async (err) => {
+        if (id === latest.current) setError(await describeError(err));
+      })
+      .finally(() => {
+        if (id === latest.current) setLoading(false);
+      });
+  }, [signedIn, filter, page, tick]);
+
+  return { tenders, total, loading, error };
 }
 
 interface Part {
@@ -161,39 +191,73 @@ function Panel({
   );
 }
 
-const TH = "type-label px-3 py-1.5 text-right font-medium text-ink-3";
-const TD = "px-3 py-2.5 text-right align-middle tabular-nums";
+const TH = "type-label px-3 py-1.5 text-right align-bottom font-medium text-ink-3";
+const TD = "border-t px-3 py-2.5 text-right align-middle tabular-nums";
 
-/** One line per stage; the bar shrinks as tenders drop out before it. */
-function Pipeline({
-  rows,
-  entered,
-  completed,
+/** A column header with what its number means underneath. */
+function Head({ label, meaning, className }: { label: string; meaning: string; className?: string }) {
+  return (
+    <th scope="col" className={cn(TH, className)}>
+      <span className="block">{label}</span>
+      <span className="block text-3xs font-normal normal-case tracking-normal text-ink-3">{meaning}</span>
+    </th>
+  );
+}
+
+/** A count that filters the tender list to its status when clicked. */
+function CountButton({
+  value,
+  selected,
+  onClick,
+  children,
+}: {
+  value: number;
+  selected: boolean;
+  onClick: () => void;
+  children?: React.ReactNode;
+}) {
+  if (value === 0) return <span className="text-ink-3">0</span>;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      title="Show these tenders below"
+      className={cn(
+        "rounded-md px-1.5 py-0.5 underline-offset-2 hover:underline",
+        selected && "bg-accent-soft text-accent-ink",
+      )}
+    >
+      {children ?? fmt(value)}
+    </button>
+  );
+}
+
+/** Where each stage is right now: one line per stage, plain counts. */
+function Stages({
+  stages,
   now,
+  filter,
+  onFilter,
   onRequeue,
   requeuing,
 }: {
-  rows: LifecycleFunnelRow[];
-  entered: number;
-  completed: number;
+  stages: LifecycleStageCount[];
   now: Date;
+  filter: LifecycleTenderFilter;
+  onFilter: (filter: LifecycleTenderFilter) => void;
   /** Developers only: send a stage's failed or slow tenders through it again. */
-  onRequeue?: (stage: LifecycleFunnelRow["stage"], from: RequeueFrom) => void;
+  onRequeue?: (stage: LifecycleMainStage, from: RequeueFrom) => void;
   /** `${stage}_${from}` of the requeue in flight. */
   requeuing: string | null;
 }) {
-  const requeueButton = (row: LifecycleFunnelRow, from: RequeueFrom, label: string) =>
+  const requeueButton = (stage: LifecycleMainStage, from: RequeueFrom, label: string) =>
     onRequeue && (
-      <IconButton
-        size="sm"
-        label={label}
-        disabled={requeuing !== null}
-        onClick={() => onRequeue(row.stage, from)}
-      >
+      <IconButton size="sm" label={label} disabled={requeuing !== null} onClick={() => onRequeue(stage, from)}>
         <RotateCcw
           className={cn(
             "size-3.5",
-            requeuing === `${row.stage}_${from}` &&
+            requeuing === `${stage}_${from}` &&
               "animate-spin [animation-direction:reverse] motion-reduce:animate-none",
           )}
         />
@@ -202,36 +266,26 @@ function Pipeline({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[46rem] border-separate border-spacing-0">
+      <table className="w-full min-w-[52rem] border-separate border-spacing-0">
         <thead>
           <tr>
-            <th scope="col" className={cn(TH, "pl-4 text-left")}>
-              Stage
-            </th>
-            <th scope="col" className={cn(TH, "w-[34%] text-left")}>
-              Share of queued tenders
-            </th>
-            <th scope="col" className={TH}>
-              Waiting
-            </th>
-            <th scope="col" className={TH}>
-              Failed
-            </th>
-            <th scope="col" className={TH}>
-              Moved on
-            </th>
-            <th scope="col" className={cn(TH, "pr-4")}>
-              Longest wait
-            </th>
+            <Head label="Stage" meaning="In pipeline order" className="pl-4 text-left" />
+            <Head label="Waiting for reply" meaning="Job sent, worker has not answered" />
+            <Head label="In queue now" meaning="Jobs no worker has picked up" />
+            <Head label="Workers" meaning="Listening on the queue" />
+            <Head label="Failed" meaning="Stopped with an error" />
+            <Head label="Longest wait" meaning="Oldest job still waiting" className="pr-4" />
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => {
+          {stages.map((row, i) => {
             const { label, detail } = STAGES[row.stage];
-            const waited = row.oldestQueued
-              ? now.getTime() - new Date(row.oldestQueued).getTime()
-              : 0;
+            const waited = row.oldestQueued ? now.getTime() - new Date(row.oldestQueued).getTime() : 0;
             const slow = waited > SLOW_MS;
+            const queuedStatus = `${row.stage}_QUEUED` as LifecycleTenderFilter;
+            const failedStatus = `${row.stage}_FAILED` as LifecycleTenderFilter;
+            // Waiting jobs that are neither in the queue nor with a worker were lost.
+            const stuck = row.queued > 0 && row.queue && row.queue.ready === 0 && row.queue.workers === 0;
             return (
               <tr key={row.stage}>
                 <th scope="row" className="border-t py-2.5 pl-4 pr-3 text-left font-normal">
@@ -241,66 +295,58 @@ function Pipeline({
                     </span>
                     <span className="flex min-w-0 flex-col">
                       <span className="font-medium">{label}</span>
-                      <span className="text-xs text-ink-3">
-                        {detail}
-                        {row.rejected > 0 && ` · ${fmt(row.rejected)} rejected`}
-                      </span>
+                      <span className="text-xs text-ink-3">{detail}</span>
+                      {stuck && (
+                        <span className="text-xs text-warn">
+                          Jobs were sent, but none is queued and no worker is running
+                        </span>
+                      )}
                     </span>
                   </div>
                 </th>
-                <td className="border-t px-3 py-2.5 align-middle">
-                  <div className="flex items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <SegmentBar
-                        className="h-2 bg-transparent"
-                        parts={[
-                          { label: "Moved on", value: row.passed, fill: "bg-good/40" },
-                          { label: "Waiting", value: row.queued, fill: "bg-accent" },
-                          { label: "Failed", value: row.failed, fill: "bg-bad" },
-                          { label: "Rejected", value: row.rejected, fill: "bg-ink-3/50" },
-                          // The rest of the line: tenders that never got this far.
-                          { label: "Not reached", value: entered - row.reached, fill: "bg-sunken" },
-                        ]}
-                      />
-                    </div>
-                    <span className="w-9 shrink-0 text-right text-xs tabular-nums text-ink-3">
-                      {percent(row.reached, entered)}%
-                    </span>
-                  </div>
+                <td className={cn(TD, "font-semibold")}>
+                  <span className="inline-flex items-center gap-1">
+                    <CountButton
+                      value={row.queued}
+                      selected={filter === queuedStatus}
+                      onClick={() => onFilter(queuedStatus)}
+                    />
+                    {row.queued > 0 &&
+                      slow &&
+                      requeueButton(
+                        row.stage,
+                        "QUEUED",
+                        `Requeue tenders waiting over ${formatDistanceStrict(0, SLOW_MS)} in ${label}`,
+                      )}
+                  </span>
                 </td>
-                <td className={cn(TD, "border-t text-md font-semibold")}>
-                  {row.queued > 0 ? (
-                    <span className="inline-flex items-center gap-1">
-                      {fmt(row.queued)}
-                      {slow &&
-                        requeueButton(
-                          row,
-                          "QUEUED",
-                          `Requeue tenders waiting over ${formatDistanceStrict(0, SLOW_MS)} in ${label}`,
-                        )}
-                    </span>
+                <td className={cn(TD, "text-ink-2")}>{row.queue ? fmt(row.queue.ready) : <Dash />}</td>
+                <td className={TD}>
+                  {!row.queue ? (
+                    <Dash />
+                  ) : row.queue.workers === 0 ? (
+                    <Badge tone="warn">None running</Badge>
                   ) : (
-                    <span className="font-normal text-ink-3">0</span>
+                    <span className="text-ink-2">{fmt(row.queue.workers)}</span>
                   )}
                 </td>
-                <td className={cn(TD, "border-t")}>
-                  {row.failed > 0 ? (
-                    <span className="inline-flex items-center gap-1">
+                <td className={TD}>
+                  <span className="inline-flex items-center gap-1">
+                    <CountButton
+                      value={row.failed}
+                      selected={filter === failedStatus}
+                      onClick={() => onFilter(failedStatus)}
+                    >
                       <Badge tone="bad">{fmt(row.failed)}</Badge>
-                      {requeueButton(row, "FAILED", `Requeue ${fmt(row.failed)} failed in ${label}`)}
-                    </span>
-                  ) : (
-                    <span className="text-ink-3">0</span>
-                  )}
+                    </CountButton>
+                    {row.failed > 0 &&
+                      requeueButton(row.stage, "FAILED", `Requeue ${fmt(row.failed)} failed in ${label}`)}
+                  </span>
                 </td>
-                <td className={cn(TD, "border-t text-ink-2")}>{fmt(row.passed)}</td>
-                <td className={cn(TD, "border-t pr-4")}>
+                <td className={cn(TD, "pr-4")}>
                   {row.oldestQueued ? (
                     <span
-                      className={cn(
-                        "inline-flex items-center gap-1",
-                        slow ? "font-medium text-warn" : "text-ink-2",
-                      )}
+                      className={cn("inline-flex items-center gap-1", slow ? "font-medium text-warn" : "text-ink-2")}
                     >
                       {slow && <Clock className="size-3" aria-hidden />}
                       {formatDistanceStrict(new Date(row.oldestQueued), now)}
@@ -312,65 +358,136 @@ function Pipeline({
               </tr>
             );
           })}
-          <tr>
-            <th scope="row" className="border-t py-2.5 pl-4 pr-3 text-left font-normal">
-              <div className="flex items-start gap-2.5">
-                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-good-soft text-good">
-                  <Check className="size-3" aria-hidden />
-                </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="font-medium">Completed</span>
-                  <span className="text-xs text-ink-3">Report saved on the tender</span>
-                </span>
-              </div>
-            </th>
-            <td className="border-t px-3 py-2.5 align-middle">
-              <div className="flex items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <SegmentBar
-                    className="h-2 bg-transparent"
-                    parts={[
-                      { label: "Completed", value: completed, fill: "bg-good" },
-                      { label: "Not reached", value: entered - completed, fill: "bg-sunken" },
-                    ]}
-                  />
-                </div>
-                <span className="w-9 shrink-0 text-right text-xs tabular-nums text-ink-3">
-                  {percent(completed, entered)}%
-                </span>
-              </div>
-            </td>
-            <td className={cn(TD, "border-t text-md font-semibold text-good")} colSpan={4}>
-              <span className="pr-1">{fmt(completed)} completed</span>
-            </td>
-          </tr>
         </tbody>
       </table>
     </div>
   );
 }
 
+type StepState = "done" | "current" | "failed" | "rejected" | "todo";
+
+const STEP_ICON: Record<StepState, { icon: typeof Check; className: string; word: string }> = {
+  done: { icon: Check, className: "bg-good-soft text-good", word: "done" },
+  current: { icon: Clock, className: "bg-accent-soft text-accent-ink", word: "waiting" },
+  failed: { icon: X, className: "bg-bad-soft text-bad", word: "failed" },
+  rejected: { icon: Ban, className: "bg-sunken text-ink-2", word: "rejected" },
+  todo: { icon: Circle, className: "bg-sunken text-ink-3", word: "not reached" },
+};
+
+/** Each stage's state for one tender. */
+function steps(status: string | null): StepState[] {
+  if (status === "COMPLETED") return LIFECYCLE_MAIN_STAGES.map(() => "done");
+  if (status === "RELEVANCE_REJECTED") return LIFECYCLE_MAIN_STAGES.map((_, i) => (i === 0 ? "rejected" : "todo"));
+  const [stage, state] = (status ?? "").split("_");
+  const at = LIFECYCLE_MAIN_STAGES.indexOf(stage as LifecycleMainStage);
+  return LIFECYCLE_MAIN_STAGES.map((_, i) =>
+    at < 0 || i > at ? "todo" : i < at ? "done" : state === "FAILED" ? "failed" : "current",
+  );
+}
+
+function Progress({ status }: { status: string | null }) {
+  const states = steps(status);
+  return (
+    <span
+      className="inline-flex items-center gap-1"
+      aria-label={LIFECYCLE_MAIN_STAGES.map((s, i) => `${STAGES[s].label} ${STEP_ICON[states[i]].word}`).join(", ")}
+    >
+      {LIFECYCLE_MAIN_STAGES.map((stage, i) => {
+        const { icon: Icon, className, word } = STEP_ICON[states[i]];
+        return (
+          <span
+            key={stage}
+            title={`${STAGES[stage].label}: ${word}`}
+            className={cn("grid size-5 place-items-center rounded-full", className)}
+          >
+            <Icon className="size-3" aria-hidden />
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+const fixed = { search: false, sortable: false } as const;
+
+function tenderColumns(now: Date): DataTableColumn<LifecycleTender>[] {
+  return [
+    { id: "referenceNo", header: "Reference No", width: 200, ...fixed, text: (r) => r.referenceNo ?? "" },
+    { id: "tenderBrief", header: "Brief", width: 320, ...fixed, text: (r) => r.tenderBrief ?? "" },
+    {
+      id: "progress",
+      header: "Progress",
+      width: 130,
+      ...fixed,
+      cell: (r) => <Progress status={r.lifecycleStatus} />,
+    },
+    {
+      id: "status",
+      header: "Status",
+      width: 220,
+      sortable: false,
+      filter: { type: "select", options: FILTER_OPTIONS },
+      text: (r) => statusLabel(r.lifecycleStatus),
+    },
+    {
+      id: "since",
+      header: "Since",
+      width: 130,
+      ...fixed,
+      text: (r) =>
+        r.lifecycleUpdatedAt ? formatDistanceStrict(new Date(r.lifecycleUpdatedAt), now, { addSuffix: true }) : "",
+    },
+    { id: "lifecycleError", header: "Error", width: 380, ...fixed, text: (r) => r.lifecycleError ?? "" },
+  ];
+}
+
+const getRowId = (row: LifecycleTender) => String(row.id);
+const noop = () => {};
+
 export function AiAnalysisView() {
   const { status } = useSession();
-  const { counts: loaded, updatedAt, error, loading, live, setLive, load } = useLifecycleCounts(
-    status === "authenticated",
-  );
+  const signedIn = status === "authenticated";
+  const { counts, updatedAt, error, loading, load } = useLifecycleCounts(signedIn);
   const developer = useIsDeveloper();
   const [requeuing, setRequeuing] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [live, setLive] = useState(false);
+  const [filter, setFilter] = useState<LifecycleTenderFilter>("ALL");
+  const [page, setPage] = useState(1);
+  const [tick, setTick] = useState(0);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const list = useLifecycleTenders(signedIn, filter, page, tick);
 
-  const requeue = (stage: LifecycleFunnelRow["stage"], from: RequeueFrom) => {
+  const reloadAll = useCallback(() => {
+    load();
+    setTick((t) => t + 1);
+  }, [load]);
+
+  useEffect(() => {
+    if (!live || !signedIn) return;
+    const interval = setInterval(reloadAll, POLL_MS);
+    return () => clearInterval(interval);
+  }, [live, signedIn, reloadAll]);
+
+  const pick = useCallback((next: LifecycleTenderFilter) => {
+    setFilter((prev) => (prev === next ? "ALL" : next));
+    setPage(1);
+  }, []);
+
+  const columns = useMemo(() => tenderColumns(updatedAt ?? new Date()), [updatedAt]);
+
+  const requeue = (stage: LifecycleMainStage, from: RequeueFrom) => {
     setRequeuing(`${stage}_${from}`);
     toast.promise(
       requeueStage(stage, from).finally(() => {
         setRequeuing(null);
-        load();
+        reloadAll();
       }),
       {
         loading: `Requeueing ${from === "FAILED" ? "failed" : "slow"} tenders in ${STAGES[stage].label}...`,
         success: ({ queued, notQueued }) =>
           notQueued > 0
-            ? `${fmt(queued)} requeued, ${fmt(notQueued)} could not be queued`
+            ? `${fmt(queued)} requeued, ${fmt(notQueued)} could not be sent. See the Error column`
             : `${fmt(queued)} requeued`,
         error: async (err) => `Requeue failed: ${await describeError(err)}`,
       },
@@ -381,7 +498,7 @@ export function AiAnalysisView() {
   const refresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 5_000);
-    load();
+    reloadAll();
   };
 
   if (status === "unauthenticated") {
@@ -396,7 +513,7 @@ export function AiAnalysisView() {
     );
   }
 
-  if (!loaded || !updatedAt) {
+  if (!counts || !updatedAt) {
     if (!error) return <PageSkeleton label="AI analysis" />;
     return (
       <Page className="items-center justify-center">
@@ -411,24 +528,26 @@ export function AiAnalysisView() {
     );
   }
 
-  const sample = lifecycleFunnel(loaded).entered === 0;
-  const counts = sample ? sampleCounts(updatedAt) : loaded;
-  const { rows, entered } = lifecycleFunnel(counts);
-
-  const inProgress = rows.reduce((sum, r) => sum + r.queued, 0);
-  const failed = rows.reduce((sum, r) => sum + r.failed, 0);
-  const finished = counts.completed + counts.rejected;
-  const overall: Part[] = [
-    { label: "Completed", value: counts.completed, fill: "bg-good" },
-    { label: "Rejected", value: counts.rejected, fill: "bg-ink-3" },
-    { label: "In progress", value: inProgress, fill: "bg-accent" },
-    { label: "Failed", value: failed, fill: "bg-bad" },
+  const inPipeline = counts.stages.reduce((sum, s) => sum + s.queued + s.failed, 0);
+  const tiles: { filter: LifecycleTenderFilter; label: string; detail: string; value: number }[] = [
+    { filter: "NEW", label: "Not started", detail: "never sent", value: counts.notStarted },
+    { filter: "ALL", label: "In pipeline", detail: "waiting or failed", value: inPipeline },
+    { filter: "RELEVANCE_REJECTED", label: "Rejected", detail: "not relevant", value: counts.rejected },
+    { filter: "COMPLETED", label: "Completed", detail: "report saved", value: counts.completed },
   ];
   const parsing: Part[] = [
     { label: "Parsed", value: counts.parsing.completed, fill: "bg-good" },
     { label: "Pending", value: counts.parsing.pending, fill: "bg-accent" },
     { label: "Failed", value: counts.parsing.failed, fill: "bg-bad" },
+    { label: "Not sent", value: counts.parsing.notSent, fill: "bg-sunken" },
   ];
+
+  const onFilterChange = (columnId: string, type: ColumnFilterType, value: unknown | undefined) => {
+    if (columnId !== "status" || type !== "select") return;
+    // One status at a time: the newest pick replaces the last.
+    setFilter(((value as string[] | undefined)?.at(-1) as LifecycleTenderFilter | undefined) ?? "ALL");
+    setPage(1);
+  };
 
   return (
     <Page className="overflow-y-auto">
@@ -443,7 +562,6 @@ export function AiAnalysisView() {
               </span>
             )}
             Updated {updatedAt.toLocaleTimeString("en-IN")}
-            {sample && <Badge tone="warn">Sample data</Badge>}
           </span>
         }
         actions={
@@ -474,40 +592,26 @@ export function AiAnalysisView() {
         </p>
       )}
 
-      <section className="hairline flex shrink-0 flex-col gap-4 rounded-xl bg-surface p-4">
-        <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
-          <div className="flex flex-col">
-            <span className="text-xs text-ink-2">Finished</span>
-            <span className="flex items-baseline gap-2.5">
-              <span className="text-4xl font-semibold leading-none tracking-[-0.03em] tabular-nums">
-                {percent(finished, entered)}%
-              </span>
-              <span className="tabular-nums text-ink-2">
-                {fmt(finished)} of {fmt(entered)} queued tenders
-              </span>
-            </span>
-          </div>
-          <div className="ml-auto">
-            <Legend parts={overall} />
-          </div>
-        </div>
-        <SegmentBar parts={overall} className="h-2.5" />
-        <p className="text-xs tabular-nums text-ink-3">
-          {fmt(counts.notStarted)} tenders are not in the pipeline and are not counted above.
-        </p>
-      </section>
+      <div className="flex flex-wrap gap-2">
+        {tiles.map((t) => (
+          <StatTile
+            key={t.filter}
+            label={t.label}
+            detail={t.detail}
+            value={fmt(t.value)}
+            selected={filter === t.filter}
+            onClick={() => pick(t.filter)}
+          />
+        ))}
+      </div>
 
-      <Panel
-        title="Pipeline"
-        aside={`A wait over ${formatDistanceStrict(0, SLOW_MS)} is marked as slow`}
-      >
-        <Pipeline
-          rows={rows}
-          entered={entered}
-          completed={counts.completed}
+      <Panel title="Stages" aside={`A wait over ${formatDistanceStrict(0, SLOW_MS)} is marked as slow`}>
+        <Stages
+          stages={counts.stages}
           now={updatedAt}
-          // Sample rows have nothing behind them to requeue.
-          onRequeue={developer && !sample ? requeue : undefined}
+          filter={filter}
+          onFilter={pick}
+          onRequeue={developer ? requeue : undefined}
           requeuing={requeuing}
         />
       </Panel>
@@ -518,6 +622,31 @@ export function AiAnalysisView() {
           <SegmentBar parts={parsing} className="h-2 min-w-48 flex-1" />
         </div>
       </Panel>
+
+      <section className="flex min-h-[28rem] shrink-0 flex-col">
+        <DataTable<LifecycleTender>
+          noun="tenders"
+          columns={columns}
+          rows={list.tenders}
+          getRowId={getRowId}
+          total={list.total}
+          page={page}
+          pageSize={PAGE_SIZE}
+          pageSizeOptions={PAGE_SIZES}
+          onPageChange={setPage}
+          onPageSizeChange={noop}
+          sort={null}
+          onSortChange={noop}
+          filters={filter === "ALL" ? {} : { status: { select: [filter] } }}
+          onFilterChange={onFilterChange}
+          onResetFilters={() => pick("ALL")}
+          columnVisibility={columnVisibility}
+          onColumnVisibilityChange={setColumnVisibility}
+          loading={list.loading}
+          error={list.error}
+          onRetry={reloadAll}
+        />
+      </section>
     </Page>
   );
 }

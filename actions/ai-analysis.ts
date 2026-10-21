@@ -101,6 +101,7 @@ async function requeueStageFn(stage: RequeueStage, from: "FAILED" | "QUEUED") {
   for (const tender of tenders) {
     const { id, referenceNo } = tender;
     let sent = false;
+    let reason = "Requeue: job not sent; RabbitMQ unreachable";
     if (stage === "RELEVANCE") {
       sent = await publishRelevance(tender);
     } else if (stage === "AUTOMATION") {
@@ -116,6 +117,7 @@ async function requeueStageFn(stage: RequeueStage, from: "FAILED" | "QUEUED") {
         orderBy: { id: "asc" },
       });
       // Nothing to ingest: the download has to be requeued first.
+      if (files.length === 0) reason = "Requeue: no downloaded files to ingest; requeue Documents first";
       sent = files.length > 0 && (await publishIngestionTask({ referenceNo, files }));
     } else {
       sent = await publishAgentIntelligenceTask({
@@ -126,7 +128,11 @@ async function requeueStageFn(stage: RequeueStage, from: "FAILED" | "QUEUED") {
         itemcategory: tender.itemCategory ?? "",
       });
     }
-    if (!sent) continue;
+    if (!sent) {
+      // Say why on the tender, so the AI analysis page can show it.
+      if (from === "FAILED") await setLifecycleStatus(referenceNo, `${stage}_FAILED`, reason);
+      continue;
+    }
     await setLifecycleStatus(referenceNo, `${stage}_QUEUED`);
     queued++;
   }

@@ -51,6 +51,30 @@ export async function getChannel(): Promise<Channel | null> {
   }
 }
 
+/** Ready messages and listening workers per queue; null for one that cannot be checked. */
+export async function checkQueues(
+  names: string[],
+): Promise<({ ready: number; workers: number } | null)[]> {
+  const m = await getModel();
+  if (!m) return names.map(() => null);
+  return Promise.all(
+    names.map(async (name) => {
+      // Own channel: checking a queue that does not exist closes the channel it ran on.
+      let ch: Channel | null = null;
+      try {
+        ch = await m.createChannel();
+        ch.on("error", () => {});
+        const { messageCount, consumerCount } = await ch.checkQueue(name);
+        return { ready: messageCount, workers: consumerCount };
+      } catch {
+        return null;
+      } finally {
+        await ch?.close().catch(() => {});
+      }
+    }),
+  );
+}
+
 export async function closeConnection(): Promise<void> {
   try {
     await channel?.close();
