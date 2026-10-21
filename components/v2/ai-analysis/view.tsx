@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatDistanceStrict } from "date-fns";
 import { signIn, useSession } from "next-auth/react";
+import { useIsDeveloper } from "@/components/v2/providers";
 import { toast } from "sonner";
 import { AlertTriangle, Check, Clock, LogIn, Radio, RefreshCw, RotateCcw } from "lucide-react";
 import { requeueStage } from "@/actions/ai-analysis";
@@ -350,11 +351,11 @@ function Pipeline({
 }
 
 export function AiAnalysisView() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const { counts: loaded, updatedAt, error, loading, live, setLive, load } = useLifecycleCounts(
     status === "authenticated",
   );
-  const developer = session?.user?.role === "developer";
+  const developer = useIsDeveloper();
   const [requeuing, setRequeuing] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 

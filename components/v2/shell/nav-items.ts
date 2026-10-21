@@ -30,7 +30,7 @@ export interface NavItem {
 
 export interface NavGroup {
   label: string;
-  adminOnly?: boolean;
+  developerOnly?: boolean;
   items: NavItem[];
 }
 
@@ -64,8 +64,8 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Admin",
-    adminOnly: true,
+    label: "Developers",
+    developerOnly: true,
     items: [
       { href: "/v2/admin/mappings", label: "Column Mappings", icon: Columns3, v2: true },
       { href: "/v2/admin/indices", label: "Column Index", icon: ListOrdered, v2: true },

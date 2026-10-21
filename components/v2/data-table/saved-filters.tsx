@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useIsDeveloper } from "@/components/v2/providers";
 import { Bookmark, BookmarkPlus, Globe, Loader2, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,7 +22,6 @@ import { toastError } from "@/components/v2/ui/errors";
  * same checks as a typed formula.
  */
 
-const useIsDeveloper = () => useSession().data?.user?.role === "developer";
 
 /** The page's list, owned by the formula bar so a save shows up in the menu. */
 interface ListProps {
