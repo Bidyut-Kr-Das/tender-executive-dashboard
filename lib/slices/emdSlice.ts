@@ -153,14 +153,10 @@ export const updateEmdField = createAsyncThunk<
   }
 });
 
-export const emdSlice = createSlice({
+const emdSlice = createSlice({
   name: "emd",
   initialState,
-  reducers: {
-    clearEmdError(state) {
-      state.error = null;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchEmdMerged.pending, (state) => {
@@ -208,5 +204,4 @@ export const emdSlice = createSlice({
   },
 });
 
-export const { clearEmdError } = emdSlice.actions;
 export default emdSlice.reducer;

@@ -69,7 +69,7 @@ function sanitizeSegment(value: string): string {
   return value.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-export function buildKey(fileName: string, folder?: string): string {
+function buildKey(fileName: string, folder?: string): string {
   const prefix = folder
     ? folder.split("/").filter(Boolean).map(sanitizeSegment).join("/") + "/"
     : "";
@@ -134,7 +134,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".txt": "text/plain",
 };
 
-export function contentTypeFor(fileName: string): string {
+function contentTypeFor(fileName: string): string {
   return CONTENT_TYPES[path.extname(fileName).toLowerCase()] ?? "application/octet-stream";
 }
 

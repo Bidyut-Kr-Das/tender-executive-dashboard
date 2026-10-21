@@ -61,7 +61,7 @@ export const EPC_UNFILTERABLE: ReadonlySet<string> = new Set([
  * raw-material range inputs, free-text boxes and the static option lists.
  * Moved here from TenderTable so the server and the table share one copy.
  */
-export const EPC_UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
+const EPC_UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
   "lastDateOfSubmission",
   "files",
   "boqChart",
@@ -78,13 +78,13 @@ export const EPC_UNIQUE_OPTION_SKIP: ReadonlySet<string> = new Set([
 ]);
 
 /** Multi-select columns whose tokens are Yes / No / (Blank), not raw values. */
-export const EPC_BOOLEAN_COLUMNS: ReadonlySet<string> = new Set([
+const EPC_BOOLEAN_COLUMNS: ReadonlySet<string> = new Set([
   "participated",
   "reverseAuctionApplicable",
 ]);
 
 /** Columns rendered as Available / Not Available, with a hardcoded option list. */
-export const EPC_AVAILABILITY_COLUMNS: ReadonlySet<string> = new Set([
+const EPC_AVAILABILITY_COLUMNS: ReadonlySet<string> = new Set([
   "attachmentUrl",
 ]);
 
@@ -95,18 +95,4 @@ export function epcNeedsFacetQuery(accessor: string): boolean {
   if (EPC_BOOLEAN_COLUMNS.has(accessor)) return false;
   if (EPC_AVAILABILITY_COLUMNS.has(accessor)) return false;
   return true;
-}
-
-/** The (Blank) / Yes / No tokens the table stores, as the SQL layer wants them. */
-export function normalizeEpcSelectTokens(
-  accessor: string,
-  values: string[],
-): string[] {
-  return values.map((v) => {
-    if (v === "(Blank)") return "__blank__";
-    if (!EPC_BOOLEAN_COLUMNS.has(accessor)) return v;
-    if (v === "Yes") return "true";
-    if (v === "No") return "false";
-    return v;
-  });
 }

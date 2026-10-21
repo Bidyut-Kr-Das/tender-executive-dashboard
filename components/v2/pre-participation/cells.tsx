@@ -632,7 +632,7 @@ function ErpItem({ item }: { item: CostingItem }) {
   );
 }
 
-export function parseCostingItems(row: Row): CostingItem[] {
+function parseCostingItems(row: Row): CostingItem[] {
   try {
     const parsed = JSON.parse(row.costingDetails || "[]");
     return Array.isArray(parsed)

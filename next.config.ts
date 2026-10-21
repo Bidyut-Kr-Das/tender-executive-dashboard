@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     "@prisma/adapter-pg",
     "pg",
   ],
-  output: "standalone", 
+  // output: "standalone", 
   experimental: {
     authInterrupts: true,
   },

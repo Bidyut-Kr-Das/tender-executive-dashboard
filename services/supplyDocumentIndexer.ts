@@ -3,10 +3,6 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { indexFolderFiles } from "@/services/fileIndexer";
 
-const CONFIG = {
-  scanIntervalMs: 12 * 60 * 60 * 1000
-};
-
 function getNetworkPath(): string {
   const networkPath = process.env.SUPPLY_NETWORK_PATH;
   if (!networkPath) {
@@ -134,27 +130,5 @@ export async function runIndexer(): Promise<void> {
     );
   } catch (err) {
     console.error(`[SupplyIndexer] Critical indexing failure: ${(err as Error).message}`);
-  }
-}
-
-let scheduleInterval: ReturnType<typeof setInterval> | null = null;
-
-export function startScheduling(): void {
-  if (scheduleInterval) return;
-
-  runIndexer().catch(err => console.error("[SupplyIndexer] Startup run failed:", err));
-
-  scheduleInterval = setInterval(() => {
-    runIndexer().catch(err => console.error("[SupplyIndexer] Scheduled run failed:", err));
-  }, CONFIG.scanIntervalMs);
-
-  console.log(`[SupplyIndexer] Scheduled to scan every ${CONFIG.scanIntervalMs / 3600000} hours.`);
-}
-
-export function stopScheduling(): void {
-  if (scheduleInterval) {
-    clearInterval(scheduleInterval);
-    scheduleInterval = null;
-    console.log("[SupplyIndexer] Schedule stopped.");
   }
 }

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type { DocumentIndex, DocumentIndexEntry } from "@/types/indexer";
+import type { DocumentIndex } from "@/types/indexer";
 
 interface ScanRecord {
   docketNo: string;
@@ -21,7 +21,6 @@ export function resolveRootPath(): string {
 
 const CONFIG = {
   dbFilePath: path.resolve(process.cwd(), "data", "document_index.json"),
-  scanIntervalMs: 60 * 60 * 1000
 };
 
 function ensureDir(dirPath: string): void {
@@ -104,7 +103,6 @@ export async function scanDirectoryRecursive(
   }
 
   const dirs = entries.filter(e => e.isDirectory());
-  const files = entries.filter(e => e.isFile() && !e.name.startsWith("~$") && !e.name.endsWith(".tmp"));
 
   for (const dir of dirs) {
     const folderPath = path.join(currentDir, dir.name);
@@ -231,35 +229,4 @@ export async function runIndexer(): Promise<void> {
   } catch (err) {
     console.error(`[Indexer] Critical indexing failure: ${(err as Error).message}`);
   }
-}
-
-let scheduleInterval: ReturnType<typeof setInterval> | null = null;
-
-export function startScheduling(): void {
-  if (scheduleInterval) return;
-
-  runIndexer();
-
-  scheduleInterval = setInterval(() => {
-    runIndexer();
-  }, CONFIG.scanIntervalMs);
-
-  console.log(`[Scheduler] Indexer scheduled to run every ${CONFIG.scanIntervalMs / 3600000} hour(s).`);
-}
-
-export function stopScheduling(): void {
-  if (scheduleInterval) {
-    clearInterval(scheduleInterval);
-    scheduleInterval = null;
-    console.log("[Scheduler] Indexer schedule stopped.");
-  }
-}
-
-export async function getNetworkFolderIndex(): Promise<Map<string, { folderPath: string; folderName: string }>> {
-  const scanned = await scanNetworkLocation();
-  const result = new Map<string, { folderPath: string; folderName: string }>();
-  for (const [docketNo, record] of scanned) {
-    result.set(docketNo, { folderPath: record.folderPath, folderName: record.folderName });
-  }
-  return result;
 }

@@ -1,43 +1,9 @@
 import "server-only"
 
 import { auth } from "@/auth"
-import { redirect } from "next/navigation"
 import { NextResponse, type NextRequest } from "next/server"
-import { cache } from "react"
 
 export const ADMIN_ROLES = ["admin", "developer"] as const
-
-export const verifySession = cache(async () => {
-  const session = await auth()
-
-  if (!session?.user) {
-    redirect("/auth/login")
-  }
-
-  return {
-    isAuth: true,
-    userId: session.user.id,
-    role: session.user.role,
-  }
-})
-
-export const requireRole = cache(async (role: string) => {
-  const session = await auth()
-
-  if (!session?.user) {
-    redirect("/auth/login")
-  }
-
-  if (session.user.role !== role) {
-    redirect("/")
-  }
-
-  return {
-    isAuth: true,
-    userId: session.user.id,
-    role: session.user.role,
-  }
-})
 
 // For server actions: they bypass proxy page guards, so each mutating action must check itself.
 export async function requireUserAction() {

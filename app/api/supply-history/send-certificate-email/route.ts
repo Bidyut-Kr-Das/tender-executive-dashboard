@@ -121,8 +121,6 @@ async function runSendCertificateEmail(params: { partyRefNo: string }) {
     const templateSource = fs.readFileSync(path.join(process.cwd(), "certificate_of_satisfactory_performance.hbs"), "utf-8");
     // Build CertificateTemplateData from rows
     const first = rows[0] as any;
-    const totalAmt = rows.reduce((sum: number, r: any) => sum + (r.invoiceQty ?? 0 ? r.invoiceAmt ?? 0 : r.invoiceAmt ?? 0), 0);
-    // Use invoiceAmt sum correctly (same as generate route)
     const total = rows.reduce((sum: number, r: any) => sum + (r.invoiceAmt ?? 0), 0);
     const data = {
       partyRefNo: first.partyRefNo ?? "",

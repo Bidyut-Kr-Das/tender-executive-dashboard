@@ -22,7 +22,7 @@ export type TenderLifecycleStatus =
 // Stages in pipeline order. A stage is "done" when the next main-chain stage is QUEUED (or COMPLETED after intelligence).
 // PARSING is a side branch published together with INGESTION by the automation webhook; it has no tender status
 // and is tracked per file in TenderFile.parseStatus.
-export const TENDER_LIFECYCLE_STAGES = [
+const TENDER_LIFECYCLE_STAGES = [
   {
     stage: "RELEVANCE",
     queue: QUEUES.AGENT_RELEVANCE,

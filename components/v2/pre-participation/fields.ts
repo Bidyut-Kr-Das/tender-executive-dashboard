@@ -74,7 +74,7 @@ export const fieldValue = (field: FieldDef, row: Row): string =>
 export const dateKey = (value: string): string => toISTDateKey(parseDate(value)) ?? "";
 
 /** A non-empty RA qualification rule forces reverse auction to yes. */
-export function raValue(row: Row): boolean | null {
+function raValue(row: Row): boolean | null {
   if ((row.raQualificationRule ?? "").trim()) return true;
   if (row.reverseAuctionApplicable === "true") return true;
   if (row.reverseAuctionApplicable === "false") return false;

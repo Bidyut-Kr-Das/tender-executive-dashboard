@@ -43,7 +43,7 @@ export type Row = FlatRow;
 
 const str = (v: unknown) => (v == null ? "" : String(v));
 
-export function parseJsonArray(raw: unknown): string[] | null {
+function parseJsonArray(raw: unknown): string[] | null {
   if (Array.isArray(raw)) return raw.map(String);
   try {
     const parsed = JSON.parse(str(raw));

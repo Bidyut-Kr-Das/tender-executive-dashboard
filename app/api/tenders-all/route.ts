@@ -88,22 +88,12 @@ export async function GET(_req: NextRequest) {
   let dbFetchMsTotal = 0;
   let dbBatches = 0;
   let columns: string[] = [];
-  let columnsReady = false;
 
   async function* lineGenerator(): AsyncGenerator<string> {
     const genStart = performance.now();
     let cursor: { id: number } | undefined = undefined;
     let pending: string[] = [];
     let isFirstBatch = true;
-
-    // Helper to flush pending as a single chunk (backpressure via yield)
-    const flushPending = function* () {
-      if (pending.length === 0) return;
-      batchCount++;
-      const chunk = pending.join("");
-      pending = [];
-      yield chunk;
-    };
 
     try {
       while (true) {
@@ -131,7 +121,6 @@ export async function GET(_req: NextRequest) {
         if (isFirstBatch) {
           const colStart = performance.now();
           columns = buildColumns(batch);
-          columnsReady = true;
           const header = `${JSON.stringify({ columns, associations: allAssociations, total: totalCount })}\n`;
           uncompressedBytes += Buffer.byteLength(header, "utf8");
           serializedLines++;

@@ -122,14 +122,10 @@ export const deleteCredential = createAsyncThunk(
   },
 );
 
-export const credentialsSlice = createSlice({
+const credentialsSlice = createSlice({
   name: "credentials",
   initialState,
-  reducers: {
-    clearCredentialsError(state) {
-      state.error = null;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchCredentials.pending, (state) => {
@@ -194,5 +190,4 @@ export const credentialsSlice = createSlice({
   },
 });
 
-export const { clearCredentialsError } = credentialsSlice.actions;
 export default credentialsSlice.reducer;
