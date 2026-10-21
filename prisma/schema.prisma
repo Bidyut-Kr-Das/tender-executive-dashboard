@@ -63,6 +63,7 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   activityLogs ActivityLog[]
+  savedFilters SavedFilter[]
 
   @@map("users")
 }
@@ -1242,4 +1243,20 @@ model Railways {
   expectedContractStatus String?
 
   @@index([tenderNo])
+}
+
+/// A table's column filters saved as a formula (see components/v2/data-table/filter-formula.ts).
+model SavedFilter {
+  id        String   @id @default(uuid())
+  page      String // pathname of the table's page, e.g. "/v2/tenders"
+  name      String
+  formula   String
+  userId    String? // null = global, offered to every user
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([page, userId])
+  @@map("saved_filters")
 }
