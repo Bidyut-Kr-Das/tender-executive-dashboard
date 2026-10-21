@@ -17,7 +17,7 @@ import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
 import { Check, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./button";
-import { CheckMark, Input } from "./field";
+import { CheckMark, Input, SwitchMark } from "./field";
 
 type Side = "top" | "bottom" | "left" | "right";
 type Align = "start" | "center" | "end";
@@ -230,6 +230,32 @@ export function MenuCheckItem({
     >
       <CheckMark checked={checked} />
       {children}
+    </BaseMenu.CheckboxItem>
+  );
+}
+
+/** A menu row with an on/off switch at its end; stays open when toggled. */
+export function MenuSwitchItem({
+  icon,
+  checked,
+  onCheckedChange,
+  children,
+}: {
+  icon?: ReactNode;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <BaseMenu.CheckboxItem
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      closeOnClick={false}
+      className={ITEM}
+    >
+      {icon && <span className="text-ink-3 [&>svg]:size-3.5">{icon}</span>}
+      <span className="flex-1">{children}</span>
+      <SwitchMark checked={checked} />
     </BaseMenu.CheckboxItem>
   );
 }
