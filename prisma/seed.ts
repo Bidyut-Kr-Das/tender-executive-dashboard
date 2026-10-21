@@ -2,6 +2,7 @@ import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import columnMappings from "./seed-data/column-mappings.json";
+import columnIndices from "./seed-data/column-indices.json";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL!),
@@ -95,6 +96,15 @@ async function main() {
     skipDuplicates: true,
   });
   console.log(`✅ Column mappings: ${mapped.count} added, ${columnMappings.length - mapped.count} already present.`);
+
+  // Tenders table column order, names and visibility, exported from a known-good
+  // database. createdAt is kept because columns with the same displayOrder sort
+  // by it. Insert-only on columnName: entries an admin changed since are left alone.
+  const indexed = await prisma.columnIndex.createMany({
+    data: columnIndices,
+    skipDuplicates: true,
+  });
+  console.log(`✅ Column indices: ${indexed.count} added, ${columnIndices.length - indexed.count} already present.`);
 
   // Global saved filters (userId null), offered to every user. Insert-only by
   // page + name: rerunning never duplicates or overwrites one.

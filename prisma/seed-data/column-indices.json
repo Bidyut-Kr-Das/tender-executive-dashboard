@@ -1,0 +1,1232 @@
+[
+  {
+    "columnName": "type",
+    "displayOrder": 1,
+    "displayName": "Type",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.337Z"
+  },
+  {
+    "columnName": "referenceNo",
+    "displayOrder": 2,
+    "displayName": "Reference No",
+    "visible": true,
+    "width": null,
+    "frozen": true,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.432Z"
+  },
+  {
+    "columnName": "tenderBrief",
+    "displayOrder": 3,
+    "displayName": "Tender Brief",
+    "visible": false,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.459Z"
+  },
+  {
+    "columnName": "Organization@Department Name",
+    "displayOrder": 3,
+    "displayName": null,
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T07:09:41.147Z"
+  },
+  {
+    "columnName": "Tender Brief @ Item Category",
+    "displayOrder": 3,
+    "displayName": null,
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-23T12:31:31.994Z"
+  },
+  {
+    "columnName": "organization",
+    "displayOrder": 4,
+    "displayName": "Organization",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.447Z"
+  },
+  {
+    "columnName": "departmentName",
+    "displayOrder": 4,
+    "displayName": "Department Name",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.453Z"
+  },
+  {
+    "columnName": "size",
+    "displayOrder": 4,
+    "displayName": "Size",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-23T12:32:16.819Z"
+  },
+  {
+    "columnName": "deadline",
+    "displayOrder": 5,
+    "displayName": "Deadline",
+    "visible": true,
+    "width": 300,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.482Z"
+  },
+  {
+    "columnName": "nameOfWorkDescription",
+    "displayOrder": 6,
+    "displayName": "Name Of Work Description",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.473Z"
+  },
+  {
+    "columnName": "tenderSubmittedDate",
+    "displayOrder": 9,
+    "displayName": "Tender Submitted Date",
+    "visible": false,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.495Z"
+  },
+  {
+    "columnName": "location",
+    "displayOrder": 10,
+    "displayName": "Location",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.502Z"
+  },
+  {
+    "columnName": "Location @ Ministry State Name",
+    "displayOrder": 10,
+    "displayName": null,
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T07:10:33.154Z"
+  },
+  {
+    "columnName": "ministryStateName",
+    "displayOrder": 11,
+    "displayName": "Ministry State Name",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.508Z"
+  },
+  {
+    "columnName": "Office Name @ Consignees Reporting Officer",
+    "displayOrder": 11,
+    "displayName": null,
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T07:29:16.392Z"
+  },
+  {
+    "columnName": "officeName",
+    "displayOrder": 12,
+    "displayName": "Office Name",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.514Z"
+  },
+  {
+    "columnName": "consigneesReportingOfficer",
+    "displayOrder": 13,
+    "displayName": "Consignees Reporting Officer",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.520Z"
+  },
+  {
+    "columnName": "value",
+    "displayOrder": 14,
+    "displayName": "Value",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.530Z"
+  },
+  {
+    "columnName": "estimatedBidValue",
+    "displayOrder": 15,
+    "displayName": "Estimated Bid Value",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.537Z"
+  },
+  {
+    "columnName": "Quantity / Size",
+    "displayOrder": 15,
+    "displayName": null,
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T07:31:49.988Z"
+  },
+  {
+    "columnName": "estimatedCostRs",
+    "displayOrder": 16,
+    "displayName": "Tender Value in Rs",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.543Z"
+  },
+  {
+    "columnName": "reason",
+    "displayOrder": 17,
+    "displayName": "REASON FOR NOT PARTICIPATION",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.549Z"
+  },
+  {
+    "columnName": "quantity",
+    "displayOrder": 18,
+    "displayName": "Quantity",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.556Z"
+  },
+  {
+    "columnName": "emd",
+    "displayOrder": 19,
+    "displayName": "Emd",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.562Z"
+  },
+  {
+    "columnName": "miiPurchasePreference",
+    "displayOrder": 20,
+    "displayName": "Mii Purchase Preference",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.569Z"
+  },
+  {
+    "columnName": "documentFees",
+    "displayOrder": 21,
+    "displayName": "Document Fees",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.575Z"
+  },
+  {
+    "columnName": "Quantity",
+    "displayOrder": 22,
+    "displayName": "Quantity",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.584Z"
+  },
+  {
+    "columnName": "totalQuantity",
+    "displayOrder": 23,
+    "displayName": "Total Quantity",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "deleted",
+    "createdAt": "2026-07-21T06:47:25.592Z"
+  },
+  {
+    "columnName": "itemCategory",
+    "displayOrder": 24,
+    "displayName": "Item Category",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.599Z"
+  },
+  {
+    "columnName": "app",
+    "displayOrder": 25,
+    "displayName": "app",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.605Z"
+  },
+  {
+    "columnName": "aps",
+    "displayOrder": 26,
+    "displayName": "aps",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.613Z"
+  },
+  {
+    "columnName": "apm",
+    "displayOrder": 27,
+    "displayName": "apm",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.618Z"
+  },
+  {
+    "columnName": "managementDecision",
+    "displayOrder": 28,
+    "displayName": "Management Decision",
+    "visible": false,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.622Z"
+  },
+  {
+    "columnName": "assignedTo",
+    "displayOrder": 29,
+    "displayName": "Assigned To",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.627Z"
+  },
+  {
+    "columnName": "tenderPrepareBy",
+    "displayOrder": 30,
+    "displayName": "Tender Prepare By",
+    "visible": false,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.632Z"
+  },
+  {
+    "columnName": "participated",
+    "displayOrder": 30,
+    "displayName": "Participated",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.981Z"
+  },
+  {
+    "columnName": "aiRelevanceValid",
+    "displayOrder": 31,
+    "displayName": "AI Relevance",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.640Z"
+  },
+  {
+    "columnName": "tenderFileUrl",
+    "displayOrder": 32,
+    "displayName": "Tender Document",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.664Z"
+  },
+  {
+    "columnName": "downloadLink",
+    "displayOrder": 33,
+    "displayName": "Download Link",
+    "visible": false,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.672Z"
+  },
+  {
+    "columnName": "contractNo",
+    "displayOrder": 33,
+    "displayName": "Contract Number",
+    "visible": true,
+    "width": 180,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.242Z"
+  },
+  {
+    "columnName": "parseStatus",
+    "displayOrder": 34,
+    "displayName": "Parse Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.676Z"
+  },
+  {
+    "columnName": "quotationNo",
+    "displayOrder": 34,
+    "displayName": "Quotation No",
+    "visible": false,
+    "width": 180,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.045Z"
+  },
+  {
+    "columnName": "reportings",
+    "displayOrder": 35,
+    "displayName": "Reporting Officers",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.680Z"
+  },
+  {
+    "columnName": "website",
+    "displayOrder": 36,
+    "displayName": "Website",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.684Z"
+  },
+  {
+    "columnName": "source",
+    "displayOrder": 37,
+    "displayName": "Source",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.688Z"
+  },
+  {
+    "columnName": "bidToRaEnabled",
+    "displayOrder": 38,
+    "displayName": "Bid To Ra Enabled",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.692Z"
+  },
+  {
+    "columnName": "reverseAuctionApplicable",
+    "displayOrder": 39,
+    "displayName": "Reverse Auction Applicable",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.699Z"
+  },
+  {
+    "columnName": "evaluationMethod",
+    "displayOrder": 40,
+    "displayName": "Evaluation Method",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.703Z"
+  },
+  {
+    "columnName": "raQualificationRule",
+    "displayOrder": 41,
+    "displayName": "Ra Qualification Rule",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.707Z"
+  },
+  {
+    "columnName": "contractPeriod",
+    "displayOrder": 42,
+    "displayName": "Contract Period",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.710Z"
+  },
+  {
+    "columnName": "bidOfferValidity",
+    "displayOrder": 43,
+    "displayName": "Bid Offer Validity",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.715Z"
+  },
+  {
+    "columnName": "emdPaymentMode",
+    "displayOrder": 44,
+    "displayName": "Emd Payment Mode",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.719Z"
+  },
+  {
+    "columnName": "bgNoUtrNo",
+    "displayOrder": 45,
+    "displayName": "Bg No Utr No",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.723Z"
+  },
+  {
+    "columnName": "emdValidity",
+    "displayOrder": 46,
+    "displayName": "Emd Validity",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.726Z"
+  },
+  {
+    "columnName": "bidValidityExpired",
+    "displayOrder": 47,
+    "displayName": "Bid Validity Expired",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.730Z"
+  },
+  {
+    "columnName": "t247Id",
+    "displayOrder": 100,
+    "displayName": "Portal ID",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-21T06:47:25.442Z"
+  },
+  {
+    "columnName": "docketNo",
+    "displayOrder": 100,
+    "displayName": "Docket No",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.601Z"
+  },
+  {
+    "columnName": "msmeExemption",
+    "displayOrder": 100,
+    "displayName": "MSME Exemption",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.887Z"
+  },
+  {
+    "columnName": "startupExemption",
+    "displayOrder": 100,
+    "displayName": "Startup Exemption",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.893Z"
+  },
+  {
+    "columnName": "checklist",
+    "displayOrder": 100,
+    "displayName": "Checklist",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.901Z"
+  },
+  {
+    "columnName": "scrapedDate",
+    "displayOrder": 100,
+    "displayName": "Scraped Date",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.905Z"
+  },
+  {
+    "columnName": "markedStatus",
+    "displayOrder": 100,
+    "displayName": "Marked Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.910Z"
+  },
+  {
+    "columnName": "sheetStatus",
+    "displayOrder": 100,
+    "displayName": "Sheet Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.920Z"
+  },
+  {
+    "columnName": "currency",
+    "displayOrder": 100,
+    "displayName": "Currency",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.927Z"
+  },
+  {
+    "columnName": "attachmentUrl",
+    "displayOrder": 100,
+    "displayName": "Costing File",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.932Z"
+  },
+  {
+    "columnName": "remarks",
+    "displayOrder": 100,
+    "displayName": "Remarks",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.940Z"
+  },
+  {
+    "columnName": "state",
+    "displayOrder": 100,
+    "displayName": "State",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.944Z"
+  },
+  {
+    "columnName": "locationCount",
+    "displayOrder": 100,
+    "displayName": "Location Count",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.949Z"
+  },
+  {
+    "columnName": "slNo",
+    "displayOrder": 100,
+    "displayName": "Sl No",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.953Z"
+  },
+  {
+    "columnName": "tenderFor",
+    "displayOrder": 100,
+    "displayName": "Tender For",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.957Z"
+  },
+  {
+    "columnName": "tenderOpeningDate",
+    "displayOrder": 100,
+    "displayName": "Tender Opening Date",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.962Z"
+  },
+  {
+    "columnName": "bidValidityDays",
+    "displayOrder": 100,
+    "displayName": "Bid Validity Days",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.966Z"
+  },
+  {
+    "columnName": "contractPeriodDays",
+    "displayOrder": 100,
+    "displayName": "Contract Period Days",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.977Z"
+  },
+  {
+    "columnName": "currentStatus",
+    "displayOrder": 100,
+    "displayName": "Current Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.986Z"
+  },
+  {
+    "columnName": "reverseAuctionDate",
+    "displayOrder": 100,
+    "displayName": "Reverse Auction Date",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.990Z"
+  },
+  {
+    "columnName": "loiPoNoAndDate",
+    "displayOrder": 100,
+    "displayName": "LOI/PO No and Date",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:24.998Z"
+  },
+  {
+    "columnName": "price",
+    "displayOrder": 100,
+    "displayName": "Price Type",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.002Z"
+  },
+  {
+    "columnName": "diffPercentFromL1",
+    "displayOrder": 100,
+    "displayName": "Diff L1 (%)",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.006Z"
+  },
+  {
+    "columnName": "diffPercentFromL2",
+    "displayOrder": 100,
+    "displayName": "Diff L2 (%)",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.011Z"
+  },
+  {
+    "columnName": "finalRemarks",
+    "displayOrder": 100,
+    "displayName": "Final Remarks",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.015Z"
+  },
+  {
+    "columnName": "tenderUpdateStatus",
+    "displayOrder": 100,
+    "displayName": "Tender Update Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.020Z"
+  },
+  {
+    "columnName": "nextAction",
+    "displayOrder": 100,
+    "displayName": "Next Action",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.025Z"
+  },
+  {
+    "columnName": "diffL1ManuallyEdited",
+    "displayOrder": 100,
+    "displayName": "Diff L1 Manually Edited",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.029Z"
+  },
+  {
+    "columnName": "diffL2ManuallyEdited",
+    "displayOrder": 100,
+    "displayName": "Diff L2 Manually Edited",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.033Z"
+  },
+  {
+    "columnName": "cva",
+    "displayOrder": 100,
+    "displayName": "CVA",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.041Z"
+  },
+  {
+    "columnName": "rawMaterials",
+    "displayOrder": 100,
+    "displayName": "Raw Materials",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.049Z"
+  },
+  {
+    "columnName": "bidOpeningDateTime",
+    "displayOrder": 100,
+    "displayName": "Bid Opening Date/Time",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.054Z"
+  },
+  {
+    "columnName": "minimumAverageAnnualTurnover",
+    "displayOrder": 100,
+    "displayName": "Min Avg Annual Turnover",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.060Z"
+  },
+  {
+    "columnName": "yearsOfPastExperience",
+    "displayOrder": 100,
+    "displayName": "Years of Past Experience",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.064Z"
+  },
+  {
+    "columnName": "oemAverageTurnover",
+    "displayOrder": 100,
+    "displayName": "OEM Average Turnover",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.069Z"
+  },
+  {
+    "columnName": "financialDocumentPriceBreakupRequired",
+    "displayOrder": 100,
+    "displayName": "Financial Doc Price Breakup Required",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.074Z"
+  },
+  {
+    "columnName": "similarCategory",
+    "displayOrder": 100,
+    "displayName": "Similar Category",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.079Z"
+  },
+  {
+    "columnName": "pastExperienceSimilarServicesRequired",
+    "displayOrder": 100,
+    "displayName": "Past Exp Similar Services Required",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.086Z"
+  },
+  {
+    "columnName": "documentRequiredFromSeller",
+    "displayOrder": 100,
+    "displayName": "Document Required From Seller",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.090Z"
+  },
+  {
+    "columnName": "pastPerformance",
+    "displayOrder": 100,
+    "displayName": "Past Performance",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.095Z"
+  },
+  {
+    "columnName": "boqTitle",
+    "displayOrder": 100,
+    "displayName": "BOQ Title",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.099Z"
+  },
+  {
+    "columnName": "bidDetails",
+    "displayOrder": 100,
+    "displayName": "Bid Details",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.103Z"
+  },
+  {
+    "columnName": "comprehensiveMaintenanceChargesRequired",
+    "displayOrder": 100,
+    "displayName": "Comprehensive Maintenance Charges Required",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.108Z"
+  },
+  {
+    "columnName": "typeOfBid",
+    "displayOrder": 100,
+    "displayName": "Type of Bid",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.113Z"
+  },
+  {
+    "columnName": "technicalClarificationTimeAllowed",
+    "displayOrder": 100,
+    "displayName": "Technical Clarification Time Allowed",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.117Z"
+  },
+  {
+    "columnName": "inspectionRequired",
+    "displayOrder": 100,
+    "displayName": "Inspection Required",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.122Z"
+  },
+  {
+    "columnName": "advisoryBank",
+    "displayOrder": 100,
+    "displayName": "Advisory Bank",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.129Z"
+  },
+  {
+    "columnName": "ePbgPercentage",
+    "displayOrder": 100,
+    "displayName": "e-PBG Percentage",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.134Z"
+  },
+  {
+    "columnName": "ePbgDurationMonths",
+    "displayOrder": 100,
+    "displayName": "e-PBG Duration (Months)",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.139Z"
+  },
+  {
+    "columnName": "msePurchasePreference",
+    "displayOrder": 100,
+    "displayName": "MSE Purchase Preference",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.143Z"
+  },
+  {
+    "columnName": "mediationClause",
+    "displayOrder": 100,
+    "displayName": "Mediation Clause",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.148Z"
+  },
+  {
+    "columnName": "arbitrationClause",
+    "displayOrder": 100,
+    "displayName": "Arbitration Clause",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.152Z"
+  },
+  {
+    "columnName": "bidStatus",
+    "displayOrder": 100,
+    "displayName": "Bid Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.157Z"
+  },
+  {
+    "columnName": "differenceBetweenRank1",
+    "displayOrder": 100,
+    "displayName": "L1 Diff (%)",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.164Z"
+  },
+  {
+    "columnName": "nameOfRank1",
+    "displayOrder": 100,
+    "displayName": "L1 Party Name",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.169Z"
+  },
+  {
+    "columnName": "valueOfRank1",
+    "displayOrder": 100,
+    "displayName": "L1 Price",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.177Z"
+  },
+  {
+    "columnName": "differenceBetweenRank2",
+    "displayOrder": 100,
+    "displayName": "L2 Diff (%)",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.181Z"
+  },
+  {
+    "columnName": "nameOfRank2",
+    "displayOrder": 100,
+    "displayName": "L2 Party Name",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.185Z"
+  },
+  {
+    "columnName": "valueOfRank2",
+    "displayOrder": 100,
+    "displayName": "L2 Price",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.190Z"
+  },
+  {
+    "columnName": "evaluationTableData",
+    "displayOrder": 100,
+    "displayName": "Evaluation Table Data",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.195Z"
+  },
+  {
+    "columnName": "resultAutomationStatus",
+    "displayOrder": 100,
+    "displayName": "Result Automation Status",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.199Z"
+  },
+  {
+    "columnName": "resultAutomationError",
+    "displayOrder": 100,
+    "displayName": "Result Automation Error",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.203Z"
+  },
+  {
+    "columnName": "beneficiaryBankDetails",
+    "displayOrder": 100,
+    "displayName": "Beneficiary Bank Details",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.208Z"
+  },
+  {
+    "columnName": "ourRank",
+    "displayOrder": 100,
+    "displayName": "Our Rank",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.212Z"
+  },
+  {
+    "columnName": "ourValue",
+    "displayOrder": 100,
+    "displayName": "Our Value",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.220Z"
+  },
+  {
+    "columnName": "proposedErpItemName",
+    "displayOrder": 100,
+    "displayName": "Proposed ERP Item Name",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.228Z"
+  },
+  {
+    "columnName": "proposedErpQuantity",
+    "displayOrder": 100,
+    "displayName": "Proposed ERP Quantity",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.235Z"
+  },
+  {
+    "columnName": "competitors",
+    "displayOrder": 100,
+    "displayName": "Competitors",
+    "visible": true,
+    "width": null,
+    "frozen": false,
+    "status": "active",
+    "createdAt": "2026-07-28T12:31:25.250Z"
+  }
+]
