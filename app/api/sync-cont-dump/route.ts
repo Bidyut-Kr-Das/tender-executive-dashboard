@@ -12,7 +12,7 @@ async function runSyncContDump() {
 const syncContDumpWithLog = withLog(runSyncContDump, (stats) => ({
   action: "UPDATE" as const,
   tableName: "TenderMerged",
-  details: `Synced from CONT DUMP: ${stats.updated} tenders updated (contract: ${stats.updatedContract}, tm: ${stats.updatedTm}) from ${stats.uniqueQuotations} quotations (${stats.notFound} not found, ${stats.skippedExisting} already set, ${stats.errors} errors)`,
+  details: `Synced from CONT DUMP: ${stats.updated} tenders updated (contract: ${stats.updatedContract}, tm: ${stats.updatedTm}) from ${stats.uniqueQuotations} quotations (${stats.notFound} not found, ${stats.skippedExisting} unchanged, ${stats.errors} errors)`,
 }));
 
 export async function POST(req: NextRequest) {

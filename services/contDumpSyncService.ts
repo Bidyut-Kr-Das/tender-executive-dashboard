@@ -23,7 +23,7 @@ export interface ContDumpSyncStats {
   updated: number;
   updatedContract: number;
   updatedTm: number;
-  /** DB rows whose target fields were already set. */
+  /** DB rows already holding the sheet values (no write needed). */
   skippedExisting: number;
   /** DB rows with a quotationNo absent from the sheet. */
   notFound: number;
@@ -141,9 +141,11 @@ export async function syncContractAndTmFromContDump(): Promise<ContDumpSyncStats
       continue;
     }
 
+    // Incoming non-empty values replace existing ones; null/empty sheet values are
+    // already excluded from the maps and never blank a populated DB field.
     const data: { contractNo?: string; tmNo?: string } = {};
-    if (contractNo !== undefined && !(tender.contractNo ?? "").trim()) data.contractNo = contractNo;
-    if (tmNo !== undefined && !(tender.tmNo ?? "").trim()) data.tmNo = tmNo;
+    if (contractNo !== undefined && contractNo !== (tender.contractNo ?? "").trim()) data.contractNo = contractNo;
+    if (tmNo !== undefined && tmNo !== (tender.tmNo ?? "").trim()) data.tmNo = tmNo;
 
     if (Object.keys(data).length === 0) {
       stats.skippedExisting++;

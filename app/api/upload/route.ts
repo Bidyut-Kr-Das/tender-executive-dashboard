@@ -98,7 +98,7 @@ function buildCreateData(
   associations?: { id: number; name: string; email: string }[],
 ): { refNo: string; tenderType: "GEM" | "NON_GEM"; createData: Record<string, unknown> } {
   const refNo = getReferenceNo(row, headers, customColumnMap) || "";
-  const { knownFields, extraFields } = mapRowToTender(row, MERGED_FIELDS, customColumnMap);
+  const { knownFields } = mapRowToTender(row, MERGED_FIELDS, customColumnMap);
   const tenderType: "GEM" | "NON_GEM" = isGemReference(refNo) ? "GEM" : "NON_GEM";
 
   const createData: Record<string, unknown> = {
@@ -133,12 +133,6 @@ function buildCreateData(
       }
     }
     delete createData.assignedTo;
-  }
-
-  if (extraFields.length) {
-    createData.extraFields = {
-      create: extraFields,
-    };
   }
 
   return { refNo, tenderType, createData };
@@ -352,7 +346,7 @@ async function insertTenderMerged(
       const SKIP_KEYS = new Set([
         "fileId", "referenceNo", "tenderType", "excludedCategory",
         "deadline", "app", "aps", "apm",
-        "tenderAssociations", "extraFields",
+        "tenderAssociations",
       ]);
 
       for (const [key, value] of Object.entries(p.createData)) {
