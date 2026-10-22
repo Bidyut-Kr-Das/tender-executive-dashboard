@@ -12,6 +12,19 @@ function httpError(message: string, status: number) {
 
 // APM-approved tenders we participated in that still have no costing sheet file.
 async function sendCostingSheetReminder() {
+  // Costing sheet is shared per docket: one file covers every tender on that docket.
+  const docketsWithCosting = await prisma.tenderMerged.findMany({
+    where: {
+      docketNo: { not: null },
+      tenderFiles: {
+        some: { tags: { has: TENDER_FILE_TYPES.COSTING_ATTACHMENT } },
+      },
+    },
+    select: { docketNo: true },
+    distinct: ["docketNo"],
+  });
+  const coveredDockets = new Set(docketsWithCosting.map((row) => row.docketNo));
+
   const tenders = await prisma.tenderMerged.findMany({
     where: {
       apm: "YES",
@@ -23,11 +36,15 @@ async function sendCostingSheetReminder() {
         },
       },
     },
-    select: { referenceNo: true, organization: true },
+    select: { referenceNo: true, organization: true, docketNo: true },
     orderBy: { referenceNo: "asc" },
   });
 
-  if (tenders.length === 0) {
+  const pending = tenders.filter(
+    (tender) => !tender.docketNo || !coveredDockets.has(tender.docketNo),
+  );
+
+  if (pending.length === 0) {
     return { success: true, sent: false, count: 0 };
   }
 
@@ -40,7 +57,7 @@ async function sendCostingSheetReminder() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      references: tenders.map((tender) => ({
+      references: pending.map((tender) => ({
         referenceNumber: tender.referenceNo,
         organizationName: tender.organization ?? "",
       })),
@@ -54,7 +71,7 @@ async function sendCostingSheetReminder() {
     );
   }
 
-  return { success: true, sent: true, count: tenders.length };
+  return { success: true, sent: true, count: pending.length };
 }
 
 const sendCostingSheetReminderWithLog = withLog(
