@@ -868,6 +868,7 @@ model TenderMerged {
   proposedErpQuantity String?
   erpPartyName        String?
   contractNo          String?
+  tmNo                String?
   typetest String?
 
   competitors     String?
