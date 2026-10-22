@@ -4,7 +4,7 @@
  * the "Quotation Number" column in the sheet.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/populateContractFromScReport.ts
+ *   cd v2 && pnpm exec tsx scripts/populateContractFromScReport.ts
  */
 import "dotenv/config";
 import { prisma } from "@/lib/prisma";

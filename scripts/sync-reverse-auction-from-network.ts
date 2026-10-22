@@ -8,7 +8,7 @@
  * source = encryptRelativePath("RA_COSTING_FILE", relativePath).
  *
  * Usage:
- *   npx tsx scripts/sync-reverse-auction-from-network.ts
+ *   pnpm exec tsx scripts/sync-reverse-auction-from-network.ts
  */
 import fs from "fs";
 import path from "path";

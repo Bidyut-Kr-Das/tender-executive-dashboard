@@ -20,7 +20,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (!email || !password) return null
 
         const user = await prisma.user.findUnique({ where: { email } })
-        if (!user || !user.passwordHash) return null
+        if (!user || !user.passwordHash || !user.active) return null
 
         const isValid = await bcrypt.compare(password, user.passwordHash)
         if (!isValid) return null
@@ -39,7 +39,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id as string
         token.role = (user as any).role
+        return token
       }
+      // Re-read on every session check, so a role change or a deactivation
+      // takes effect at once instead of when the token expires.
+      // ponytail: one indexed lookup per check; cache briefly if it shows up in profiles.
+      const current = await prisma.user.findUnique({
+        where: { id: token.id as string },
+        select: { role: true, active: true },
+      })
+      if (!current?.active) return null
+      token.role = current.role
       return token
     },
     async session({ session, token }) {

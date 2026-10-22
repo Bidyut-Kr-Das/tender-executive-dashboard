@@ -3,8 +3,8 @@
  * Only touches rows with no category yet (never overwrites).
  *
  * Usage:
- *   npx tsx scripts/backfillManufacturingCategory.ts            # dry run, counts only
- *   npx tsx scripts/backfillManufacturingCategory.ts --apply    # write changes
+ *   pnpm exec tsx scripts/backfillManufacturingCategory.ts            # dry run, counts only
+ *   pnpm exec tsx scripts/backfillManufacturingCategory.ts --apply    # write changes
  */
 import { prisma } from "../lib/prisma";
 import { TENDER_CATEGORIES } from "../lib/tender-categories";

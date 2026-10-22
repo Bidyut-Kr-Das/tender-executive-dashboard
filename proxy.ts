@@ -1,9 +1,11 @@
 import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
 
-const protectedRoutes = ["/v2/admin"]
+// Developer tools: the pages, and every write to the settings they edit.
+const developerRoutes = ["/v2/admin", "/v2/design"]
+const developerApiPaths = ["/api/column-mappings", "/api/column-groups", "/api/column-indices", "/api/sop-responsibilities"]
 const syncApiPaths = ["/api/sync", "/api/refresh-all"]
-const publicApiPaths = ["/api/external", "/api/sync-dockets", "/api/sync-costing-smartsheet", "/api/sync-bom", "/api/health", "/api/sync-to-merged", "/api/admin/reset-password", "/api/webhook/intelligence", "/api/webhook/ai-relevance", "/api/webhook/automation", "/api/webhook/parsing", "/api/webhook/ingestion", "/api/webhook/feedback", "/api/webhook/result", "/api/webhook/performance-certificate"]
+const publicApiPaths = ["/api/external", "/api/mcp","/api/sync-dockets", "/api/sync-costing-smartsheet", "/api/sync-bom", "/api/health", "/api/sync-to-merged", "/api/admin/reset-password", "/api/webhook/intelligence", "/api/webhook/ai-relevance", "/api/webhook/automation", "/api/webhook/parsing", "/api/webhook/ingestion", "/api/webhook/feedback", "/api/webhook/result", "/api/webhook/performance-certificate"]
 const ADMIN_ROLES = ["admin", "developer"]
 
 export default async function proxy(req: NextRequest) {
@@ -27,6 +29,9 @@ export default async function proxy(req: NextRequest) {
       if (!session?.user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
+      if (developerApiPaths.some(p => path.startsWith(p)) && session.user.role !== "developer") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
       // Sync API routes require admin or developer role
       if (syncApiPaths.some(p => path.startsWith(p))) {
         if (!ADMIN_ROLES.includes(session.user.role)) {
@@ -37,7 +42,7 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const isProtected = protectedRoutes.some(
+  const isProtected = developerRoutes.some(
     (route) => path === route || path.startsWith(route + "/")
   )
 
@@ -51,6 +56,10 @@ export default async function proxy(req: NextRequest) {
     const loginUrl = new URL("/auth/login", req.url)
     loginUrl.searchParams.set("callbackUrl", path)
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (isProtected && session?.user?.role !== "developer") {
+    return NextResponse.redirect(new URL("/v2/tenders", req.url))
   }
 
   if (isAuthRoute && session?.user && path === "/auth/login") {

@@ -75,6 +75,69 @@ export function CheckMark({
   );
 }
 
+/** The track and thumb of an on/off switch, for controls that bring their own input. */
+export function SwitchMark({
+  checked,
+  className,
+}: {
+  checked: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 motion-safe:transition-colors motion-safe:duration-150",
+        checked ? "bg-accent" : "bg-line-strong",
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          "size-3 rounded-full bg-white shadow-sm motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-(--ease-out)",
+          checked && "translate-x-3",
+        )}
+      />
+    </span>
+  );
+}
+
+/** A setting that takes effect at once, unlike a Checkbox that is part of a form. */
+export function Switch({
+  checked,
+  onChange,
+  children,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-2",
+        disabled && "cursor-not-allowed opacity-50",
+      )}
+    >
+      <input
+        type="checkbox"
+        role="switch"
+        className="peer sr-only"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <SwitchMark
+        checked={checked}
+        className="peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-accent"
+      />
+      {children}
+    </label>
+  );
+}
+
 export function Checkbox({
   checked,
   onChange,

@@ -13,7 +13,7 @@ const TARGET_HEADERS = {
 
 export type TypeTestLab = "CPRI" | "ERDA" | "NABL";
 
-export function mapLab(raw: string | null): TypeTestLab | null {
+function mapLab(raw: string | null): TypeTestLab | null {
   if (!raw) return null;
   const n = raw.toLowerCase().trim();
   if (n.includes("central power research institute")) return "CPRI";
@@ -197,7 +197,6 @@ export async function readTypeTestLedger(opts?: { filePath?: string }): Promise<
     // hyperlink from actual cell object, not sheet_to_json value
     let certHyperlink: string | null = null;
     if (cols.testCertificateNo !== undefined) {
-      const addr = XLSX.utils.encode_cell({ r, c: cols.testCertificateNo });
       // note: r is index in sheet_to_json rows which equals excel row index if no blank rows skipped,
       // but blankrows:false may offset; safer to use headerRow + data offset
       // We use raw sheet cell lookup: headerRow (excel 0-index) + (r - headerRow)
@@ -247,4 +246,3 @@ export async function readTypeTestLedger(opts?: { filePath?: string }): Promise<
 // Mapping for future tenderfiles save (type prefix for encryptRelativePath)
 // Keep here so controller can reuse: when saving type test certs, use TYPE_TEST | relative path
 export const TYPE_TEST_FILE_TYPE = "TYPETEST" as const;
-export const TENDER_TYPE_TEST_TAG = "typeTestCertificate" as const;

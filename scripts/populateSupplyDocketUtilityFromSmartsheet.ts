@@ -4,7 +4,7 @@
  * matching on the quotation number.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/populateSupplyDocketUtilityFromSmartsheet.ts
+ *   cd v2 && pnpm exec tsx scripts/populateSupplyDocketUtilityFromSmartsheet.ts
  */
 import "dotenv/config";
 import { prisma } from "@/lib/prisma";

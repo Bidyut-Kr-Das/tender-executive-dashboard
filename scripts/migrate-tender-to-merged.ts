@@ -1,7 +1,7 @@
 /**
  * Migration Script: Migrate legacy Tender records into TenderMerged
  *
- * Usage: cd v2 && npx tsx scripts/migrate-tender-to-merged.ts
+ * Usage: cd v2 && pnpm exec tsx scripts/migrate-tender-to-merged.ts
  *
  * - If tenderNoNitNo already exists as referenceNo → UPDATE that TenderMerged
  * - If not → CREATE a new TenderMerged record

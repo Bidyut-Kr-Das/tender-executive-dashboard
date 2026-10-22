@@ -1,9 +1,9 @@
 /**
  * Populate TypeTest table from Type Test Ledger.xlsx
  * Usage:
- *   npx tsx scripts/syncTypeTestLedger.ts
- *   npx tsx scripts/syncTypeTestLedger.ts --dry-run --verbose
- *   npx tsx scripts/syncTypeTestLedger.ts --file="W:\\Updated TTR\\Type Test Ledger.xlsx"
+ *   pnpm exec tsx scripts/syncTypeTestLedger.ts
+ *   pnpm exec tsx scripts/syncTypeTestLedger.ts --dry-run --verbose
+ *   pnpm exec tsx scripts/syncTypeTestLedger.ts --file="W:\\Updated TTR\\Type Test Ledger.xlsx"
  */
 import "dotenv/config";
 import { prisma } from "../lib/prisma";

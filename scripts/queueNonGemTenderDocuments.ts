@@ -6,7 +6,7 @@
  * to the "tender:parsing" queue with type NON_GEM_BOQ_PARSING.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/queueNonGemTenderDocuments.ts
+ *   cd v2 && pnpm exec tsx scripts/queueNonGemTenderDocuments.ts
  */
 import { prisma } from "../lib/prisma";
 import { publishNonGemBoqParsingTask } from "../lib/queue/publisher";

@@ -6,9 +6,9 @@
  * Dry-run by default; pass --publish to actually push to RabbitMQ.
  *
  * Usage:
- *   npx tsx scripts/publishAgentIntelligence.ts           # dry-run all
- *   npx tsx scripts/publishAgentIntelligence.ts --publish # push all
- *   npx tsx scripts/publishAgentIntelligence.ts --referenceNo=REF1,REF2 --publish
+ *   pnpm exec tsx scripts/publishAgentIntelligence.ts           # dry-run all
+ *   pnpm exec tsx scripts/publishAgentIntelligence.ts --publish # push all
+ *   pnpm exec tsx scripts/publishAgentIntelligence.ts --referenceNo=REF1,REF2 --publish
  */
 import { prisma } from "../lib/prisma";
 import { QUEUES } from "../lib/queue/config";

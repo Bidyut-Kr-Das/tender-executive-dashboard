@@ -132,6 +132,21 @@ export interface FilterChip {
   onRemove?: () => void;
 }
 
+/**
+ * A page filter that is not a column (a toolbar control), offered to the
+ * filter formula under its own name. Its chip stays the page's `extraChips`.
+ */
+export interface FormulaFilter {
+  id: string;
+  name: string;
+  filter: ColumnFilter;
+  value: ColumnFilterState | undefined;
+  /** `undefined` clears it. */
+  onChange: (value: ColumnFilterState | undefined) => void;
+  /** Why a parsed value cannot be applied, if it cannot. */
+  check?: (value: ColumnFilterState) => string | null;
+}
+
 export interface DataTableProps<Row> {
   columns: DataTableColumn<Row>[];
   rows: Row[];
@@ -173,6 +188,8 @@ export interface DataTableProps<Row> {
   error?: string | null;
   onRetry?: () => void;
 
+  /** Filters outside the columns that the filter formula also reads and writes. */
+  formulaFilters?: FormulaFilter[];
   /** Chips for filters that live outside the columns. */
   extraChips?: FilterChip[];
   /** Controls placed beside the column picker. */

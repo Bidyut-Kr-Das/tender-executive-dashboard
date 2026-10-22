@@ -1,6 +1,6 @@
 import { isBeforeTodayIST } from "@/lib/format-ist";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
-import { Chips, Clamp } from "@/components/v2/data-table/cells";
+import { Chips, Clamp, emdRangeFilter } from "@/components/v2/data-table/cells";
 import {
   stackColumns,
   type ColumnStack,
@@ -345,7 +345,7 @@ export function buildPreParticipationColumns(
       cell: (row) => <RawMaterialsCell row={row} />,
     },
     editable("emdPaymentMode", "EMD Payment Mode", 170, { search: false }),
-    editable("emd", "EMD"),
+    editable("emd", "EMD", 180, { search: false, filter: emdRangeFilter }),
     editable("bgDate", "BG Date"),
     editable("bgExpiryDate", "BG Expiry Date"),
     editable("claimDate", "Claim Date"),

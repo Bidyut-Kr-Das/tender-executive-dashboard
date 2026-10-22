@@ -1,7 +1,7 @@
 /**
  * Self-check for the filter -> SQL translator. Run it with:
  *
- *   npx tsx lib/tender-query.check.ts
+ *   pnpm exec tsx lib/tender-query.check.ts
  *
  * No database is touched: buildWhereSql is pure, so the assertions look at the
  * SQL text and the bound parameters it produces.
@@ -189,6 +189,19 @@ check("copper has no alloy veto", () => {
   });
   assert.ok(sql.values.includes("(^cu$|copper)"));
   assert.equal(sql.values.includes("alloy"), false);
+});
+
+check("value range casts only numeric text", () => {
+  const sql = where({ columnFilters: { value: { numberRange: { min: "500000", max: "" } } } });
+  const t = text(sql);
+  assert.match(t, /CASE WHEN btrim\(t\."value"::text\) ~ \$\d+ THEN btrim\(t\."value"::text\)::numeric END\) >= \$\d+/);
+  assert.ok(sql.values.includes(500000));
+  assert.equal(t.includes("<="), false);
+});
+
+check("an empty value range is not a filter", () => {
+  const sql = where({ columnFilters: { value: { numberRange: { min: "", max: "" } } } });
+  assert.equal(text(sql).includes("::numeric"), false);
 });
 
 check("an empty raw materials range is not a filter", () => {

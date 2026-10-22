@@ -1,4 +1,4 @@
-export const STATE_ALIAS_MAP: Record<string, string | null> = {
+const STATE_ALIAS_MAP: Record<string, string | null> = {
   // typos -> correct
   hariyana: "Haryana",
   gujrat: "Gujarat",

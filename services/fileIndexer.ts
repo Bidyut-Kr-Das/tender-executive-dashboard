@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { toPortableRelative } from "@/lib/pathUtils";
-import type { FileMetadata, FileIndex, FileIndexEntry, FolderScanResult, ScanDirectoryResult } from "@/types/indexer";
+import type { FileMetadata, FileIndex, FolderScanResult, ScanDirectoryResult } from "@/types/indexer";
 
 const CONFIG = {
   dbFilePath: path.resolve(process.cwd(), "data", "file_index.json")

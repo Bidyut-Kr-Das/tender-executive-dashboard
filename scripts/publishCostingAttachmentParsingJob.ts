@@ -2,8 +2,8 @@
  * Script to publish COSTING_ATTACHMENT_PARSING jobs to the "tender:parsing" queue.
  *
  * Usage:
- *   npx tsx scripts/publishCostingAttachmentParsingJob.ts                       # all tenders with a costing attachment
- *   npx tsx scripts/publishCostingAttachmentParsingJob.ts <referenceNo> [...]    # only these tenders
+ *   pnpm exec tsx scripts/publishCostingAttachmentParsingJob.ts                       # all tenders with a costing attachment
+ *   pnpm exec tsx scripts/publishCostingAttachmentParsingJob.ts <referenceNo> [...]    # only these tenders
  */
 import { prisma } from "../lib/prisma";
 import { publishTenderParsingTask } from "../lib/queue/publisher";

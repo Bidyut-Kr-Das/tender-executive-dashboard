@@ -1,4 +1,4 @@
-export function getDocketKey(
+function getDocketKey(
   row: Record<string, unknown> | { docketNo?: string | null; id?: unknown },
 ): string | null {
   const raw = String(
@@ -9,7 +9,7 @@ export function getDocketKey(
   return raw ? raw : null;
 }
 
-export function normalizeDocketKey(key: string): string {
+function normalizeDocketKey(key: string): string {
   return key.trim().toUpperCase();
 }
 
@@ -32,8 +32,4 @@ export function dedupeByDocketNo<
     }
   }
   return out;
-}
-
-export function countUniqueDockets(rows: Record<string, unknown>[]): number {
-  return dedupeByDocketNo(rows as Record<string, unknown>[] & { id?: unknown }[]).length;
 }

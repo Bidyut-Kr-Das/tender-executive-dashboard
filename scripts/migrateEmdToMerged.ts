@@ -1,6 +1,6 @@
 /**
  * Migrate EmdDetailsBG + EmdDetailsCash -> EmdMerged
- * Usage: npx tsx scripts/migrateEmdToMerged.ts [--dryRun] [--skipRelation]
+ * Usage: pnpm exec tsx scripts/migrateEmdToMerged.ts [--dryRun] [--skipRelation]
  * Assumes emd_merged is empty, no truncate, no legacy ids.
  */
 import "dotenv/config";

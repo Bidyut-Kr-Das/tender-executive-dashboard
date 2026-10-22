@@ -60,9 +60,12 @@ model User {
   email        String        @unique
   passwordHash String?
   role         String        @default("user")
+  /// False blocks sign-in and ends the user's open sessions.
+  active       Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   activityLogs ActivityLog[]
+  savedFilters SavedFilter[]
 
   @@map("users")
 }
@@ -187,12 +190,12 @@ model SupplyHistory {
   invoiceQty     Float?
   invoiceAmt     Float?
 
-  documentUrls  String?
-  attachmentUrl String?
-  email         String?
-  contactNo     String?
-  certificateUrl String?
-  certificateFileName String? 
+  documentUrls        String?
+  attachmentUrl       String?
+  email               String?
+  contactNo           String?
+  certificateUrl      String?
+  certificateFileName String?
   certificateSentDate DateTime?
 
   lastSyncedAt DateTime @default(now())
@@ -226,242 +229,242 @@ model File {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  gemTenders       GemTender[]
-  nonGemTenders    NonGemTender[]
+  // gemTenders       GemTender[]
+  // nonGemTenders    NonGemTender[]
   tenderMergedList TenderMerged[]
 
   @@map("files")
 }
 
-// ---------- GEM TENDER ----------
-model GemTender {
-  id Int @id @default(autoincrement())
+// // ---------- GEM TENDER ----------
+// model GemTender {
+//   id Int @id @default(autoincrement())
 
-  fileId Int
-  file   File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+//   fileId Int
+//   file   File @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
-  referenceNo String  @unique
-  tenderBrief String?
+//   referenceNo String  @unique
+//   tenderBrief String?
 
-  value              String?
-  deadline           DateTime?
-  location           String?
-  organization       String?
-  documentFees       String?
-  emd                String?
-  msmeExemption      String?
-  startupExemption   String?
-  quantity           String?
-  bidOpeningDateTime String?
-  bidOfferValidity   String?
+//   value              String?
+//   deadline           DateTime?
+//   location           String?
+//   organization       String?
+//   documentFees       String?
+//   emd                String?
+//   msmeExemption      String?
+//   startupExemption   String?
+//   quantity           String?
+//   bidOpeningDateTime String?
+//   bidOfferValidity   String?
 
-  ministryStateName String?
-  departmentName    String?
-  officeName        String?
+//   ministryStateName String?
+//   departmentName    String?
+//   officeName        String?
 
-  size String?
+//   size String?
 
-  minimumAverageAnnualTurnover String?
-  yearsOfPastExperience        String?
-  oemAverageTurnover           String?
-  contractPeriod               String?
+//   minimumAverageAnnualTurnover String?
+//   yearsOfPastExperience        String?
+//   oemAverageTurnover           String?
+//   contractPeriod               String?
 
-  financialDocumentPriceBreakupRequired String?
-  similarCategory                       String?
-  pastExperienceSimilarServicesRequired String?
+//   financialDocumentPriceBreakupRequired String?
+//   similarCategory                       String?
+//   pastExperienceSimilarServicesRequired String?
 
-  documentRequiredFromSeller String?
-  pastPerformance            String?
-  bidToRaEnabled             String?
-  raQualificationRule        String?
+//   documentRequiredFromSeller String?
+//   pastPerformance            String?
+//   bidToRaEnabled             String?
+//   raQualificationRule        String?
 
-  boqTitle   String?
-  bidDetails String?
+//   boqTitle   String?
+//   bidDetails String?
 
-  comprehensiveMaintenanceChargesRequired String?
-  typeOfBid                               String?
+//   comprehensiveMaintenanceChargesRequired String?
+//   typeOfBid                               String?
 
-  technicalClarificationTimeAllowed String?
-  inspectionRequired                String?
+//   technicalClarificationTimeAllowed String?
+//   inspectionRequired                String?
 
-  estimatedBidValue String?
-  evaluationMethod  String?
-  advisoryBank      String?
+//   estimatedBidValue String?
+//   evaluationMethod  String?
+//   advisoryBank      String?
 
-  ePbgPercentage     String?
-  ePbgDurationMonths String?
+//   ePbgPercentage     String?
+//   ePbgDurationMonths String?
 
-  msePurchasePreference String?
-  miiPurchasePreference String?
+//   msePurchasePreference String?
+//   miiPurchasePreference String?
 
-  consigneesReportingOfficer String?
-  mediationClause            String?
-  arbitrationClause          String?
+//   consigneesReportingOfficer String?
+//   mediationClause            String?
+//   arbitrationClause          String?
 
-  checklist String?
+//   checklist String?
 
-  t247Id       String?
-  scrapedDate  String?
-  source       String?
-  assignedTo   String?
-  markedStatus String?
-  sheetStatus  String?
-  ready        String?
-  searchKey    String?
-  downloadLink String?
-  currency     String?
+//   t247Id       String?
+//   scrapedDate  String?
+//   source       String?
+//   assignedTo   String?
+//   markedStatus String?
+//   sheetStatus  String?
+//   ready        String?
+//   searchKey    String?
+//   downloadLink String?
+//   currency     String?
 
-  excludedCategory String?
+//   excludedCategory String?
 
-  aiRelevanceValid  Boolean?
-  aiRelevanceReason String?
+//   aiRelevanceValid  Boolean?
+//   aiRelevanceReason String?
 
-  tenderFileUrl String?
+//   tenderFileUrl String?
 
-  parseStatus String? @map("parse_status")
-  parseError  String? @map("parse_error")
+//   parseStatus String? @map("parse_status")
+//   parseError  String? @map("parse_error")
 
-  resultAutomationStatus String? @map("result_automation_status")
-  resultAutomationError  String? @map("result_automation_error")
+//   resultAutomationStatus String? @map("result_automation_status")
+//   resultAutomationError  String? @map("result_automation_error")
 
-  itemCategory  String?
-  totalQuantity String?
+//   itemCategory  String?
+//   totalQuantity String?
 
-  bidStatus              String?
-  differenceBetweenRank1 String?
-  nameOfRank1            String?
-  valueOfRank1           String?
+//   bidStatus              String?
+//   differenceBetweenRank1 String?
+//   nameOfRank1            String?
+//   valueOfRank1           String?
 
-  differenceBetweenRank2 String?
-  nameOfRank2            String?
-  valueOfRank2           String?
+//   differenceBetweenRank2 String?
+//   nameOfRank2            String?
+//   valueOfRank2           String?
 
-  evaluationTableData String?
+//   evaluationTableData String?
 
-  docketNo      String?
-  attachmentUrl String?
-  remarks       String?
+//   docketNo      String?
+//   attachmentUrl String?
+//   remarks       String?
 
-  app Decision @default(NOT_DECIDED)
-  aps Decision @default(NOT_DECIDED)
-  apm Decision @default(NOT_DECIDED)
+//   app Decision @default(NOT_DECIDED)
+//   aps Decision @default(NOT_DECIDED)
+//   apm Decision @default(NOT_DECIDED)
 
-  tenderStatusId Int?
-  tenderStatus   TenderStatusTable? @relation("GemTenderStatus", fields: [tenderStatusId], references: [id], onDelete: SetNull)
-  state          String?
-  website        String?
-  locationCount  Int?
+//   tenderStatusId Int?
+//   tenderStatus   TenderStatusTable? @relation("GemTenderStatus", fields: [tenderStatusId], references: [id], onDelete: SetNull)
+//   state          String?
+//   website        String?
+//   locationCount  Int?
 
-  utilityMappingId Int?
-  utilityMapping   UtilityMapping? @relation(fields: [utilityMappingId], references: [id])
+//   utilityMappingId Int?
+//   utilityMapping   UtilityMapping? @relation(fields: [utilityMappingId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  extraFields        TenderExtraField[]
-  tenderAssociations TenderAssociation[]
-  reportings         Reporting[]
-  evaluations        Evaluation[]
+//   extraFields        TenderExtraField[]
+//   tenderAssociations TenderAssociation[]
+//   reportings         Reporting[]
+//   evaluations        Evaluation[]
 
-  @@index([fileId])
-  @@index([utilityMappingId])
-  @@map("gem_tenders")
-}
+//   @@index([fileId])
+//   @@index([utilityMappingId])
+//   @@map("gem_tenders")
+// }
 
 // ---------- NON GEM ----------
-model NonGemTender {
-  id Int @id @default(autoincrement())
+// model NonGemTender {
+//   id Int @id @default(autoincrement())
 
-  fileId Int
-  file   File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+//   fileId Int
+//   file   File @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
-  referenceNo String  @unique
-  tenderBrief String?
+//   referenceNo String  @unique
+//   tenderBrief String?
 
-  estimatedBidValue String?
-  deadline          DateTime?
-  location          String?
-  organization      String?
+//   estimatedBidValue String?
+//   deadline          DateTime?
+//   location          String?
+//   organization      String?
 
-  documentFees String?
-  emd          String?
+//   documentFees String?
+//   emd          String?
 
-  msmeExemption    String?
-  startupExemption String?
+//   msmeExemption    String?
+//   startupExemption String?
 
-  quantity String?
+//   quantity String?
 
-  checklist String?
+//   checklist String?
 
-  t247Id       String?
-  scrapedDate  String?
-  source       String?
-  assignedTo   String?
-  markedStatus String?
-  sheetStatus  String?
-  ready        String?
-  searchKey    String?
-  downloadLink String?
-  currency     String?
+//   t247Id       String?
+//   scrapedDate  String?
+//   source       String?
+//   assignedTo   String?
+//   markedStatus String?
+//   sheetStatus  String?
+//   ready        String?
+//   searchKey    String?
+//   downloadLink String?
+//   currency     String?
 
-  excludedCategory String?
+//   excludedCategory String?
 
-  aiRelevanceValid  Boolean?
-  aiRelevanceReason String?
+//   aiRelevanceValid  Boolean?
+//   aiRelevanceReason String?
 
-  tenderFileUrl String?
+//   tenderFileUrl String?
 
-  docketNo      String?
-  attachmentUrl String?
-  remarks       String?
+//   docketNo      String?
+//   attachmentUrl String?
+//   remarks       String?
 
-  app Decision @default(NOT_DECIDED)
-  aps Decision @default(NOT_DECIDED)
-  apm Decision @default(NOT_DECIDED)
+//   app Decision @default(NOT_DECIDED)
+//   aps Decision @default(NOT_DECIDED)
+//   apm Decision @default(NOT_DECIDED)
 
-  tenderStatusId Int?
-  tenderStatus   TenderStatusTable? @relation("NonGemTenderStatus", fields: [tenderStatusId], references: [id], onDelete: SetNull)
-  state          String?
-  website        String?
-  locationCount  Int?
+//   tenderStatusId Int?
+//   tenderStatus   TenderStatusTable? @relation("NonGemTenderStatus", fields: [tenderStatusId], references: [id], onDelete: SetNull)
+//   state          String?
+//   website        String?
+//   locationCount  Int?
 
-  utilityMappingId Int?
-  utilityMapping   UtilityMapping? @relation(fields: [utilityMappingId], references: [id])
+//   utilityMappingId Int?
+//   utilityMapping   UtilityMapping? @relation(fields: [utilityMappingId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  extraFields        TenderExtraField[]
-  tenderAssociations TenderAssociation[]
+//   extraFields        TenderExtraField[]
+//   tenderAssociations TenderAssociation[]
 
-  @@index([fileId])
-  @@index([utilityMappingId])
-  @@map("non_gem_tenders")
-}
+//   @@index([fileId])
+//   @@index([utilityMappingId])
+//   @@map("non_gem_tenders")
+// }
 
-model TenderExtraField {
-  id Int @id @default(autoincrement())
+// model TenderExtraField {
+//   id Int @id @default(autoincrement())
 
-  gemTenderId Int?
-  gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
+//   gemTenderId Int?
+//   gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
 
-  nonGemTenderId Int?
-  nonGemTender   NonGemTender? @relation(fields: [nonGemTenderId], references: [id], onDelete: Cascade)
+//   nonGemTenderId Int?
+//   nonGemTender   NonGemTender? @relation(fields: [nonGemTenderId], references: [id], onDelete: Cascade)
 
-  tenderMergedId Int?
-  tenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
+//   tenderMergedId Int?
+//   tenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
 
-  fieldName  String
-  fieldValue String?
+//   fieldName  String
+//   fieldValue String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  @@index([gemTenderId])
-  @@index([nonGemTenderId])
-  @@index([tenderMergedId])
-  @@map("tender_extra_fields")
-}
+//   @@index([gemTenderId])
+//   @@index([nonGemTenderId])
+//   @@index([tenderMergedId])
+//   @@map("tender_extra_fields")
+// }
 
 model ColumnMapping {
   id          Int      @id @default(autoincrement())
@@ -532,11 +535,11 @@ model Association {
 model TenderAssociation {
   id Int @id @default(autoincrement())
 
-  gemTenderId Int?
-  gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
+  // gemTenderId Int?
+  // gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
 
-  nonGemTenderId Int?
-  nonGemTender   NonGemTender? @relation(fields: [nonGemTenderId], references: [id], onDelete: Cascade)
+  // nonGemTenderId Int?
+  // nonGemTender   NonGemTender? @relation(fields: [nonGemTenderId], references: [id], onDelete: Cascade)
 
   tenderMergedId Int?
   tenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
@@ -547,11 +550,11 @@ model TenderAssociation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([gemTenderId, associationId])
-  @@unique([nonGemTenderId, associationId])
+  // @@unique([gemTenderId, associationId])
+  // @@unique([nonGemTenderId, associationId])
   @@unique([tenderMergedId, associationId])
-  @@index([gemTenderId])
-  @@index([nonGemTenderId])
+  // @@index([gemTenderId])
+  // @@index([nonGemTenderId])
   @@index([tenderMergedId])
   @@index([associationId])
   @@map("tender_associations")
@@ -559,9 +562,9 @@ model TenderAssociation {
 
 // ---------- REPORTING ----------
 model Reporting {
-  id          Int        @id @default(autoincrement())
-  gemTenderId Int?
-  gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
+  id Int @id @default(autoincrement())
+  // gemTenderId Int?
+  // gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
 
   tenderMergedId Int?
   tenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
@@ -573,7 +576,7 @@ model Reporting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([gemTenderId])
+  // @@index([gemTenderId])
   @@index([tenderMergedId])
   @@map("reportings")
 }
@@ -593,8 +596,8 @@ model TenderStatusTable {
   dscName         String?
   dscPassword     String?
 
-  gemTenders       GemTender[]    @relation("GemTenderStatus")
-  nonGemTenders    NonGemTender[] @relation("NonGemTenderStatus")
+  // gemTenders       GemTender[]    @relation("GemTenderStatus")
+  // nonGemTenders    NonGemTender[] @relation("NonGemTenderStatus")
   tenderMergedList TenderMerged[]
 
   @@map("tender_status_table")
@@ -602,9 +605,9 @@ model TenderStatusTable {
 
 // ---------- EVALUATION ----------
 model Evaluation {
-  id          Int        @id @default(autoincrement())
-  gemTenderId Int?
-  gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
+  id Int @id @default(autoincrement())
+  // gemTenderId Int?
+  // gemTender   GemTender? @relation(fields: [gemTenderId], references: [id], onDelete: Cascade)
 
   tenderMergedId Int?
   tenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
@@ -618,7 +621,7 @@ model Evaluation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([gemTenderId])
+  // @@index([gemTenderId])
   @@index([tenderMergedId])
   @@map("evaluations")
 }
@@ -647,8 +650,8 @@ model UtilityMapping {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  gemTenders       GemTender[]
-  nonGemTenders    NonGemTender[]
+  // gemTenders       GemTender[]
+  // nonGemTenders    NonGemTender[]
   tenderMergedList TenderMerged[]
 
   @@map("utility_mappings")
@@ -735,7 +738,7 @@ model TenderMerged {
   location          String?
   organization      String?
   documentFees      String?
-  emd               String?
+  emd               String?         @default("0")
   msmeExemption     String?
   startupExemption  String?
   quantity          String?
@@ -807,7 +810,7 @@ model TenderMerged {
   quotationNo          String?
   rawMaterials         String?
 
-  value                                   String?
+  value                                   String? @default("0")
   bidOpeningDateTime                      String?
   bidOfferValidity                        String?
   ministryStateName                       String?
@@ -832,6 +835,7 @@ model TenderMerged {
   technicalClarificationTimeAllowed       String?
   inspectionRequired                      String?
   inspectionAgency                        String?
+  /// @deprecated Merged into value (migration 20261021150000). Kept for history; do not read or write.
   estimatedBidValue                       String?
   evaluationMethod                        String?
   advisoryBank                            String?
@@ -871,8 +875,8 @@ model TenderMerged {
   tmNo                String?
   typetest String?
 
-  competitors     String?
-  agentReport     String?
+  competitors String?
+  agentReport String?
 
   // TENDER_LIFECYCLE_STATUS (lib/tender-lifecycle.ts); null = NEW, nothing published yet.
   lifecycleStatus    String?
@@ -882,8 +886,8 @@ model TenderMerged {
   applicableIndex String?
   publishedDate   DateTime?
 
-  baseDate     DateTime?
-  buyerDetails String?
+  baseDate             DateTime?
+  buyerDetails         String?
   divisionOrDepartment String?
 
   fileId Int
@@ -895,13 +899,13 @@ model TenderMerged {
   utilityMappingId Int?
   utilityMapping   UtilityMapping? @relation(fields: [utilityMappingId], references: [id])
 
-  extraFields         TenderExtraField[]
+  // extraFields         TenderExtraField[]
   tenderAssociations  TenderAssociation[]
   reportings          Reporting[]
   evaluations         Evaluation[]
   tenderFiles         TenderFile[]
   CostingSheetDetails CostingSheetDetails[]
-  emdMergeds          EmdMerged[]         @relation("EmdMergedToTenderMerged")
+  emdMergeds          EmdMerged[]           @relation("EmdMergedToTenderMerged")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1026,20 +1030,20 @@ model EmdMerged {
   statusPriceAssDone String?
 
   // Cash only (14)
-  permanent                    String?
-  chDdNo                       String?
-  acHolder                     String?
-  statusAsPerSujibDaAndOther   String?
-  canBeRefunded                String?
-  rank                         String?
-  poIssueStatus                String?
-  aocAwardOfContractStatus     String?
-  refundableOrNot              String?
-  statusRefundedPending        String?
-  statusOfTender               String?
-  conditionsForRefund          String?
-  certificateByParty           String?
-  certificateByUtility         String?
+  permanent                  String?
+  chDdNo                     String?
+  acHolder                   String?
+  statusAsPerSujibDaAndOther String?
+  canBeRefunded              String?
+  rank                       String?
+  poIssueStatus              String?
+  aocAwardOfContractStatus   String?
+  refundableOrNot            String?
+  statusRefundedPending      String?
+  statusOfTender             String?
+  conditionsForRefund        String?
+  certificateByParty         String?
+  certificateByUtility       String?
 
   // M:N with TenderMerged via implicit join table, populated by docketNo matching
   tenderMergeds TenderMerged[] @relation("EmdMergedToTenderMerged")
@@ -1111,17 +1115,17 @@ model Bom {
 }
 
 model TypeTest {
-  id                   Int         @id @default(autoincrement())
-  itemCode             String
-  testCertificateNo    String
-  testCertificateUrl   String?     @db.Text
-  lab                  TypeTestLab?
-  issuedAt             DateTime?
-  expiredAt            DateTime?
-  validity             String?
+  id                 Int          @id @default(autoincrement())
+  itemCode           String
+  testCertificateNo  String
+  testCertificateUrl String?      @db.Text
+  lab                TypeTestLab?
+  issuedAt           DateTime?
+  expiredAt          DateTime?
+  validity           String?
 
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([itemCode, testCertificateNo])
   @@index([itemCode])
@@ -1163,41 +1167,45 @@ model PerformanceCertificate {
 }
 
 model SopResponsibility {
-  id          Int      @id @default(autoincrement())
-  columnName  String  
-  description String?  @db.Text
-  allocatedTo String?  
-  email       String?
-  dailyLog    String?  @db.Text
-  date        DateTime? @db.Date
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  logs SopDailyLog[]
-  source String? 
-  doneFromWhere String?
-  isManual Boolean @default(false)
-  dailyLogEnabled Boolean @default(true)
-  dateEnabled Boolean @default(true)
+  id              Int           @id @default(autoincrement())
+  columnName      String
+  description     String?       @db.Text
+  allocatedTo     String?
+  email           String?
+  dailyLog        String?       @db.Text
+  date            DateTime?     @db.Date
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  logs            SopDailyLog[]
+  source          String?
+  doneFromWhere   String?
+  isManual        Boolean       @default(false)
+  dailyLogEnabled Boolean       @default(true)
+  dateEnabled     Boolean       @default(true)
+
   @@index([source])
   @@index([columnName])
   @@index([date])
   @@map("sop_responsibilities")
 }
+
 model SopDailyLog {
-  id                  Int      @id @default(autoincrement())
+  id                  Int               @id @default(autoincrement())
   sopResponsibilityId Int
   sopResponsibility   SopResponsibility @relation(fields: [sopResponsibilityId], references: [id], onDelete: Cascade)
-  date                DateTime @db.Date // IST day 00:00
-  isChecked           Boolean  @default(false)
-  checkedBy           String?  // session.user.email
+  date                DateTime          @db.Date // IST day 00:00
+  isChecked           Boolean           @default(false)
+  checkedBy           String? // session.user.email
   checkedAt           DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
   @@unique([sopResponsibilityId, date])
   @@index([date])
   @@index([sopResponsibilityId])
   @@map("sop_daily_logs")
 }
+
 model Credential {
   id              String   @id @default(uuid())
   createdAt       DateTime @default(now())
@@ -1243,4 +1251,20 @@ model Railways {
   expectedContractStatus String?
 
   @@index([tenderNo])
+}
+
+/// A table's column filters saved as a formula (see components/v2/data-table/filter-formula.ts).
+model SavedFilter {
+  id        String   @id @default(uuid())
+  page      String // pathname of the table's page, e.g. "/v2/tenders"
+  name      String
+  formula   String
+  userId    String? // null = global, offered to every user
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([page, userId])
+  @@map("saved_filters")
 }

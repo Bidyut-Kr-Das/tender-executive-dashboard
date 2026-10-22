@@ -23,6 +23,7 @@ import { Button } from "@/components/v2/ui/button";
 import { toastError } from "@/components/v2/ui/errors";
 import { Field, Input, Textarea } from "@/components/v2/ui/field";
 import { Sheet } from "@/components/v2/ui/sheet";
+import { parseRupees } from "@/lib/rupees";
 
 export type { Row };
 type Column = DataTableColumn<Row>;
@@ -38,10 +39,7 @@ const invalidEmails = (value: string) =>
 
 /* ---------------------------------- Values --------------------------------- */
 
-export function parseAmount(value: unknown): number {
-  const n = parseFloat(String(value ?? "").replace(/[₹,\s]/g, ""));
-  return Number.isNaN(n) ? 0 : n;
-}
+export const parseAmount = (value: unknown): number => parseRupees(value) ?? 0;
 
 /** Sheet dates arrive as ISO, as "31-12-2025" or as free text. */
 function toDate(value: unknown): Date | null {

@@ -7,7 +7,7 @@
  * button will keep filling new blanks automatically.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/populateSmartsheetDockets.ts
+ *   cd v2 && pnpm exec tsx scripts/populateSmartsheetDockets.ts
  */
 import "dotenv/config";
 import { syncDocketFromSmartsheet } from "../services/smartsheetDocketSync";

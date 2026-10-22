@@ -32,7 +32,7 @@ export const updateRailwaysErpCode = createAsyncThunk(
   },
 );
 
-export const railwaysSlice = createSlice({
+const railwaysSlice = createSlice({
   name: "railways",
   initialState,
   reducers: {},

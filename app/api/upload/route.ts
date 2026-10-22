@@ -17,6 +17,7 @@ import { sendTenderWebhook } from "@/lib/webhook";
 import { TENDER_FILE_TYPES } from "@/lib/tender-file-types";
 import { format } from "date-fns";
 import { withLog } from "@/lib/activity-logger";
+import { parseEmd, parseRupees } from "@/lib/rupees";
 import {
   isValidCategorySelection,
   resolveEpcSubCategory,
@@ -258,8 +259,6 @@ function parseSheetData(
     const excludedCategory =
       excludedCategories.length > 0 ? excludedCategories.join(",") : null;
 
-    if (excludedCategory !== null) excludedCount++;
-
     const { refNo: r, tenderType, createData } = buildCreateData(
       row,
       headers,
@@ -280,10 +279,20 @@ function parseSheetData(
           }
         : categoryFields;
     Object.assign(createData, rowCategoryFields);
+    // Value is stored as plain rupees so it filters and sorts as a number.
+    // Text that is not an amount ("NA", "Not visible", PDF text) becomes "0",
+    // so the column stays all numbers; the tender still imports.
+    if (createData.value != null) {
+      createData.value = String(parseRupees(createData.value) ?? 0);
+    }
+    if (createData.emd != null) {
+      createData.emd = String(parseEmd(createData.emd) ?? 0);
+    }
     console.log(
       `[UPLOAD] Deadline for ${r}:`,
       createData.deadline ? format(createData.deadline as Date, "do MMM yyyy") : "null",
     );
+    if (excludedCategory !== null) excludedCount++;
     prepared.push({ refNo: r, tenderType, createData, originalRow: row });
   }
 
@@ -375,7 +384,10 @@ async function insertTenderMerged(
         }
 
         const oldVal = (old as any)[key];
-        if ((oldVal == null || oldVal === "") && value != null && value !== "") {
+        // value and emd default to "0", which means "no amount yet" and can be filled.
+        const amount = key === "value" || key === "emd";
+        const isEmpty = oldVal == null || oldVal === "" || (amount && oldVal === "0");
+        if (isEmpty && value != null && value !== "" && !(amount && value === "0")) {
           updateData[key] = value;
         }
       }

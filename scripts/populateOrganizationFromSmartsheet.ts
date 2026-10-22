@@ -4,7 +4,7 @@
  * and sets organization to Party Name.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/populateOrganizationFromSmartsheet.ts
+ *   cd v2 && pnpm exec tsx scripts/populateOrganizationFromSmartsheet.ts
  */
 import "dotenv/config";
 import { syncOrganizationFromSmartsheet } from "../services/smartsheetOrganizationSync";

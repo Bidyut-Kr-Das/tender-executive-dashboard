@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { SheetRecord, FieldDefinition, FieldType, UpsertResult } from "@/types/services";
+import type { SheetRecord, FieldDefinition } from "@/types/services";
 
 const cleanDate = (val: unknown): Date | null => {
   if (!val) return null;

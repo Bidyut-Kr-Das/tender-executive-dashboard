@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { ClientTablePage } from "@/components/v2/data-table/client-table-page";
 import { selectFilter, type DataTableColumn, type SortState } from "@/components/v2/data-table/types";
-import { Button } from "@/components/v2/ui/button";
-import { Checkbox, Field, Input } from "@/components/v2/ui/field";
+import { Button, IconButton } from "@/components/v2/ui/button";
+import { toastError } from "@/components/v2/ui/errors";
+import { Badge, Checkbox, Field, Input } from "@/components/v2/ui/field";
 import { Combobox } from "@/components/v2/ui/overlay";
 import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
 import { request, useRows } from "./shared";
@@ -17,6 +18,8 @@ interface ColumnIndex {
   displayOrder: number;
   displayName: string | null;
   visible: boolean;
+  /** "active", or "deleted" for a removed entry that can be restored. */
+  status: string;
 }
 
 interface Draft {
@@ -29,9 +32,30 @@ interface Draft {
 const BLANK: Draft = { columnName: null, displayOrder: "", displayName: "", visible: true };
 const ENDPOINT = "/api/column-indices";
 
-const load = async () => (await request<{ indices: ColumnIndex[] }>(ENDPOINT)).indices;
+const load = async () =>
+  (await request<{ indices: ColumnIndex[] }>(`${ENDPOINT}?include=deleted`)).indices;
 const defaultSort: SortState = { column: "displayOrder", direction: "asc" };
 const getRowId = (row: ColumnIndex) => String(row.id);
+const isDeleted = (row: ColumnIndex) => row.status === "deleted";
+
+function RestoreButton({ row, onRestored }: { row: ColumnIndex; onRestored: (index: ColumnIndex) => void }) {
+  const [pending, setPending] = useState(false);
+  const restore = () => {
+    setPending(true);
+    request<{ index: ColumnIndex }>(`${ENDPOINT}/${row.id}`, "PATCH", { status: "active" })
+      .then(({ index }) => {
+        onRestored(index);
+        toast.success(`Restored index entry for "${row.columnName}"`);
+      })
+      .catch((err) => toastError("Not restored", err))
+      .finally(() => setPending(false));
+  };
+  return (
+    <IconButton size="sm" label="Restore" disabled={pending} onClick={restore}>
+      <RotateCcw className="size-3.5" />
+    </IconButton>
+  );
+}
 
 export function ColumnIndicesView() {
   const t = useRows(load);
@@ -44,7 +68,7 @@ export function ColumnIndicesView() {
       .catch(() => {});
   }, []);
 
-  const { remove } = t;
+  const { upsert } = t;
   const columns = useMemo<DataTableColumn<ColumnIndex>[]>(
     () => [
       { id: "columnName", header: "Column Name", width: 280, filter: selectFilter() },
@@ -59,21 +83,36 @@ export function ColumnIndicesView() {
         text: (r) => (r.visible ? "Yes" : "No"),
       },
       {
+        id: "status",
+        header: "Status",
+        width: 120,
+        search: false,
+        filter: selectFilter(),
+        text: (r) => (isDeleted(r) ? "Deleted" : "Active"),
+        cell: (r) => (isDeleted(r) ? <Badge tone="bad">Deleted</Badge> : <Badge tone="good">Active</Badge>),
+      },
+      {
         id: "actions",
         header: "Actions",
         width: 100,
         search: false,
         sortable: false,
-        cell: (row) => (
-          <RowActions
-            what={`index entry for "${row.columnName}"`}
-            onEdit={() => setEditing(row)}
-            onDelete={() => request(`${ENDPOINT}/${row.id}`, "DELETE").then(() => remove(row.id))}
-          />
-        ),
+        cell: (row) =>
+          isDeleted(row) ? (
+            <RestoreButton row={row} onRestored={upsert} />
+          ) : (
+            <RowActions
+              what={`index entry for "${row.columnName}"`}
+              onEdit={() => setEditing(row)}
+              // Kept in the list as deleted, so it can be restored.
+              onDelete={() =>
+                request(`${ENDPOINT}/${row.id}`, "DELETE").then(() => upsert({ ...row, status: "deleted" }))
+              }
+            />
+          ),
       },
     ],
-    [remove],
+    [upsert],
   );
 
   const row = editing && editing !== "new" ? editing : null;

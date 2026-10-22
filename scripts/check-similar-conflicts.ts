@@ -12,7 +12,7 @@
  *     the associationId sets differ.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/check-similar-conflicts.ts
+ *   cd v2 && pnpm exec tsx scripts/check-similar-conflicts.ts
  */
 import { prisma } from "../lib/prisma";
 

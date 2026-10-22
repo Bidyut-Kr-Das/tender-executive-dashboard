@@ -1,0 +1,245 @@
+"use client";
+
+import { useMemo, useState, type ReactNode } from "react";
+import { useSession } from "next-auth/react";
+import { KeyRound, Plus, UserCheck, UserX } from "lucide-react";
+import { toast } from "sonner";
+import { createUser, listUsers, resetUserPassword, setUserActive, updateUserRole } from "@/actions/users";
+import { USER_ROLES } from "@/lib/user-roles";
+import { dateText } from "@/components/v2/data-table/cells";
+import { ClientTablePage } from "@/components/v2/data-table/client-table-page";
+import { SelectEditCell } from "@/components/v2/data-table/edit-cells";
+import { selectFilter, type DataTableColumn, type SortState } from "@/components/v2/data-table/types";
+import { Button, IconButton } from "@/components/v2/ui/button";
+import { toastError } from "@/components/v2/ui/errors";
+import { Badge, Field, Input } from "@/components/v2/ui/field";
+import { FormDialog } from "@/components/v2/ui/form-dialog";
+import { Dialog, Select } from "@/components/v2/ui/overlay";
+import { useRows } from "./shared";
+
+type User = Awaited<ReturnType<typeof listUsers>>[number];
+
+interface Draft {
+  name: string;
+  email: string;
+  role: string | null;
+}
+
+const BLANK: Draft = { name: "", email: "", role: "user" };
+const ROLE_OPTIONS = USER_ROLES.map((r) => ({ value: r, label: r }));
+const defaultSort: SortState = { column: "name", direction: "asc" };
+const getRowId = (row: User) => row.id;
+const nameOf = (row: User) => row.name || row.email;
+
+/** An icon button that asks before it acts. */
+function ConfirmButton({
+  icon,
+  label,
+  title,
+  description,
+  confirmLabel,
+  danger,
+  disabled,
+  onConfirm,
+}: {
+  icon: ReactNode;
+  label: string;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  danger?: boolean;
+  disabled?: boolean;
+  onConfirm: () => Promise<unknown>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const confirm = () => {
+    setPending(true);
+    onConfirm()
+      .then(() => setOpen(false))
+      .catch((err) => toastError(`${label} failed`, err))
+      .finally(() => setPending(false));
+  };
+  return (
+    <>
+      <IconButton size="sm" label={label} disabled={disabled} onClick={() => setOpen(true)}>
+        {icon}
+      </IconButton>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title={title}
+        description={description}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant={danger ? "danger" : "primary"} loading={pending} onClick={confirm}>
+              {confirmLabel}
+            </Button>
+          </>
+        }
+      />
+    </>
+  );
+}
+
+export function UsersView() {
+  const t = useRows(listUsers);
+  const me = useSession().data?.user?.id;
+  const [creating, setCreating] = useState(false);
+
+  const { upsert } = t;
+  const columns = useMemo<DataTableColumn<User>[]>(
+    () => [
+      { id: "name", header: "Name", width: 220, filter: selectFilter(), text: (r) => r.name ?? "" },
+      { id: "email", header: "Email", width: 300, filter: selectFilter() },
+      {
+        id: "role",
+        header: "Role",
+        width: 160,
+        search: false,
+        filter: selectFilter(),
+        cell: (row) => (
+          <SelectEditCell
+            label={`Role of ${nameOf(row)}`}
+            value={row.role}
+            options={ROLE_OPTIONS}
+            required
+            // Your own role stays put, so you cannot lock yourself out.
+            readOnly={row.id === me}
+            onSave={(role) => updateUserRole({ id: row.id, role }).then(upsert)}
+          />
+        ),
+      },
+      {
+        id: "active",
+        header: "Status",
+        width: 120,
+        search: false,
+        filter: selectFilter(),
+        text: (r) => (r.active ? "Active" : "Inactive"),
+        cell: (r) => (r.active ? <Badge tone="good">Active</Badge> : <Badge>Inactive</Badge>),
+      },
+      {
+        id: "createdAt",
+        header: "Created",
+        width: 130,
+        search: false,
+        text: (r) => dateText(r.createdAt),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        width: 100,
+        search: false,
+        sortable: false,
+        cell: (row) => (
+          <div className="flex gap-0.5">
+            <ConfirmButton
+              icon={<KeyRound className="size-3.5" />}
+              label="Reset password"
+              title={`Reset password for ${nameOf(row)}?`}
+              description="Their password goes back to the default. They should change it after signing in."
+              confirmLabel="Reset password"
+              onConfirm={() =>
+                resetUserPassword(row.email).then(() => toast.success(`Password reset for ${nameOf(row)}`))
+              }
+            />
+            {row.active ? (
+              <ConfirmButton
+                icon={<UserX className="size-3.5" />}
+                label="Deactivate"
+                title={`Deactivate ${nameOf(row)}?`}
+                description="They are signed out and cannot sign in until activated again."
+                confirmLabel="Deactivate"
+                danger
+                disabled={row.id === me}
+                onConfirm={() =>
+                  setUserActive({ id: row.id, active: false }).then((user) => {
+                    upsert(user);
+                    toast.success(`${nameOf(row)} deactivated`);
+                  })
+                }
+              />
+            ) : (
+              <ConfirmButton
+                icon={<UserCheck className="size-3.5" />}
+                label="Activate"
+                title={`Activate ${nameOf(row)}?`}
+                description="They can sign in again with their current password."
+                confirmLabel="Activate"
+                onConfirm={() =>
+                  setUserActive({ id: row.id, active: true }).then((user) => {
+                    upsert(user);
+                    toast.success(`${nameOf(row)} activated`);
+                  })
+                }
+              />
+            )}
+          </div>
+        ),
+      },
+    ],
+    [upsert, me],
+  );
+
+  const create = async (draft: Draft) => {
+    if (!draft.email.trim()) throw new Error("Email is required");
+    if (!draft.role) throw new Error("Role is required");
+    const user = await createUser({ name: draft.name, email: draft.email, role: draft.role });
+    upsert(user);
+    toast.success(`${nameOf(user)} added`);
+  };
+
+  return (
+    <>
+      <ClientTablePage
+        title="Users"
+        noun="users"
+        rows={t.rows}
+        columns={columns}
+        getRowId={getRowId}
+        loading={t.loading}
+        error={t.error}
+        onRetry={t.reload}
+        defaultSort={defaultSort}
+        actions={
+          <Button variant="primary" icon={<Plus className="size-3.5" />} onClick={() => setCreating(true)}>
+            Add user
+          </Button>
+        }
+      />
+
+      <FormDialog
+        open={creating}
+        onOpenChange={setCreating}
+        title="Add user"
+        description="The user signs in with the default password and should change it."
+        initial={BLANK}
+        onSubmit={create}
+        submitLabel="Add user"
+      >
+        {(draft, set) => (
+          <>
+            <Field label="Name">
+              <Input autoFocus value={draft.name} onChange={(e) => set({ name: e.target.value })} />
+            </Field>
+            <Field label="Email">
+              <Input
+                type="email"
+                autoComplete="off"
+                value={draft.email}
+                onChange={(e) => set({ email: e.target.value })}
+              />
+            </Field>
+            <Field label="Role">
+              <Select label="Role" value={draft.role} onChange={(role) => set({ role })} options={ROLE_OPTIONS} />
+            </Field>
+          </>
+        )}
+      </FormDialog>
+    </>
+  );
+}

@@ -6,9 +6,6 @@ import { EMD_STATUS_OPTIONS } from "@/lib/emdStatusOptions";
 
 export const runtime = "nodejs";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-function isValidEmailsCSV(v: string) {
-  return v.split(",").map((s) => s.trim()).filter(Boolean).every((e) => EMAIL_RE.test(e));
-}
 
 async function updateEmdMergedFields(id: string, data: { reason?: string | null; contactEmailId?: string | null; contactNo?: string | null; status?: string | null; remarks?: string | null; tmNo?: string | null; docketNo?: string | null; bgNo?: string | null }) {
   const updateData: any = {};

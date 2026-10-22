@@ -10,10 +10,10 @@
  *  - Column names verified before any DB write (aborts if missing)
  *
  * Usage:
- *   npx tsx scripts/syncQuotationFromSmartsheetByDocket.ts
- *   npx tsx scripts/syncQuotationFromSmartsheetByDocket.ts --dry-run
- *   npx tsx scripts/syncQuotationFromSmartsheetByDocket.ts --dry-run --verbose
- *   npx tsx scripts/syncQuotationFromSmartsheetByDocket.ts --verbose
+ *   pnpm exec tsx scripts/syncQuotationFromSmartsheetByDocket.ts
+ *   pnpm exec tsx scripts/syncQuotationFromSmartsheetByDocket.ts --dry-run
+ *   pnpm exec tsx scripts/syncQuotationFromSmartsheetByDocket.ts --dry-run --verbose
+ *   pnpm exec tsx scripts/syncQuotationFromSmartsheetByDocket.ts --verbose
  */
 import "dotenv/config";
 import { prisma } from "../lib/prisma";
@@ -32,7 +32,7 @@ async function main() {
   const { dryRun, verbose, help } = parseArgs();
   if (help) {
     console.log(`
-Usage: npx tsx scripts/syncQuotationFromSmartsheetByDocket.ts [options]
+Usage: pnpm exec tsx scripts/syncQuotationFromSmartsheetByDocket.ts [options]
 
 Options:
   --dry-run   Simulate without DB writes (shows would-update count)

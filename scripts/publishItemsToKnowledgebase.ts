@@ -4,8 +4,8 @@
  * Dry-run by default; pass --publish to actually push to RabbitMQ.
  *
  * Usage:
- *   npx tsx scripts/publishItemsToKnowledgebase.ts           # dry-run
- *   npx tsx scripts/publishItemsToKnowledgebase.ts --publish # push all
+ *   pnpm exec tsx scripts/publishItemsToKnowledgebase.ts           # dry-run
+ *   pnpm exec tsx scripts/publishItemsToKnowledgebase.ts --publish # push all
  */
 import { prisma } from "../lib/prisma";
 import { publishKnowledgebaseTask } from "../lib/queue/publisher";

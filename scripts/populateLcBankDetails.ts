@@ -3,7 +3,7 @@
  * from the LC Smartsheet. Matches referenceNo against TENDER MASTER NO column.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/populateLcBankDetails.ts
+ *   cd v2 && pnpm exec tsx scripts/populateLcBankDetails.ts
  */
 import "dotenv/config";
 import { syncBeneficiaryBankDetails } from "../services/lcSmartsheetService";

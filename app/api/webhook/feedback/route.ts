@@ -3,18 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { publishAiRelevanceTask } from "@/lib/queue/publisher";
 import { setRelevanceQueued } from "@/lib/tender-lifecycle-store";
+import { parseRupees } from "@/lib/rupees";
 
 // "Power Distribution" -> "power_distribution"
 function toSnakeCase(label: string | null | undefined): string | null {
   if (!label) return null;
   return label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-}
-
-// Amounts are stored as free text (e.g. "6,50,00,000"); strip separators before parsing.
-function parseAmount(raw: string | null | undefined): number | null {
-  if (!raw) return null;
-  const match = raw.replace(/,/g, "").match(/\d+(\.\d+)?/);
-  return match ? Number(match[0]) : null;
 }
 
 interface TriggerAnalysisInput {
@@ -30,7 +24,6 @@ async function triggerAnalysis({ referenceNo, company }: TriggerAnalysisInput) {
       itemCategory: true,
       subCategory: true,
       value: true,
-      estimatedBidValue: true,
     },
   });
   if (!tender) {
@@ -48,7 +41,7 @@ async function triggerAnalysis({ referenceNo, company }: TriggerAnalysisInput) {
     tenderbrief: tender.tenderBrief ?? "",
     itemcategory: tender.itemCategory ?? "",
     category: toSnakeCase(tender.subCategory),
-    tenderAmount: parseAmount(tender.value ?? tender.estimatedBidValue),
+    tenderAmount: parseRupees(tender.value),
   });
   if (!queued) {
     console.warn(

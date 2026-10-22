@@ -143,13 +143,6 @@ export function tenderFilterKey(query: TenderQuery): string {
   return tenderQueryKey({ ...query, page: 1, pageSize: 0, sort: null });
 }
 
-export function selectScopeState(
-  state: RootState,
-  scope: TenderScope,
-): ScopePageState {
-  return state.tenderPage.byScope[scope];
-}
-
 /**
  * Assembles the server query from the filter state the UI already keeps.
  * The file-date window is resolved to instants here, matching what
@@ -198,14 +191,6 @@ export function selectTenderQuery(
     pageSize: page.pageSize,
   };
 }
-
-/** Read-only thunks in the tenders slice; everything else mutates a row. */
-const TENDERS_READ_ONLY = new Set([
-  "tenders/fetchAllTenders",
-  "tenders/fetchTendersIncremental",
-  "tenders/appendTenders",
-  "tenders/searchByParty",
-]);
 
 /** Mutation args that never name a row field. */
 const NON_FIELD_ARG_KEYS = new Set([
@@ -258,7 +243,7 @@ function onFilterChange(scope: ScopePageState) {
   // them left an already-open dropdown rendering an empty option list.
 }
 
-export const tenderPageSlice = createSlice({
+const tenderPageSlice = createSlice({
   name: "tenderPage",
   initialState,
   reducers: {
@@ -299,35 +284,6 @@ export const tenderPageSlice = createSlice({
       s.associationFilter = action.payload.associationFilter;
       s.page = 1;
     },
-    /**
-     * Everything buildEpcQueryFilters produces, in one dispatch.
-     *
-     * The table re-reports its filters on any of its own state changes, so an
-     * unchanged payload must not reset the page or drop the facet cache.
-     */
-    setEpcFilters(
-      state,
-      action: PayloadAction<{
-        scope: TenderScope;
-        columnFilters: Record<string, ColumnFilterState>;
-        erpItemCategory: string | null;
-        priceBasis: string | null;
-      }>,
-    ) {
-      const s = state.byScope[action.payload.scope];
-      const next = JSON.stringify([
-        action.payload.columnFilters,
-        action.payload.erpItemCategory,
-        action.payload.priceBasis,
-      ]);
-      if (next === JSON.stringify([s.columnFilters, s.erpItemCategory, s.priceBasis])) {
-        return;
-      }
-      s.columnFilters = action.payload.columnFilters;
-      s.erpItemCategory = action.payload.erpItemCategory;
-      s.priceBasis = action.payload.priceBasis;
-      onFilterChange(s);
-    },
     setScopeColumnFilter(
       state,
       action: PayloadAction<{
@@ -356,9 +312,6 @@ export const tenderPageSlice = createSlice({
       s.priceBasis = null;
       s.associationFilter = null;
       onFilterChange(s);
-    },
-    resetPagination(state, action: PayloadAction<{ scope: TenderScope }>) {
-      onFilterChange(state.byScope[action.payload.scope]);
     },
     clearStale(state, action: PayloadAction<{ scope: TenderScope }>) {
       state.byScope[action.payload.scope].stale = false;
@@ -438,9 +391,8 @@ export const tenderPageSlice = createSlice({
       .addMatcher(
         (action): action is { type: string; meta: { arg: unknown }; payload: unknown } => {
           const type = (action as { type?: unknown }).type;
-          if (typeof type !== "string") return false;
-          if (!type.startsWith("tenders/") || !type.endsWith("/fulfilled")) return false;
-          return !TENDERS_READ_ONLY.has(type.slice(0, type.lastIndexOf("/")));
+          // Every tenders/* thunk mutates a row.
+          return typeof type === "string" && type.startsWith("tenders/") && type.endsWith("/fulfilled");
         },
         (state, action) => {
           const arg = action.meta?.arg as Record<string, unknown> | undefined;
@@ -511,11 +463,9 @@ export const {
   setSort,
   setMergedGroups,
   setAssociationFilter,
-  setEpcFilters,
   setScopeColumnFilter,
   setErpItemCategory,
   clearScopeFilters,
-  resetPagination,
   clearStale,
 } = tenderPageSlice.actions;
 

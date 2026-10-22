@@ -1,7 +1,7 @@
 /**
  * Self-check for EPC subcategory derivation. Run it with:
  *
- *   npx tsx lib/tender-categories.check.ts
+ *   pnpm exec tsx lib/tender-categories.check.ts
  *
  * resolveEpcSubCategory is pure, so the assertions only inspect the returned
  * subcategory string.

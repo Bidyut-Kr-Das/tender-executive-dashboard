@@ -21,7 +21,7 @@ export const fetchItems = createAsyncThunk(
   async () => await getItems(),
 );
 
-export const itemsSlice = createSlice({
+const itemsSlice = createSlice({
   name: "items",
   initialState,
   reducers: {},

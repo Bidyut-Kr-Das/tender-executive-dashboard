@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import { useIsDeveloper } from "@/components/v2/providers";
 import { REASON_FOR_NOT_APM_OPTIONS } from "@/lib/reason-for-not-apm";
 import type { FlatRow } from "@/lib/tender-flatten";
 import {
@@ -43,7 +44,7 @@ export type Row = FlatRow;
 
 const str = (v: unknown) => (v == null ? "" : String(v));
 
-export function parseJsonArray(raw: unknown): string[] | null {
+function parseJsonArray(raw: unknown): string[] | null {
   if (Array.isArray(raw)) return raw.map(String);
   try {
     const parsed = JSON.parse(str(raw));
@@ -72,18 +73,25 @@ export function DecisionCell({
   rowIndex,
 }: {
   row: Row;
-  field: "app" | "aps" | "apm";
+  field: "app" | "aps" | "apm" | "participated";
   rowIndex: number;
 }) {
   const dispatch = useAppDispatch();
+  // participated is a boolean column: "true" / "false", and empty when undecided.
+  const bool = field === "participated";
+  const stored = (choice: "YES" | "NO") => (bool ? String(choice === "YES") : choice);
+  const label = bool ? "Participated" : field.toUpperCase();
+  // Participated is set from the participation pages; only developers change it here.
+  const developer = useIsDeveloper();
+  const locked = bool && !developer;
   const saved = str(row[field]);
   // Shown the moment it is pressed; reverts if the server refuses.
   const [pending, setPending] = useState<string | null>(null);
   const value = pending ?? saved;
 
   const choose = (choice: "YES" | "NO") => {
-    const next = saved === choice ? "NOT_DECIDED" : choice;
-    const label = field.toUpperCase();
+    const cleared = saved === stored(choice);
+    const next = cleared ? (bool ? "" : "NOT_DECIDED") : stored(choice);
     setPending(next);
     dispatch(
       updateTenderCell({
@@ -96,9 +104,7 @@ export function DecisionCell({
     )
       .unwrap()
       .then((result) => {
-        toast.success(
-          next === "NOT_DECIDED" ? `${label} cleared` : `${label} set to ${next}`,
-        );
+        toast.success(cleared ? `${label} cleared` : `${label} set to ${choice}`);
         if (result?.webhookTriggered && result.webhookResponse?.message) {
           const notify = result.webhookResponse.success ? toast.success : toast.error;
           notify(`${result.referenceNo ?? ""}: ${result.webhookResponse.message}`);
@@ -109,16 +115,17 @@ export function DecisionCell({
   };
 
   const option = (choice: "YES" | "NO") => {
-    const on = value === choice;
+    const on = value === stored(choice);
     return (
       <button
         type="button"
         aria-pressed={on}
-        aria-label={`${field.toUpperCase()} ${choice === "YES" ? "yes" : "no"}`}
-        disabled={pending !== null}
+        aria-label={`${label} ${choice === "YES" ? "yes" : "no"}`}
+        disabled={locked || pending !== null}
         onClick={() => choose(choice)}
         className={cn(
-          "press h-6 w-7 rounded-[0.3125rem] text-xs font-semibold disabled:cursor-progress",
+          "press h-6 w-7 rounded-[0.3125rem] text-xs font-semibold",
+          locked ? "cursor-not-allowed" : "disabled:cursor-progress",
           on
             ? choice === "YES"
               ? "bg-good text-white dark:text-black"

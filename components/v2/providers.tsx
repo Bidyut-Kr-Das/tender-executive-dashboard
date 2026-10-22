@@ -1,19 +1,19 @@
 "use client";
 
 import { useSyncExternalStore, type ReactNode } from "react";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { Toaster } from "sonner";
 import StoreProvider from "@/lib/store-provider";
 import { TooltipProvider } from "@/components/v2/ui/overlay";
 
 // Same storage keys as v1, so the theme follows the user across both shells.
-export const bootScript = `try{var d=document.documentElement;if(localStorage.getItem("theme")==="dark")d.classList.add("dark");if(localStorage.getItem("v2-sidebar")==="collapsed")d.dataset.sidebar="collapsed"}catch(e){}`;
+export const bootScript = `try{var d=document.documentElement;if(localStorage.getItem("theme")==="dark")d.classList.add("dark");if(localStorage.getItem("v2-sidebar")==="collapsed")d.dataset.sidebar="collapsed";if(localStorage.getItem("v2-dev-mode")==="off")d.dataset.dev="off"}catch(e){}`;
 
 function subscribeRoot(onChange: () => void) {
   const observer = new MutationObserver(onChange);
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["class", "data-sidebar"],
+    attributeFilter: ["class", "data-sidebar", "data-dev"],
   });
   return () => observer.disconnect();
 }
@@ -48,6 +48,30 @@ export function setSidebarCollapsed(collapsed: boolean) {
   try {
     localStorage.setItem("v2-sidebar", collapsed ? "collapsed" : "open");
   } catch {}
+}
+
+/** The developer's own switch; on unless they turned it off in this browser. */
+export function useDeveloperMode() {
+  return useSyncExternalStore(
+    subscribeRoot,
+    () => document.documentElement.dataset.dev !== "off",
+    () => true,
+  );
+}
+
+export function setDeveloperMode(on: boolean) {
+  const root = document.documentElement;
+  if (on) delete root.dataset.dev;
+  else root.dataset.dev = "off";
+  try {
+    localStorage.setItem("v2-dev-mode", on ? "on" : "off");
+  } catch {}
+}
+
+/** Show developer tools: a developer with developer mode on. Access is still checked on the server. */
+export function useIsDeveloper() {
+  const developerMode = useDeveloperMode();
+  return useSession().data?.user?.role === "developer" && developerMode;
 }
 
 function ThemedToaster() {
