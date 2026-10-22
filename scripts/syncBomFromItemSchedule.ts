@@ -42,7 +42,7 @@ async function main() {
   const { dryRun, verbose, help, limit, batchSize, apiUrl } = parseArgs();
   if (help) {
     console.log(`
-Usage: npx tsx scripts/syncBomFromItemSchedule.ts [options]
+Usage: pnpm exec tsx scripts/syncBomFromItemSchedule.ts [options]
 
 Options:
   --dry-run          Parse + call API without DB writes

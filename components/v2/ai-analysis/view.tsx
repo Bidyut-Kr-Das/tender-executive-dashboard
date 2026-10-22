@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatDistanceStrict } from "date-fns";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { AlertTriangle, Check, Clock, Radio, RefreshCw, RotateCcw } from "lucide-react";
+import { AlertTriangle, Check, Clock, LogIn, Radio, RefreshCw, RotateCcw } from "lucide-react";
 import { requeueStage } from "@/actions/ai-analysis";
 import { fetchLifecycleCounts } from "@/actions/tender-lifecycle";
 import {
@@ -51,8 +51,8 @@ function sampleCounts(now: Date): LifecycleCounts {
   };
 }
 
-/** Loads once on mount; with `live` on, again every five seconds. */
-function useLifecycleCounts() {
+/** Loads once signed in; with `live` on, again every five seconds. */
+function useLifecycleCounts(signedIn: boolean) {
   const [counts, setCounts] = useState<LifecycleCounts | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,15 +77,16 @@ function useLifecycleCounts() {
     }
   }, []);
 
+  // The action rejects a signed-out caller, so it is not called at all.
   useEffect(() => {
-    load();
-  }, [load]);
+    if (signedIn) load();
+  }, [signedIn, load]);
 
   useEffect(() => {
-    if (!live) return;
+    if (!live || !signedIn) return;
     const interval = setInterval(load, POLL_MS);
     return () => clearInterval(interval);
-  }, [live, load]);
+  }, [live, signedIn, load]);
 
   return { counts, updatedAt, error, loading, live, setLive, load };
 }
@@ -349,8 +350,11 @@ function Pipeline({
 }
 
 export function AiAnalysisView() {
-  const { counts: loaded, updatedAt, error, loading, live, setLive, load } = useLifecycleCounts();
-  const developer = useSession().data?.user?.role === "developer";
+  const { data: session, status } = useSession();
+  const { counts: loaded, updatedAt, error, loading, live, setLive, load } = useLifecycleCounts(
+    status === "authenticated",
+  );
+  const developer = session?.user?.role === "developer";
   const [requeuing, setRequeuing] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -378,6 +382,18 @@ export function AiAnalysisView() {
     setTimeout(() => setRefreshing(false), 5_000);
     load();
   };
+
+  if (status === "unauthenticated") {
+    return (
+      <Page className="items-center justify-center">
+        <EmptyState
+          icon={LogIn}
+          title="Sign in to see AI analysis status"
+          action={<Button onClick={() => signIn()}>Sign in</Button>}
+        />
+      </Page>
+    );
+  }
 
   if (!loaded || !updatedAt) {
     if (!error) return <PageSkeleton label="AI analysis" />;

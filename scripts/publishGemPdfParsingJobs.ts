@@ -3,7 +3,7 @@
  * to the "tender:parsing" queue.
  *
  * Usage:
- *   npx tsx scripts/publishGemPdfParsingJobs.ts
+ *   pnpm exec tsx scripts/publishGemPdfParsingJobs.ts
  */
 import { prisma } from "../lib/prisma";
 import { publishGemPdfParsingTask } from "../lib/queue/publisher";

@@ -1,7 +1,7 @@
 /**
  * Self-check for the table's row grouping. Run it with:
  *
- *   npx tsx components/v2/data-table/group-rows.check.ts
+ *   pnpm exec tsx components/v2/data-table/group-rows.check.ts
  */
 import assert from "node:assert/strict";
 import { groupRows } from "./types";

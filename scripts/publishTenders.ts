@@ -21,11 +21,11 @@
  *   tender:parsing+ NON_GEM -> NON_GEM_BOQ_PARSING (via publishNonGemBoqParsingTask, needs tenderDocument file)
  *
  * Usage:
- *   npx tsx scripts/publishTenders.ts
- *   npx tsx scripts/publishTenders.ts --tender_type=gem --queue=tender:task --limit=10
- *   npx tsx scripts/publishTenders.ts --tender_type=non_gem --queue=tender:parsing --limit=10 --date=27-08-2026 --publish
- *   npx tsx scripts/publishTenders.ts --tenderNo=GEM/2025/B/123 --publish
- *   npx tsx scripts/publishTenders.ts --tenderNo=REF1,REF2 --queue=tender:parsing --tender_type=gem
+ *   pnpm exec tsx scripts/publishTenders.ts
+ *   pnpm exec tsx scripts/publishTenders.ts --tender_type=gem --queue=tender:task --limit=10
+ *   pnpm exec tsx scripts/publishTenders.ts --tender_type=non_gem --queue=tender:parsing --limit=10 --date=27-08-2026 --publish
+ *   pnpm exec tsx scripts/publishTenders.ts --tenderNo=GEM/2025/B/123 --publish
+ *   pnpm exec tsx scripts/publishTenders.ts --tenderNo=REF1,REF2 --queue=tender:parsing --tender_type=gem
  */
 import { prisma } from "../lib/prisma";
 import {
@@ -220,7 +220,7 @@ function parseArgs(): ParsedArgs {
 
 function printHelp() {
   console.log(`
-Usage: npx tsx scripts/publishTenders.ts [flags]
+Usage: pnpm exec tsx scripts/publishTenders.ts [flags]
 
 Flags (all optional):
   --tender_type=gem|non_gem|all      Filter by tender type (default: all)
@@ -232,11 +232,11 @@ Flags (all optional):
   --help, -h                        Show this help
 
 Examples:
-  npx tsx scripts/publishTenders.ts
-  npx tsx scripts/publishTenders.ts --tender_type=gem --queue=tender:task --limit=10
-  npx tsx scripts/publishTenders.ts --tender_type=non_gem --queue=tender:parsing --date=27-08-2026 --publish
-  npx tsx scripts/publishTenders.ts --tenderNo=GEM/2025/B/123 --publish
-  npx tsx scripts/publishTenders.ts --tenderNo=REF1,REF2 --queue=tender:parsing --tender_type=gem --limit=10
+  pnpm exec tsx scripts/publishTenders.ts
+  pnpm exec tsx scripts/publishTenders.ts --tender_type=gem --queue=tender:task --limit=10
+  pnpm exec tsx scripts/publishTenders.ts --tender_type=non_gem --queue=tender:parsing --date=27-08-2026 --publish
+  pnpm exec tsx scripts/publishTenders.ts --tenderNo=GEM/2025/B/123 --publish
+  pnpm exec tsx scripts/publishTenders.ts --tenderNo=REF1,REF2 --queue=tender:parsing --tender_type=gem --limit=10
 `);
 }
 

@@ -3,7 +3,7 @@
  * TenderMerged records by matching tenderNoNitNo → referenceNo.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/sync-docket-to-merged.ts
+ *   cd v2 && pnpm exec tsx scripts/sync-docket-to-merged.ts
  */
 import { prisma } from "../lib/prisma";
 import { GoogleSheetService } from "../services/googleSheetService";

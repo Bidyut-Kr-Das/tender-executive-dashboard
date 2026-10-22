@@ -27,8 +27,8 @@ export async function describeError(err: unknown): Promise<string> {
   if (/unauthori[sz]ed|\b401\b/i.test(message)) return SIGNED_OUT;
   if (/failed to fetch|networkerror|load failed/i.test(message)) return OFFLINE;
   // Production builds strip a server action's message, so "signed out" arrives
-  // as this generic text. Ask the session which it was.
-  if (!message || /omitted in production builds|server components render/i.test(message)) {
+  // as this generic text (or React's minified #441). Ask the session which it was.
+  if (!message || /omitted in production builds|server components render|react error #441\b/i.test(message)) {
     const session = await getSession().catch(() => null);
     return session?.user ? UNKNOWN : SIGNED_OUT;
   }

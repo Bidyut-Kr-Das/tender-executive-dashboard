@@ -1,7 +1,7 @@
 /**
  * Self-check for the EPC filter -> ColumnFilterState translation. Run it with:
  *
- *   npx tsx lib/epc-table-query.check.ts
+ *   pnpm exec tsx lib/epc-table-query.check.ts
  *
  * No database and no React: buildEpcQueryFilters is pure.
  */

@@ -22,8 +22,8 @@
  *   - Losers are deleted. ReferenceNo of the winner is kept as-is.
  *
  * Usage:
- *   cd v2 && npx tsx scripts/merge-similar-tenders.ts          # dry-run
- *   cd v2 && npx tsx scripts/merge-similar-tenders.ts --apply  # commit
+ *   cd v2 && pnpm exec tsx scripts/merge-similar-tenders.ts          # dry-run
+ *   cd v2 && pnpm exec tsx scripts/merge-similar-tenders.ts --apply  # commit
  */
 import { writeFileSync } from "node:fs";
 import path from "node:path";

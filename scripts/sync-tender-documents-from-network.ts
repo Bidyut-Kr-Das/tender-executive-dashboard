@@ -13,10 +13,10 @@
  * which is resolved in TenderAttachmentController via OLD_FILES env.
  *
  * Usage:
- *   npx tsx scripts/sync-tender-documents-from-network.ts
- *   npx tsx scripts/sync-tender-documents-from-network.ts --test=ENQ-12345-22-23
- *   npx tsx scripts/sync-tender-documents-from-network.ts --test=12345
- *   npx tsx scripts/sync-tender-documents-from-network.ts --docket=ENQ-12345-22-23
+ *   pnpm exec tsx scripts/sync-tender-documents-from-network.ts
+ *   pnpm exec tsx scripts/sync-tender-documents-from-network.ts --test=ENQ-12345-22-23
+ *   pnpm exec tsx scripts/sync-tender-documents-from-network.ts --test=12345
+ *   pnpm exec tsx scripts/sync-tender-documents-from-network.ts --docket=ENQ-12345-22-23
  */
 import fs from "fs";
 import path from "path";

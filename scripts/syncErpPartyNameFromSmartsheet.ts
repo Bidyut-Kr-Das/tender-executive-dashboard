@@ -11,10 +11,10 @@
  *  - Column names verified before any DB write (aborts if missing)
  *
  * Usage:
- *   npx tsx scripts/syncErpPartyNameFromSmartsheet.ts
- *   npx tsx scripts/syncErpPartyNameFromSmartsheet.ts --dry-run
- *   npx tsx scripts/syncErpPartyNameFromSmartsheet.ts --dry-run --verbose
- *   npx tsx scripts/syncErpPartyNameFromSmartsheet.ts --force --verbose
+ *   pnpm exec tsx scripts/syncErpPartyNameFromSmartsheet.ts
+ *   pnpm exec tsx scripts/syncErpPartyNameFromSmartsheet.ts --dry-run
+ *   pnpm exec tsx scripts/syncErpPartyNameFromSmartsheet.ts --dry-run --verbose
+ *   pnpm exec tsx scripts/syncErpPartyNameFromSmartsheet.ts --force --verbose
  */
 import "dotenv/config";
 import { prisma } from "../lib/prisma";
@@ -71,7 +71,7 @@ async function main() {
   const { dryRun, verbose, force, help } = parseArgs();
   if (help) {
     console.log(`
-Usage: npx tsx scripts/syncErpPartyNameFromSmartsheet.ts [options]
+Usage: pnpm exec tsx scripts/syncErpPartyNameFromSmartsheet.ts [options]
 
 Options:
   --dry-run   Simulate without DB writes

@@ -10,7 +10,7 @@
  *   5. Create TenderFile entries with boqComparativeChart tag
  *   6. Publish NON_GEM_BOQ_PARSING job for each found BOQ
  *
- * Usage: npx tsx scripts/recover-old-boq-files.ts
+ * Usage: pnpm exec tsx scripts/recover-old-boq-files.ts
  */
 import fs from "fs";
 import path from "path";

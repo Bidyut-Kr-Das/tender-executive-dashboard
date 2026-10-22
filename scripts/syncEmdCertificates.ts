@@ -6,9 +6,9 @@
  * Rule: only replace null/empty certificateByParty/certificateByUtility, never overwrite existing
  *
  * Usage:
- *   npx tsx scripts/syncEmdCertificates.ts --dry-run --verbose
- *   npx tsx scripts/syncEmdCertificates.ts --verbose
- *   npx tsx scripts/syncEmdCertificates.ts --sheetId=ID --tabName="Form Responses 1" --dry-run
+ *   pnpm exec tsx scripts/syncEmdCertificates.ts --dry-run --verbose
+ *   pnpm exec tsx scripts/syncEmdCertificates.ts --verbose
+ *   pnpm exec tsx scripts/syncEmdCertificates.ts --sheetId=ID --tabName="Form Responses 1" --dry-run
  */
 import "dotenv/config";
 import { prisma } from "../lib/prisma";
@@ -39,7 +39,7 @@ async function main() {
     console.log(`
 Sync EMD certificates from Google Sheet to EmdDetailsCash (only null overwrite)
 
-Usage: npx tsx scripts/syncEmdCertificates.ts [options]
+Usage: pnpm exec tsx scripts/syncEmdCertificates.ts [options]
 Options:
   --dry-run            Simulate without DB writes
   --verbose            Detailed logging per row
