@@ -24,12 +24,6 @@ const TENDER_MERGED_SELECT = {
   },
 } as const;
 
-type TenderMergedSummary = Awaited<
-  ReturnType<
-    typeof prisma.tenderMerged.findMany<{ select: typeof TENDER_MERGED_SELECT }>
-  >
->[number];
-
 const RESPONSE_FIELDS = [
   "docketNo",
   "rawMaterials",

@@ -167,7 +167,7 @@ export const uploadResultFiles = createAsyncThunk(
   },
 );
 
-export const uploadSlice = createSlice({
+const uploadSlice = createSlice({
   name: "upload",
   initialState,
   reducers: {

@@ -15,6 +15,7 @@ import {
   Dash,
   Field,
   Input,
+  Switch,
   Textarea,
 } from "@/components/v2/ui/field";
 import {
@@ -25,6 +26,7 @@ import {
   MenuItem,
   MenuLabel,
   MenuSeparator,
+  MenuSwitchItem,
   Popover,
   Select,
   Tip,
@@ -142,6 +144,7 @@ export function Showcase() {
   const [date, setDate] = useState("");
   const [select, setSelect] = useState<string | null>(null);
   const [menuCheck, setMenuCheck] = useState(true);
+  const [switchOn, setSwitchOn] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -315,6 +318,14 @@ export function Showcase() {
             Disabled
           </Checkbox>
         </Row>
+        <Row label="Switch">
+          <Switch checked={switchOn} onChange={setSwitchOn}>
+            Developer mode
+          </Switch>
+          <Switch checked={false} onChange={() => {}} disabled>
+            Disabled
+          </Switch>
+        </Row>
         <Row label="Choice">
           <Choice
             label="Deadline"
@@ -363,6 +374,9 @@ export function Showcase() {
             <MenuCheckItem checked={menuCheck} onCheckedChange={setMenuCheck}>
               Show archived
             </MenuCheckItem>
+            <MenuSwitchItem checked={switchOn} onCheckedChange={setSwitchOn}>
+              Developer mode
+            </MenuSwitchItem>
             <MenuSeparator />
             <MenuItem icon={<Trash2 />} tone="bad">
               Delete

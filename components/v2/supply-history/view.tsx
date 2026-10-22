@@ -3,10 +3,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download, ExternalLink, RefreshCw, ScanSearch } from "lucide-react";
 import { toast } from "sonner";
-import type { SupplyHistoryRecord } from "@/types/supplyHistory";
+import {
+  fetchSupplyFacet,
+  fetchSupplyPage,
+  fetchSupplyRows,
+  syncSupplySheet,
+} from "@/actions/supply-history";
 import { DataTable } from "@/components/v2/data-table/data-table";
-import type { SortState } from "@/components/v2/data-table/types";
-import { useClientTable } from "@/components/v2/data-table/use-client-table";
+import type {
+  ColumnFilterState,
+  ColumnFilterType,
+  FilterOption,
+  SortState,
+} from "@/components/v2/data-table/types";
+import { nextFilters } from "@/components/v2/data-table/use-client-table";
 import { Button } from "@/components/v2/ui/button";
 import { describeError, toastError } from "@/components/v2/ui/errors";
 import { Menu, MenuItem } from "@/components/v2/ui/overlay";
@@ -24,22 +34,10 @@ import {
 
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1tXiJC9AZNiAAoL8mM_KxKuzrFqzuk-n3n16abJbaam0";
-const POLL_MS = 30_000;
 
 const defaultSort: SortState = { column: "saleBillDate", direction: "desc" };
 const getRowId = (row: Row) => row.key;
 const today = () => new Date().toISOString().split("T")[0];
-
-/** Bill and item identify a row; a repeat of the pair is numbered. */
-function withKeys(records: SupplyHistoryRecord[]): Row[] {
-  const seen = new Map<string, number>();
-  return records.map((r) => {
-    const base = `${r.saleBillNumber}|${r.itemCode}`;
-    const n = seen.get(base) ?? 0;
-    seen.set(base, n + 1);
-    return { ...r, key: n ? `${base}#${n}` : base };
-  });
-}
 
 function download(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
@@ -93,60 +91,170 @@ const driveOnlyNotice = (count: number) =>
   count > 0 &&
   toast.info(`${count} record(s) with only Google Drive documents were excluded from the zip`);
 
-/** The page's rows: loaded once, polled every 30 seconds, patched in place after an edit. */
-function useSupplyRows() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const loaded = useRef(false);
-  const abortRef = useRef<AbortController | null>(null);
+const NO_TOTALS = { amount: 0, quantity: 0, withBill: 0 };
+const NO_OPTIONS = { options: null, loading: false } as const;
 
-  const load = useCallback(async (fresh = false) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    if (fresh || !loaded.current) setLoading(true);
-    try {
-      const res = await fetch(`/api/supply-history${fresh ? "?fresh=true" : ""}`, {
-        signal: controller.signal,
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || `Server error (${res.status})`);
-      loaded.current = true;
-      setRows(withKeys(json.data || []));
-      setError(null);
-    } catch (err) {
-      if (controller.signal.aborted) return;
-      setError(await describeError(err));
-    } finally {
-      // A superseded request must not switch off the newer one's progress bar.
-      if (!controller.signal.aborted) setLoading(false);
-    }
-  }, []);
+type Facet = { options: FilterOption[] | null; loading: boolean; key: string };
+
+/**
+ * One page of rows: the server filters, sorts and pages, like the tenders
+ * page. Patched in place after an edit.
+ */
+function useSupplyTable() {
+  const [filters, setFilters] = useState<Record<string, ColumnFilterState>>({});
+  const [sort, setSort] = useState<SortState | null>(defaultSort);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [columnVisibility, onColumnVisibilityChange] = useState<Record<string, boolean>>({});
+  const [rows, setRows] = useState<Row[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totals, setTotals] = useState(NO_TOTALS);
+  const [emailsByRef, setEmailsByRef] = useState(new Map<string, string[]>());
+  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [facets, setFacets] = useState<Record<string, Facet>>({});
+  const facetsRef = useRef(facets);
+  facetsRef.current = facets;
+  // Server actions cannot be aborted; only the newest answer is applied.
+  const latest = useRef(0);
+
+  const reload = useCallback(
+    async () => {
+      const id = ++latest.current;
+      setLoading(true);
+      try {
+        const res = await fetchSupplyPage({ filters, sort, page, pageSize });
+        if (id !== latest.current) return;
+        setRows(res.rows);
+        setTotal(res.total);
+        setTotals(res.totals);
+        setEmailsByRef(new Map(Object.entries(res.emailsByRef)));
+        setError(null);
+        setLoaded(true);
+      } catch (err) {
+        if (id !== latest.current) return;
+        setError(await describeError(err));
+      } finally {
+        if (id === latest.current) setLoading(false);
+      }
+    },
+    [filters, sort, page, pageSize],
+  );
 
   useEffect(() => {
-    load();
-    const interval = setInterval(() => load(), POLL_MS);
-    return () => {
-      clearInterval(interval);
-      abortRef.current?.abort();
-    };
-  }, [load]);
+    reload();
+  }, [reload]);
 
-  const refresh = useCallback(() => load(true), [load]);
-  return { rows, setRows, loading, error, refresh };
+  // Same as the tenders page: options load when a panel opens, under every
+  // other active filter, and again once those filters change.
+  const onFilterOpen = useCallback(
+    (column: string) => {
+      if (columns.find((c) => c.id === column)?.filter?.type !== "select") return;
+      const key = JSON.stringify(filters);
+      const entry = facetsRef.current[column];
+      if (entry?.key === key && (entry.loading || entry.options)) return;
+      setFacets((prev) => ({
+        ...prev,
+        [column]: { options: prev[column]?.options ?? null, loading: true, key },
+      }));
+      fetchSupplyFacet(filters, column)
+        .then((res) => res.options.map((value) => ({ value, label: value })))
+        .catch(() => null)
+        .then((options) =>
+          setFacets((prev) =>
+            prev[column]?.key === key ? { ...prev, [column]: { options, loading: false, key } } : prev,
+          ),
+        );
+    },
+    [filters],
+  );
+
+  const getFilterOptions = useCallback(
+    (column: string) => facets[column] ?? NO_OPTIONS,
+    [facets],
+  );
+
+  const onFilterChange = useCallback(
+    (columnId: string, type: ColumnFilterType, value: unknown | undefined) => {
+      setFilters((prev) => nextFilters(prev, columnId, type, value));
+      setPage(1);
+    },
+    [],
+  );
+
+  return {
+    rows,
+    setRows,
+    totals,
+    emailsByRef,
+    setEmailsByRef,
+    filters,
+    sort,
+    loading,
+    loaded,
+    error,
+    setLoading,
+    reload,
+    table: {
+      rows,
+      total,
+      page,
+      pageSize,
+      onPageChange: setPage,
+      onPageSizeChange: useCallback((size: number) => {
+        setPageSize(size);
+        setPage(1);
+      }, []),
+      sort,
+      onSortChange: useCallback((next: SortState) => {
+        setSort(next);
+        setPage(1);
+      }, []),
+      filters,
+      onFilterChange,
+      onResetFilters: useCallback(() => {
+        setFilters({});
+        setPage(1);
+      }, []),
+      getFilterOptions,
+      onFilterOpen,
+      columnVisibility,
+      onColumnVisibilityChange,
+    },
+  };
 }
 
 export function SupplyHistoryView() {
-  const { rows, setRows, loading, error, refresh } = useSupplyRows();
+  const {
+    rows,
+    setRows,
+    totals,
+    emailsByRef,
+    setEmailsByRef,
+    filters,
+    sort,
+    loading,
+    loaded,
+    error,
+    setLoading,
+    reload,
+    table,
+  } = useSupplyTable();
   const [certStates, setCertStates] = useState<Record<string, CertState>>({});
   const [busy, setBusy] = useState(false);
-  // Read at call time, so a click always acts on the rows now on screen.
-  const rowsRef = useRef(rows);
-  rowsRef.current = rows;
   const inFlight = useRef(new Set<string>());
 
-  const { table, filtered } = useClientTable(rows, columns, { defaultSort });
+  /** Pulls the Google Sheet into the database, then reloads the page. */
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      await syncSupplySheet();
+    } catch (err) {
+      toastError("Sheet not synced", err);
+    }
+    await reload();
+  }, [reload, setLoading]);
 
   const setCert = (ref: string, state: CertState) =>
     setCertStates((prev) => ({ ...prev, [ref]: state }));
@@ -169,20 +277,31 @@ export function SupplyHistoryView() {
 
       if (field === "email" && Array.isArray(json.updatedEmails)) {
         // An email is saved for the whole party: the server returns every row it touched.
-        const emails = new Map<string, string | null>(
-          json.updatedEmails.map(
-            (u: { saleBillNumber: string; itemCode: string; email?: string | null }) => [
-              `${u.saleBillNumber}|${u.itemCode}`,
-              u.email ?? null,
-            ],
-          ),
-        );
+        const updated: {
+          saleBillNumber: string;
+          itemCode: string;
+          partyRefNo?: string | null;
+          email?: string | null;
+        }[] = json.updatedEmails;
+        const emails = new Map(updated.map((u) => [`${u.saleBillNumber}|${u.itemCode}`, u.email ?? null]));
         setRows((prev) =>
           prev.map((r) => {
             const next = emails.get(`${r.saleBillNumber}|${r.itemCode}`);
             return next === undefined ? r : { ...r, email: next };
           }),
         );
+        // ponytail: assumes a party ref's rows all share one party name, so the
+        // server's list holds every row of each ref it names.
+        setEmailsByRef((prev) => {
+          const byRef = new Map<string, string[]>();
+          for (const u of updated) {
+            if (!u.partyRefNo) continue;
+            const list = byRef.get(u.partyRefNo) ?? [];
+            if (u.email) list.push(u.email);
+            byRef.set(u.partyRefNo, list);
+          }
+          return new Map([...prev, ...byRef]);
+        });
         return;
       }
       setRows((prev) =>
@@ -193,7 +312,7 @@ export function SupplyHistoryView() {
         ),
       );
     },
-    [setRows],
+    [setRows, setEmailsByRef],
   );
 
   const generateCertificate = useCallback(
@@ -202,9 +321,10 @@ export function SupplyHistoryView() {
       inFlight.current.add(ref);
       setCert(ref, { status: "generating" });
       try {
-        const group = rowsRef.current
-          .filter((r) => r.partyRefNo === ref)
-          .map(({ key: _key, ...record }) => record);
+        // The ref's rows can sit on other pages.
+        const group = (await fetchSupplyRows({ partyRefNo: { select: [ref.trim()] } }, null)).map(
+          ({ key: _key, ...record }) => record,
+        );
         const res = await fetch("/api/supply-history/generate-certificate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -276,17 +396,6 @@ export function SupplyHistoryView() {
     [setRows],
   );
 
-  const emailsByRef = useMemo(() => {
-    const out = new Map<string, string[]>();
-    for (const r of rows) {
-      if (!r.partyRefNo || !r.email) continue;
-      const list = out.get(r.partyRefNo);
-      if (list) list.push(r.email);
-      else out.set(r.partyRefNo, [r.email]);
-    }
-    return out;
-  }, [rows]);
-
   const context = useMemo(
     () => ({ saveField, certStates, emailsByRef, generateCertificate, sendCertificate }),
     [saveField, certStates, emailsByRef, generateCertificate, sendCertificate],
@@ -304,7 +413,7 @@ export function SupplyHistoryView() {
     run("Scan failed", async () => {
       const json = await (await fetch("/api/supply-indexer", { method: "POST" })).json();
       if (!json.success) throw new Error(json.error);
-      await refresh();
+      await reload();
       toast.success("Documents scanned successfully");
     });
 
@@ -320,12 +429,15 @@ export function SupplyHistoryView() {
       toast.success(
         `Quotation sync done: ${s?.updated ?? 0} records updated (${s?.totalContracts ?? 0} contracts, ${s?.errors?.length ?? 0} errors)`,
       );
-      await refresh();
+      await reload();
     });
+
+  // Exports cover every matching row, not just this page.
+  const filtered = () => fetchSupplyRows(filters, sort);
 
   const downloadAllDocuments = () =>
     run("Documents not downloaded", async () => {
-      const driveOnly = await downloadDocuments(filtered);
+      const driveOnly = await downloadDocuments(await filtered());
       if (driveOnly === null) toast.info("No document records found in current view");
       else driveOnlyNotice(driveOnly);
     });
@@ -333,23 +445,15 @@ export function SupplyHistoryView() {
   const exportAndDownload = () =>
     run("Export failed", async () => {
       // The sheet carries every record; the zip follows the current filters.
-      await exportExcel(rows);
-      const driveOnly = await downloadDocuments(filtered);
+      await exportExcel(await fetchSupplyRows({}, null));
+      const driveOnly = await downloadDocuments(await filtered());
       if (driveOnly === null) toast.info("Excel exported. No documents to zip.");
       else driveOnlyNotice(driveOnly);
     });
 
-  const totals = useMemo(
-    () => ({
-      amount: filtered.reduce((sum, r) => sum + (r.invoiceAmt || 0), 0),
-      quantity: filtered.reduce((sum, r) => sum + (r.invoiceQty || 0), 0),
-      withBill: filtered.filter((r) => r.saleBillNumber).length,
-    }),
-    [filtered],
-  );
   const whole = (n: number) => n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
-  if (loading && rows.length === 0) return <PageSkeleton label="supply history" />;
+  if (!loaded && loading) return <PageSkeleton label="supply history" />;
 
   return (
     <Page>
@@ -380,7 +484,7 @@ export function SupplyHistoryView() {
                 </Button>
               }
             >
-              <MenuItem onClick={() => run("Export failed", () => exportExcel(filtered))}>
+              <MenuItem onClick={() => run("Export failed", async () => exportExcel(await filtered()))}>
                 Export Excel
               </MenuItem>
               <MenuItem onClick={downloadAllDocuments}>Download all docs</MenuItem>
@@ -397,7 +501,7 @@ export function SupplyHistoryView() {
       />
 
       <div className="flex flex-wrap gap-2">
-        <StatTile label="Total records" value={whole(filtered.length)} />
+        <StatTile label="Total records" value={whole(table.total)} />
         <StatTile label="Total invoice amt" value={`₹${whole(totals.amount)}`} />
         <StatTile label="Total invoice qty" value={whole(totals.quantity)} />
         <StatTile label="With bill no" value={whole(totals.withBill)} />
@@ -410,7 +514,7 @@ export function SupplyHistoryView() {
           getRowId={getRowId}
           loading={loading}
           error={rows.length === 0 ? error : null}
-          onRetry={refresh}
+          onRetry={reload}
           {...table}
         />
       </SupplyContext>

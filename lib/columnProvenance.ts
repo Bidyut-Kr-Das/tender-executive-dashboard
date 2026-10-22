@@ -169,10 +169,6 @@ const POST_SET = buildPostSet();
 const NOT_SET = buildNotSet();
 
 // Only two aliases as per spec: tender/nit no <-> referenceNo, last date <-> deadline
-const ALIAS_TO_TENDERS: Record<string, string> = {
-  tenderNoNitNo: "referenceNo",
-  lastDateOfSubmission: "deadline",
-};
 const TENDERS_TO_CANONICAL: Record<string, string> = {
   referenceNo: "tenderNoNitNo",
   deadline: "lastDateOfSubmission",
@@ -202,8 +198,4 @@ export function getProvenanceForFields(fields: string[]): ProvenanceBadge[] {
   }
   const order: ProvenanceBadge[] = ["PRE", "POST", "NOT_PARTICIPATED"];
   return order.filter((b) => union.has(b));
-}
-
-export function getTendersAliasForCanonical(canonical: string): string | undefined {
-  return ALIAS_TO_TENDERS[canonical];
 }

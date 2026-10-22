@@ -384,8 +384,8 @@ export function ExclusionsMenu() {
 
 /* ------------------------------- Upload window ----------------------------- */
 
-const toInput = (iso: string | null) => (iso ? format(new Date(iso), "yyyy-MM-dd") : "");
-const fromInput = (value: string) => new Date(`${value}T00:00:00`).toISOString();
+export const toDayInput = (iso: string | null) => (iso ? format(new Date(iso), "yyyy-MM-dd") : "");
+export const fromDayInput = (value: string) => new Date(`${value}T00:00:00`).toISOString();
 
 export function formatUploadWindow(from: string | null, to: string | null): string | null {
   if (!from || !to) return null;
@@ -396,15 +396,15 @@ export function UploadWindowControl() {
   const dispatch = useAppDispatch();
   const from = useAppSelector((s) => s.files.selectedDateFrom);
   const to = useAppSelector((s) => s.files.selectedDateTo);
-  const [draft, setDraft] = useState({ from: toInput(from), to: toInput(to) });
+  const [draft, setDraft] = useState({ from: toDayInput(from), to: toDayInput(to) });
 
-  useEffect(() => setDraft({ from: toInput(from), to: toInput(to) }), [from, to]);
+  useEffect(() => setDraft({ from: toDayInput(from), to: toDayInput(to) }), [from, to]);
 
   // The window only applies with both ends set.
   const update = (next: { from: string; to: string }) => {
     setDraft(next);
     if (next.from && next.to) {
-      dispatch(setSelectedDateRange({ from: fromInput(next.from), to: fromInput(next.to) }));
+      dispatch(setSelectedDateRange({ from: fromDayInput(next.from), to: fromDayInput(next.to) }));
     }
   };
 

@@ -84,6 +84,7 @@ interface EditorProps {
 function TextEditor({ field, row, form }: EditorProps) {
   const { pending, save } = useFieldSave(field, row);
   const value = fieldValue(field, row);
+  const shown = field.display ? field.display(value) : value;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const cancelled = useRef(false);
@@ -114,7 +115,7 @@ function TextEditor({ field, row, form }: EditorProps) {
           </IconButton>
         }
       >
-        {value ? <Clamp>{value}</Clamp> : <Dash />}
+        {shown ? <Clamp>{shown}</Clamp> : <Dash />}
       </CellAction>
     );
   }
@@ -319,12 +320,13 @@ function DateTimeEditor({ field, row, form }: EditorProps) {
 
 /** A field the page does not let this row edit. */
 function LockedField({ field, row }: EditorProps) {
-  const value = fieldValue(field, row);
+  let value = fieldValue(field, row);
   if (field.kind === "yesNo") {
     if (value === field.tokens?.yes) return <Badge tone="good">Yes</Badge>;
     if (value === field.tokens?.no) return <Badge tone="bad">No</Badge>;
     return <Dash />;
   }
+  if (field.display) value = field.display(value) ?? "";
   if (!value) return <Dash />;
   if (field.kind === "dateTime") {
     return <span className="tabular-nums">{formatDateTimeIST(value)}</span>;
@@ -632,7 +634,7 @@ function ErpItem({ item }: { item: CostingItem }) {
   );
 }
 
-export function parseCostingItems(row: Row): CostingItem[] {
+function parseCostingItems(row: Row): CostingItem[] {
   try {
     const parsed = JSON.parse(row.costingDetails || "[]");
     return Array.isArray(parsed)

@@ -187,13 +187,6 @@ export function ancestorsOf(root: FlowNode, id: string): FlowNode[] {
   return walk(root) ? trail : [];
 }
 
-/** Every descendant of a node id, excluding the node itself. */
-export function descendantsOf(root: FlowNode, id: string): FlowNode[] {
-  const found = flatten(root).find((n) => n.id === id);
-  if (!found) return [];
-  return (found.children ?? []).flatMap((kid) => flatten(kid));
-}
-
 /**
  * Each flow node's filter preceded by its ancestors', keyed by the node's own
  * filter. The branch-agnostic predicates (weLost, technicalOpen, weL1 ...) only

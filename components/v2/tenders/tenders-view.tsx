@@ -4,14 +4,18 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { resetSelectedDateRange } from "@/lib/slices/filesSlice";
+import { resetSelectedDateRange, setSelectedDateRange } from "@/lib/slices/filesSlice";
 import {
   setAnalyticsFilter,
   setExclusionFilter,
   type AnalyticsFilter,
 } from "@/lib/slices/filtersSlice";
 import { DataTable } from "@/components/v2/data-table/data-table";
-import { isFilterActive, type FilterChip } from "@/components/v2/data-table/types";
+import {
+  isFilterActive,
+  type FilterChip,
+  type FormulaFilter,
+} from "@/components/v2/data-table/types";
 import { Button } from "@/components/v2/ui/button";
 import { describeError } from "@/components/v2/ui/errors";
 import { Page, PageHeader, Pill, Skeleton, StatTile } from "@/components/v2/ui/page";
@@ -25,6 +29,8 @@ import {
   UploadMenu,
   UploadWindowControl,
   formatUploadWindow,
+  fromDayInput,
+  toDayInput,
 } from "./toolbar";
 import { TenderCellContext, useTenders } from "./use-tenders";
 
@@ -133,6 +139,32 @@ export function TendersView() {
     columnFilters.deadline,
     dispatch,
   ]);
+
+  // The upload window is a toolbar control, not a column; the formula still carries it.
+  const formulaFilters = useMemo<FormulaFilter[]>(
+    () => [
+      {
+        id: "uploaded",
+        name: "Uploaded",
+        filter: { type: "dateRange" },
+        value:
+          dateFrom && dateTo
+            ? { dateRange: { startDate: toDayInput(dateFrom), endDate: toDayInput(dateTo) } }
+            : undefined,
+        onChange: (value) => {
+          const r = value?.dateRange;
+          if (r?.startDate && r.endDate) {
+            dispatch(setSelectedDateRange({ from: fromDayInput(r.startDate), to: fromDayInput(r.endDate) }));
+          } else dispatch(resetSelectedDateRange());
+        },
+        check: (value) =>
+          value.dateRange && !(value.dateRange.startDate && value.dateRange.endDate)
+            ? "needs both dates: BETWEEN start AND end"
+            : null,
+      },
+    ],
+    [dateFrom, dateTo, dispatch],
+  );
 
   const handleExport = () => {
     setExporting(true);
@@ -244,6 +276,7 @@ export function TendersView() {
           error={t.error}
           onRetry={t.reload}
           extraChips={extraChips}
+          formulaFilters={formulaFilters}
           actions={<ExclusionsMenu />}
         />
       </TenderCellContext>

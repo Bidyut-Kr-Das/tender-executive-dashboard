@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // The admin page also lists deleted entries, so they can be restored.
+    const withDeleted = request.nextUrl.searchParams.get("include") === "deleted";
     const indices = await prisma.columnIndex.findMany({
-      where: { status: "active" },
+      where: withDeleted ? undefined : { status: "active" },
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
     });
     return NextResponse.json({ indices });
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if ((error as any)?.code === "P2002") {
       return NextResponse.json(
-        { error: "A column index for this columnName already exists" },
+        { error: "A column index for this columnName already exists. If it is deleted, restore it." },
         { status: 409 },
       );
     }

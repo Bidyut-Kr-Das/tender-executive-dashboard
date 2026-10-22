@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
+  Code,
   KeyRound,
   LogIn,
   LogOut,
@@ -18,8 +19,11 @@ import { changePassword } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 import {
   setDark,
+  setDeveloperMode,
   setSidebarCollapsed,
   useIsDark,
+  useDeveloperMode,
+  useIsDeveloper,
   useSidebarCollapsed,
 } from "@/components/v2/providers";
 import { Button, IconButton } from "@/components/v2/ui/button";
@@ -30,6 +34,7 @@ import {
   Menu,
   MenuItem,
   MenuSeparator,
+  MenuSwitchItem,
   Tip,
 } from "@/components/v2/ui/overlay";
 import { Skeleton } from "@/components/v2/ui/page";
@@ -156,6 +161,7 @@ function ChangePasswordDialog({
 function UserArea() {
   const { data: session, status } = useSession();
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const developerMode = useDeveloperMode();
 
   if (status === "loading") {
     return <Skeleton className="h-8 w-full" />;
@@ -207,6 +213,11 @@ function UserArea() {
           <div className="truncate text-xs text-ink-3">{session.user?.email}</div>
         </div>
         <MenuSeparator />
+        {session.user?.role === "developer" && (
+          <MenuSwitchItem icon={<Code />} checked={developerMode} onCheckedChange={setDeveloperMode}>
+            Developer mode
+          </MenuSwitchItem>
+        )}
         <MenuItem icon={<KeyRound />} onClick={() => setPasswordOpen(true)}>
           Change password
         </MenuItem>
@@ -221,11 +232,9 @@ function UserArea() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
   const collapsed = useSidebarCollapsed();
   const isDark = useIsDark();
-  const isAdmin =
-    session?.user?.role === "admin" || session?.user?.role === "developer";
+  const isDeveloper = useIsDeveloper();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -262,7 +271,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-          {NAV_GROUPS.filter((g) => !g.adminOnly || isAdmin).map((group) => (
+          {NAV_GROUPS.filter((g) => !g.developerOnly || isDeveloper).map((group) => (
             <div key={group.label} className="mt-3 first:mt-1">
               <div className="in-data-[sidebar=collapsed]:hidden px-2.5 pb-1 type-label text-ink-3">
                 {group.label}

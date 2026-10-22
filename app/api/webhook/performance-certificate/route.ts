@@ -10,6 +10,11 @@ interface CertDetail {
   issuing_date?: string | null;
   signing_date?: string | null;
   party_reference_no?: string | null;
+  party_name?: string | null;
+  utility_or_client?: "UTILITY" | "CLIENT" | null;
+  item_schedules?: string[];
+  // JEV verdict on certificate issuer vs supply-history party; absent on older agent payloads.
+  party_match?: "same" | "different" | "needs_review" | null;
 }
 
 interface CertDuplicate {
@@ -96,6 +101,9 @@ async function handleCertEvent(
     signingDate?: Date;
     duplicateOfId?: string | null;
     partyReferenceNo?: string;
+    partyName?: string;
+    utilityOrClient?: string;
+    itemSchedule?: string;
     supplyHistoryIds?: string[];
   };
   const updates = new Map<string, CertUpdate>();
@@ -115,10 +123,18 @@ async function handleCertEvent(
     const signingDate = dateOrUndefined(d.signing_date);
     if (issueDate) data.issueDate = issueDate;
     if (signingDate) data.signingDate = signingDate;
+    const partyName = d.party_name?.trim();
+    if (partyName) data.partyName = partyName;
+    if (d.utility_or_client === "UTILITY" || d.utility_or_client === "CLIENT") {
+      data.utilityOrClient = d.utility_or_client;
+    }
+    const schedules = (d.item_schedules ?? []).map((s) => s?.trim()).filter(Boolean);
+    if (schedules.length) data.itemSchedule = schedules.join(", ");
     const ref = d.party_reference_no?.trim();
     if (ref) {
       data.partyReferenceNo = ref;
-      const ids = supplyByRef.get(ref);
+      // Same ref but a different (or unverified) party is not this certificate's supply.
+      const ids = d.party_match == null || d.party_match === "same" ? supplyByRef.get(ref) : undefined;
       if (ids?.length) data.supplyHistoryIds = ids;
     }
   }

@@ -327,6 +327,10 @@ Defined in [`lib/tender-lifecycle.ts`](../lib/tender-lifecycle.ts) as `TENDER_LI
 Stored in `TenderMerged.lifecycleStatus`, with `lifecycleUpdatedAt` and `lifecycleError`, by `setLifecycleStatus`
 ([`lib/tender-lifecycle-store.ts`](../lib/tender-lifecycle-store.ts)). `null` means `NEW`. Counts per stage are shown on
 `/v2/ai-analysis` (`fetchLifecycleCounts`, [`actions/tender-lifecycle.ts`](../actions/tender-lifecycle.ts)).
+Beside each stage's `*_QUEUED` count ("waiting for reply": job sent, no answer yet) the page shows the live
+RabbitMQ queue (`checkQueues`, [`lib/rabbitmq.ts`](../lib/rabbitmq.ts)): ready messages and listening workers.
+Waiting tenders with an empty queue and no worker were lost and need a requeue. Below, `fetchLifecycleTenders`
+lists the tenders of one status with their `lifecycleError`.
 
 Starting a new batch (`startAiAnalysisRun`, called once per "Queue analysis" click) resets every `RELEVANCE_REJECTED`
 tender to `null`, so rejections from an earlier batch are not counted again. The saved verdict (`aiRelevanceValid`,
@@ -356,7 +360,8 @@ Rules:
 - Status only moves forward, except a manual retry, which resets to the retried stage's `*_QUEUED`.
   Manual retry is `requeueStage` (`actions/ai-analysis.ts`), developer role only, from the Failed and Waiting
   columns on `/v2/ai-analysis`: it republishes that stage's job for every tender in the stage's `*_FAILED`, or in
-  its `*_QUEUED` for longer than `LIFECYCLE_SLOW_MS` (one hour).
+  its `*_QUEUED` for longer than `LIFECYCLE_SLOW_MS` (one hour). A failed tender whose job still cannot be sent
+  keeps `*_FAILED` with a `Requeue: ...` reason in `lifecycleError`.
 
 ```mermaid
 stateDiagram-v2

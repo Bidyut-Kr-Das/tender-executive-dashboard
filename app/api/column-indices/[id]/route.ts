@@ -8,7 +8,11 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { columnName, displayOrder, displayName, visible, width, frozen } = body;
+    const { columnName, displayOrder, displayName, visible, width, frozen, status } = body;
+
+    if (status !== undefined && status !== "active" && status !== "deleted") {
+      return NextResponse.json({ error: "status must be active or deleted" }, { status: 400 });
+    }
 
     const data: Record<string, unknown> = {};
     if (columnName !== undefined) data.columnName = columnName;
@@ -17,6 +21,7 @@ export async function PATCH(
     if (visible !== undefined) data.visible = visible;
     if (width !== undefined) data.width = width;
     if (frozen !== undefined) data.frozen = frozen;
+    if (status !== undefined) data.status = status;
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json(

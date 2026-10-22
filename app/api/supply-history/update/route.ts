@@ -105,6 +105,7 @@ async function runUpdateSupplyHistory(params: { saleBillNumber: string; itemCode
         updatedEmails: updatedRows.map((r) => ({
           saleBillNumber: r.saleBillNumber,
           itemCode: r.itemCode,
+          partyRefNo: r.partyRefNo,
           email: r.email,
         })),
         affectedCount: updates.length,

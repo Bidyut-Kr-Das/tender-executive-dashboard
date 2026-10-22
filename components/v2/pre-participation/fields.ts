@@ -1,6 +1,7 @@
 import { toISTDateKey } from "@/lib/format-ist";
 import type { ReverseAuctionWebhookData } from "@/lib/integrations/n8n";
 import { parseDate } from "@/lib/parse-date";
+import { formatRupees } from "@/lib/rupees";
 import type { AppDispatch } from "@/lib/store";
 import type { FlatRow } from "@/lib/tender-flatten";
 import type { TenderPageAssociation } from "@/lib/slices/tenderPageSlice";
@@ -53,6 +54,8 @@ export interface FieldDef {
   section: FieldSection;
   /** Current value when it is not simply `row[id]`. */
   value?: (row: Row) => string;
+  /** Text shown for the stored value; null shows a dash. */
+  display?: (value: string) => string | null;
   /** A message when this value must not be saved. */
   validate?: (value: string) => string | null;
   /** A message when the field cannot be edited on this row. */
@@ -74,7 +77,7 @@ export const fieldValue = (field: FieldDef, row: Row): string =>
 export const dateKey = (value: string): string => toISTDateKey(parseDate(value)) ?? "";
 
 /** A non-empty RA qualification rule forces reverse auction to yes. */
-export function raValue(row: Row): boolean | null {
+function raValue(row: Row): boolean | null {
   if ((row.raQualificationRule ?? "").trim()) return true;
   if (row.reverseAuctionApplicable === "true") return true;
   if (row.reverseAuctionApplicable === "false") return false;
@@ -230,7 +233,7 @@ const FIELD_LIST: FieldDef[] = [
     section: "EMD and BG",
     save: merged("emdPaymentMode"),
   },
-  text("emd", "EMD", "EMD and BG"),
+  { ...text("emd", "EMD", "EMD and BG"), display: formatRupees },
   text("documentFees", "Document fees", "EMD and BG"),
   day("bgDate", "BG date", "EMD and BG"),
   day("bgExpiryDate", "BG expiry date", "EMD and BG"),

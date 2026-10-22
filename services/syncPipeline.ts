@@ -2,15 +2,11 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { runIndexer } from "./documentIndexer";
-import { startScheduling as startSupplyIndexerScheduling } from "./supplyDocumentIndexer";
 import { matchTendersWithFolders } from "./tenderFolderMatcher";
 import { indexFolderFiles } from "./fileIndexer";
-import type { FolderMatch } from "@/types/indexer";
 
 const CONFIG = {
   syncLogsPath: path.resolve(process.cwd(), "data", "sync_logs.json"),
-  tendersCachePath: path.resolve(process.cwd(), "data", "tender_cache.json"),
-  syncIntervalMs: 30 * 60 * 1000,
   maxRetries: 3,
   retryDelayMs: 5000
 };
@@ -20,7 +16,6 @@ function ensureDataDir(): void {
 }
 
 let isSyncRunning = false;
-let pipelineTimer: ReturnType<typeof setInterval> | null = null;
 
 interface SyncLogEntry {
   id: string;
@@ -203,56 +198,5 @@ export async function executeSyncPipeline(
     }
 
     return { success: false, error: (err as Error).message };
-  }
-}
-
-export function startPipelineScheduler(): void {
-  if (pipelineTimer) return;
-
-  startSupplyIndexerScheduling();
-  executeSyncPipeline("SYSTEM");
-
-  pipelineTimer = setInterval(() => {
-    executeSyncPipeline("SYSTEM");
-  }, CONFIG.syncIntervalMs);
-
-  console.log(`[SyncPipeline] Scheduler active. Running every ${CONFIG.syncIntervalMs / 60000} minutes.`);
-}
-
-export function stopPipelineScheduler(): void {
-  if (pipelineTimer) {
-    clearInterval(pipelineTimer);
-    pipelineTimer = null;
-    console.log("[SyncPipeline] Scheduler stopped.");
-  }
-}
-
-import type { IncomingMessage, ServerResponse } from "http";
-
-export async function manualSyncRouteHandler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  try {
-    const result = await executeSyncPipeline("MANUAL");
-    res.statusCode = result.success ? 200 : 503;
-    res.setHeader("Content-Type", "application/json");
-    if (result.success) {
-      res.end(JSON.stringify({
-        success: true,
-        message: "Manual synchronization pipeline completed.",
-        log: result.logEntry
-      }));
-    } else {
-      res.end(JSON.stringify({
-        success: false,
-        message: "Pipeline skipped or failed.",
-        details: result.reason || result.error
-      }));
-    }
-  } catch (err) {
-    res.statusCode = 500;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({
-      success: false,
-      error: (err as Error).message
-    }));
   }
 }

@@ -148,7 +148,8 @@
     outline-offset: 1px;
   }
   ::selection {
-    background: var(--accent-soft);
+    /* --accent-soft (10-16%) is too faint to read as a selection. */
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
   }
   button {
     cursor: pointer;

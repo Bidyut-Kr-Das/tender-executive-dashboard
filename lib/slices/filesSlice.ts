@@ -1,20 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { subDays } from "date-fns";
-
-interface FileItem {
-  id: number;
-  fileName: string;
-  totalCount: number | null;
-  excludedCount: number | null;
-  status: string | null;
-  updatedAt: string;
-}
+import { createSlice } from "@reduxjs/toolkit";
 
 interface FilesState {
   selectedDateFrom: string | null;
   selectedDateTo: string | null;
-  items: FileItem[];
-  loading: boolean;
 }
 
 function todayString(): string {
@@ -23,32 +11,12 @@ function todayString(): string {
   return d.toISOString();
 }
 
-function twoDaysAgoString(): string {
-  const d = subDays(new Date(), 2);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
 const initialState: FilesState = {
   selectedDateFrom: "2026-01-01T00:00:00.000Z",
   selectedDateTo: todayString(),
-  items: [],
-  loading: false,
 };
 
-export const fetchFiles = createAsyncThunk(
-  "files/fetchFiles",
-  async () => {
-    const res = await fetch("/api/files");
-    if (!res.ok) {
-      throw new Error("Failed to fetch files");
-    }
-    const data = await res.json();
-    return data.files as FileItem[];
-  },
-);
-
-export const filesSlice = createSlice({
+const filesSlice = createSlice({
   name: "files",
   initialState,
   reducers: {
@@ -63,19 +31,6 @@ export const filesSlice = createSlice({
     clearState() {
       return initialState;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchFiles.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchFiles.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(fetchFiles.rejected, (state) => {
-        state.loading = false;
-      });
   },
 });
 

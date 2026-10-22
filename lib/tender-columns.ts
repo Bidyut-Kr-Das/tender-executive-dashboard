@@ -51,7 +51,6 @@ const MERGED_FIELDS = new Set([
   "emdValidity",
   "ePbgDurationMonths",
   "ePbgPercentage",
-  "estimatedBidValue",
   "evaluationMethod",
   "evaluationTableData",
   "excludedCategory",
@@ -144,8 +143,10 @@ export const COLUMN_MAP: ColumnMap = {
   tenderValue: "value",
   estimatedValue: "value",
   tenderValueInRs: "value",
-
-  estimatedCost: "estimatedBidValue",
+  // estimatedBidValue is scrapped: every amount header lands in value.
+  estimatedCost: "value",
+  estimatedBidValue: "value",
+  tenderAmount: "value",
 
   deadline: "deadline",
   bidDeadline: "deadline",
@@ -225,9 +226,6 @@ export const COLUMN_MAP: ColumnMap = {
   boqTitle: "boqTitle",
 
   bidDetails: "bidDetails",
-
-  estimatedBidValue: "estimatedBidValue",
-  tenderAmount: "estimatedBidValue",
 
   evaluationMethod: "evaluationMethod",
 
@@ -568,7 +566,7 @@ export function hasReferenceNoColumn(headers: string[], customColumnMap?: Column
 
 const GEM_ID_PATTERN = /(GEM\/\d{4}\/[A-Z]\/\d+)/i;
 
-export function sanitizeReferenceNo(refNo: string): string {
+function sanitizeReferenceNo(refNo: string): string {
   const cleaned = String(refNo ?? "")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/\u00A0/g, " ")
@@ -601,11 +599,7 @@ export function isGemReference(refNo: string): boolean {
   return /gem/i.test(refNo);
 }
 
-export function filterHeaders(headers: string[]): string[] {
-  return headers.filter((h) => !isIgnoredHeader(h));
-}
-
-export function findColumnByFieldName(
+function findColumnByFieldName(
   headers: string[],
   fieldName: string,
   customColumnMap?: ColumnMap,

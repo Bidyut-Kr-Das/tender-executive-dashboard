@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useIsDeveloper } from "@/components/v2/providers";
 import { toast } from "sonner";
 import { Download, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -64,7 +64,7 @@ function Loading({ title }: { title: string }) {
 export function ParticipationView({ scope }: { scope: ParticipationScope }) {
   const dispatch = useAppDispatch();
   const title = TITLES[scope];
-  const developer = useSession().data?.user?.role === "developer";
+  const developer = useIsDeveloper();
   const t = usePreParticipation(scope);
   const participationFilters = useAppSelector((s) => s.filters.participationFilters);
   const analyticsFilter = useAppSelector((s) => s.filters.analyticsFilter);

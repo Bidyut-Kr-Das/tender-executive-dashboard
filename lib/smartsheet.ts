@@ -41,7 +41,7 @@ export type SmartsheetErrorCode =
   | "NETWORK_ERROR"
   | "UNKNOWN";
 
-export class SmartsheetError extends Error {
+class SmartsheetError extends Error {
   code: SmartsheetErrorCode;
   statusCode?: number;
 

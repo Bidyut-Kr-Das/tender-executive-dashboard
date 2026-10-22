@@ -4,7 +4,7 @@
  *   pnpm exec tsx lib/tender-lifecycle.check.ts
  */
 import assert from "node:assert/strict";
-import { lifecycleFunnel, summarizeLifecycle } from "./tender-lifecycle";
+import { summarizeLifecycle } from "./tender-lifecycle";
 
 const at = new Date("2026-10-11T04:00:00.000Z");
 const counts = summarizeLifecycle(
@@ -23,6 +23,7 @@ const counts = summarizeLifecycle(
     { status: "PENDING", count: 12 },
     { status: "FAILED", count: 1 },
   ],
+  { RELEVANCE: { ready: 2, workers: 1 } },
 );
 
 // Main chain only, in pipeline order; parsing is per file.
@@ -35,19 +36,21 @@ assert.deepEqual(counts.stages[0], {
   queued: 40,
   failed: 3,
   oldestQueued: at.toISOString(),
+  queue: { ready: 2, workers: 1 },
 });
 assert.deepEqual(counts.stages[1], {
   stage: "AUTOMATION",
   queued: 0,
   failed: 0,
   oldestQueued: null,
+  queue: null,
 });
 assert.equal(counts.stages[3].queued, 8);
 assert.equal(counts.completed, 120);
 assert.equal(counts.rejected, 70);
 // Null, NEW and unknown values all count as not started.
 assert.equal(counts.notStarted, 907);
-assert.deepEqual(counts.parsing, { pending: 12, completed: 0, failed: 1 });
+assert.deepEqual(counts.parsing, { pending: 12, completed: 0, failed: 1, notSent: 300 });
 
 // Every tender is counted exactly once.
 const total =
@@ -56,19 +59,5 @@ const total =
   counts.rejected +
   counts.notStarted;
 assert.equal(total, 900 + 5 + 2 + 40 + 3 + 70 + 8 + 120);
-
-// Funnel: each stage is reached by everything waiting, failed or rejected in
-// it plus everything further along.
-const funnel = lifecycleFunnel(counts);
-assert.equal(funnel.entered, total - counts.notStarted);
-assert.deepEqual(
-  funnel.rows.map((r) => [r.stage, r.reached, r.passed, r.rejected]),
-  [
-    ["RELEVANCE", 241, 128, 70],
-    ["AUTOMATION", 128, 128, 0],
-    ["INGESTION", 128, 128, 0],
-    ["INTELLIGENCE", 128, 120, 0],
-  ],
-);
 
 console.log("tender-lifecycle: ok");

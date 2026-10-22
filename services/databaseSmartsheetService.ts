@@ -2,38 +2,6 @@ import { prisma } from "@/lib/prisma";
 import type { SmartsheetTender } from "@/types/smartsheetTender";
 
 export class DatabaseSmartsheetService {
-  static async getAllSmartsheetTenders(): Promise<SmartsheetTender[]> {
-    if (!prisma) {
-      console.warn("[DatabaseSmartsheetService] Prisma client unavailable");
-      return [];
-    }
-    const records = await prisma.smartsheetTender.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return records.map((r: any) => ({
-      enquiryDate: r.enquiryDate,
-      partyName: r.partyName,
-      docketNumber: r.docketNumber,
-      utility: r.utility,
-      quotationNumber: r.quotationNumber,
-      quotationDate: r.quotationDate,
-      accountHolder: r.accountHolder,
-      tenderPurchase: r.tenderPurchase,
-      attachmentUrl: r.attachmentUrl,
-      proposedErpItemName: r.proposedErpItemName,
-      proposedQty: r.proposedQty,
-      priceBasis: r.priceBasis,
-      aluminiumPrice: r.aluminiumPrice,
-      aluminiumAlloyPrice: r.aluminiumAlloyPrice,
-      copperTapePrice: r.copperTapePrice,
-      extrudedSemiconductivePrice: r.extrudedSemiconductivePrice,
-      htXlpePrice: r.htXlpePrice,
-      pvcTypeSt2Price: r.pvcTypeSt2Price,
-      galvanisedSteelFlatStripPrice: r.galvanisedSteelFlatStripPrice,
-      fillerPrice: r.fillerPrice,
-    }));
-  }
-
   static async upsertSmartsheetTenders(records: SmartsheetTender[]): Promise<void> {
     if (!prisma || records.length === 0) return;
 

@@ -1,4 +1,4 @@
-export const IST_TZ = "Asia/Kolkata";
+const IST_TZ = "Asia/Kolkata";
 
 function ordinalSuffix(n: number): string {
   if (n > 3 && n < 21) return "th";
@@ -71,17 +71,6 @@ export function formatDateISTLong(val: Date | string | number | null | undefined
 }
 
 /**
- * Generic IST formatter – keeps backwards compatibility for callers that previously used local formatting.
- * Provide format option: "short" -> DD-MMM-YY, "long" -> do MMM, yyyy
- */
-export function formatDateIST(
-  val: Date | string | number | null | undefined,
-  fmt: "short" | "long" = "short"
-): string {
-  return fmt === "long" ? formatDateISTLong(val) : formatDateISTShort(val);
-}
-
-/**
  * Returns true if the given date (instant) is before today in IST (calendar day).
  * Today is calculated in IST.
  */
@@ -91,43 +80,6 @@ export function isBeforeTodayIST(val: Date | string | number | null | undefined)
   const todayKey = toISTDateKey(new Date());
   if (!dateKey || !todayKey) return false;
   return dateKey < todayKey;
-}
-
-export function isAfterTodayIST(val: Date | string | number | null | undefined): boolean {
-  const dateKey = toISTDateKey(val);
-  const todayKey = toISTDateKey(new Date());
-  if (!dateKey || !todayKey) return false;
-  return dateKey > todayKey;
-}
-
-/**
- * Check if IST date key of val is within [fromKey, toKey] inclusive (YYYY-MM-DD strings in IST or Date objects)
- */
-export function isISTDateInRange(
-  val: Date | string | number | null | undefined,
-  from: string | Date | null | undefined,
-  to: string | Date | null | undefined
-): boolean {
-  const key = toISTDateKey(val);
-  if (!key) return false;
-  const fromKey = from ? toISTDateKey(from) : null;
-  const toKey = to ? toISTDateKey(to) : null;
-  if (fromKey && key < fromKey) return false;
-  if (toKey && key > toKey) return false;
-  return true;
-}
-
-/**
- * Helper to convert a filter input (YYYY-MM-DD string or Date) to IST date key.
- * If input is already YYYY-MM-DD (from <input type="date">), treat it as IST date directly.
- */
-export function normalizeFilterDateKey(input: string | Date | null | undefined): string | null {
-  if (!input) return null;
-  if (typeof input === "string") {
-    // If already YYYY-MM-DD, assume IST date
-    if (/^\d{4}-\d{2}-\d{2}$/.test(input.trim())) return input.trim();
-  }
-  return toISTDateKey(input);
 }
 
 // ---- IST week/month/year helpers for deadline presets ----

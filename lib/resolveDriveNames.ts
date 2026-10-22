@@ -22,7 +22,7 @@ function extractFileId(url: string): string | null {
   return m ? m[1] : null;
 }
 
-export async function resolveDriveFileName(
+async function resolveDriveFileName(
   url: string,
 ): Promise<string | null> {
   const fileId = extractFileId(url);

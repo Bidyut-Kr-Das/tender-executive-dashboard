@@ -144,6 +144,21 @@ export function facetOptions<Row>(rows: Row[], column: DataTableColumn<Row>): Fi
     .map((value) => ({ value, label: value }));
 }
 
+/** Filters after one change from a filter panel; `undefined` clears that part. */
+export function nextFilters(
+  prev: Filters,
+  columnId: string,
+  type: ColumnFilterType,
+  value: unknown | undefined,
+): Filters {
+  const state = { ...prev[columnId], [type]: value } as ColumnFilterState;
+  if (value === undefined) delete state[type];
+  const next = { ...prev };
+  if (Object.keys(state).length > 0) next[columnId] = state;
+  else delete next[columnId];
+  return next;
+}
+
 export interface ClientTableOptions<Row> {
   defaultSort?: SortState | null;
   pageSize?: number;
@@ -183,14 +198,7 @@ export function useClientTable<Row>(
   const onFilterChange = useCallback(
     (columnId: string, type: ColumnFilterType, value: unknown | undefined) => {
       // Functional: a filter panel can send two changes in one event.
-      setFilters((prev) => {
-        const state = { ...prev[columnId], [type]: value } as ColumnFilterState;
-        if (value === undefined) delete state[type];
-        const next = { ...prev };
-        if (Object.keys(state).length > 0) next[columnId] = state;
-        else delete next[columnId];
-        return next;
-      });
+      setFilters((prev) => nextFilters(prev, columnId, type, value));
       setPage(1);
     },
     [],

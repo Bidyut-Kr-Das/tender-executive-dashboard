@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { parseDate } from "@/lib/parse-date";
 import { toISTDateKey } from "@/lib/format-ist";
 import { calcDiffDecimal, calcDiffString } from "@/lib/diffCalculator";
+import { parseEmd, parseRupees } from "@/lib/rupees";
 
 export const updateTenderAssignmentsAction = withLog(
   async (params: {
@@ -63,7 +64,6 @@ export const updateTenderAssignmentsAction = withLog(
         itemCategory,
         organization,
         deadline,
-        tenderFileUrl,
       } = tender;
 
       console.dir(tender.tenderFiles);
@@ -293,37 +293,6 @@ export const updateDocketNumber = withLog(
   }),
 );
 
-export const updateBgNoUtrNo = withLog(
-  async (params: { tenderMergedId: number; bgNoUtrNo: string }) => {
-    await requireUserAction();
-    console.log(`[action:updateBgNoUtrNo] called with:`, params);
-    try {
-      const updated = await prisma.tenderMerged.update({
-        where: { id: params.tenderMergedId },
-        data: { bgNoUtrNo: params.bgNoUtrNo },
-        select: { id: true, referenceNo: true },
-      });
-      console.log(
-        `[action:updateBgNoUtrNo] success for id=${params.tenderMergedId}`,
-      );
-      return updated;
-    } catch (error: any) {
-      console.error(
-        `[action:updateBgNoUtrNo] ERROR for id=${params.tenderMergedId}:`,
-        error,
-      );
-      throw new Error(error.message ?? "Failed to update BG/UTR number");
-    }
-  },
-  (updated, params) => ({
-    action: "UPDATE" as const,
-    tableName: "TenderMerged",
-    recordId: String(updated.id),
-    referenceNo: updated.referenceNo ?? undefined,
-    details: `Updated bgNoUtrNo to "${params.bgNoUtrNo}" on tender #${params.tenderMergedId}`,
-  }),
-);
-
 export const updateRemarks = withLog(
   async (params: { tenderMergedId: number; remarks: string }) => {
     await requireUserAction();
@@ -386,136 +355,6 @@ export const updateReason = withLog(
   }),
 );
 
-export const updateLoiPoNoAndDate = withLog(
-  async (params: { tenderMergedId: number; loiPoNoAndDate: string }) => {
-    await requireUserAction();
-    console.log(`[action:updateLoiPoNoAndDate] called with:`, params);
-    try {
-      const updated = await prisma.tenderMerged.update({
-        where: { id: params.tenderMergedId },
-        data: { loiPoNoAndDate: params.loiPoNoAndDate },
-        select: { id: true, referenceNo: true },
-      });
-      console.log(
-        `[action:updateLoiPoNoAndDate] success for id=${params.tenderMergedId}`,
-      );
-      return updated;
-    } catch (error: any) {
-      console.error(
-        `[action:updateLoiPoNoAndDate] ERROR for id=${params.tenderMergedId}:`,
-        error,
-      );
-      throw new Error(error.message ?? "Failed to update LOI/PO No");
-    }
-  },
-  (updated, params) => ({
-    action: "UPDATE" as const,
-    tableName: "TenderMerged",
-    recordId: String(updated.id),
-    referenceNo: updated.referenceNo ?? undefined,
-    details: `Updated loiPoNoAndDate to "${params.loiPoNoAndDate}" on tender #${params.tenderMergedId}`,
-  }),
-);
-
-export const updateCompetitors = withLog(
-  async (params: { tenderMergedId: number; competitors: string }) => {
-    await requireUserAction();
-    console.log(`[action:updateCompetitors] called with:`, params);
-    try {
-      const updated = await prisma.tenderMerged.update({
-        where: { id: params.tenderMergedId },
-        data: { competitors: params.competitors },
-        select: { id: true, referenceNo: true },
-      });
-      console.log(
-        `[action:updateCompetitors] success for id=${params.tenderMergedId}`,
-      );
-      return updated;
-    } catch (error: any) {
-      console.error(
-        `[action:updateCompetitors] ERROR for id=${params.tenderMergedId}:`,
-        error,
-      );
-      throw new Error(error.message ?? "Failed to update competitors");
-    }
-  },
-  (updated, params) => ({
-    action: "UPDATE" as const,
-    tableName: "TenderMerged",
-    recordId: String(updated.id),
-    referenceNo: updated.referenceNo ?? undefined,
-    details: `Updated competitors to "${params.competitors}" on tender #${params.tenderMergedId}`,
-  }),
-);
-
-export const updateDiffPercentFromL1 = withLog(
-  async (params: {
-    tenderMergedId: number;
-    diffPercentFromL1: number | null;
-  }) => {
-    await requireUserAction();
-    console.log(`[action:updateDiffPercentFromL1] called with:`, params);
-    try {
-      const updated = await prisma.tenderMerged.update({
-        where: { id: params.tenderMergedId },
-        data: { diffPercentFromL1: params.diffPercentFromL1 },
-        select: { id: true, referenceNo: true },
-      });
-      console.log(
-        `[action:updateDiffPercentFromL1] success for id=${params.tenderMergedId}`,
-      );
-      return updated;
-    } catch (error: any) {
-      console.error(
-        `[action:updateDiffPercentFromL1] ERROR for id=${params.tenderMergedId}:`,
-        error,
-      );
-      throw new Error(error.message ?? "Failed to update Diff L1");
-    }
-  },
-  (updated, params) => ({
-    action: "UPDATE" as const,
-    tableName: "TenderMerged",
-    recordId: String(updated.id),
-    referenceNo: updated.referenceNo ?? undefined,
-    details: `Updated diffPercentFromL1 to "${params.diffPercentFromL1}" on tender #${params.tenderMergedId}`,
-  }),
-);
-
-export const updateDiffPercentFromL2 = withLog(
-  async (params: {
-    tenderMergedId: number;
-    diffPercentFromL2: number | null;
-  }) => {
-    await requireUserAction();
-    console.log(`[action:updateDiffPercentFromL2] called with:`, params);
-    try {
-      const updated = await prisma.tenderMerged.update({
-        where: { id: params.tenderMergedId },
-        data: { diffPercentFromL2: params.diffPercentFromL2 },
-        select: { id: true, referenceNo: true },
-      });
-      console.log(
-        `[action:updateDiffPercentFromL2] success for id=${params.tenderMergedId}`,
-      );
-      return updated;
-    } catch (error: any) {
-      console.error(
-        `[action:updateDiffPercentFromL2] ERROR for id=${params.tenderMergedId}:`,
-        error,
-      );
-      throw new Error(error.message ?? "Failed to update Diff L2");
-    }
-  },
-  (updated, params) => ({
-    action: "UPDATE" as const,
-    tableName: "TenderMerged",
-    recordId: String(updated.id),
-    referenceNo: updated.referenceNo ?? undefined,
-    details: `Updated diffPercentFromL2 to "${params.diffPercentFromL2}" on tender #${params.tenderMergedId}`,
-  }),
-);
-
 export async function updateBeneficiaryBankDetails(params: {
   tenderMergedId: number;
   beneficiaryBankDetails: string;
@@ -533,60 +372,23 @@ export async function updateBeneficiaryBankDetails(params: {
   });
 }
 
-type EmdPayloadSelect = {
-  emdPaymentMode: string | null;
-  referenceNo: string | null;
-  deadline: Date | null;
-  documentFees: string | null;
-  emd: string | null;
-  docketNo: string | null;
-  tenderBrief: string | null;
-  tenderOpeningDate: Date | null;
-  remarks: string | null;
-  beneficiaryBankDetails: string | null;
-  organization: string | null;
-  CostingSheetDetails: {
-    itemSchedule: string | null;
-    proposedErpItemName: string | null;
-    proposedErpQuantity: string | null;
-  }[];
-  tenderFiles: {
-    name: string;
-    extension: string;
-    url: string;
-    source: string;
-    tags: string[];
-  }[];
-};
-
-function validateEmdPayloadData(record: EmdPayloadSelect) {
-  const missing: string[] = [];
-
-  if (!record.referenceNo) missing.push("Reference No.");
-  const hasItemName = (record.CostingSheetDetails ?? []).some(
-    (c) => c.proposedErpItemName && c.proposedErpItemName.trim() !== "",
-  );
-  if (!hasItemName) missing.push("Proposed ERP Item Name");
-  const hasValidQuantity = (record.CostingSheetDetails ?? []).some((c) => {
-    const qty = parseFloat(c.proposedErpQuantity ?? "");
-    return !isNaN(qty) && qty > 0;
-  });
-  if (!hasValidQuantity) missing.push("Proposed ERP Quantity");
-  if (!record.deadline) missing.push("Last Date of Submission");
-  if (!record.documentFees || Number(record.documentFees) <= 0)
-    missing.push("Document Fee");
-  if (!record.emd || Number(record.emd) <= 0) missing.push("EMD Amount");
-
-  return missing;
-}
-
 export async function updateTenderMergedStringField(params: {
   tenderMergedId: number;
   field: string;
   value: string;
 }): Promise<{ ok: boolean; error?: string; diffPercentFromL1?: number | null; diffPercentFromL2?: number | null; differenceBetweenRank1?: string | null; differenceBetweenRank2?: string | null }> {
   await requireUserAction();
-  const { tenderMergedId, field, value } = params;
+  const { tenderMergedId, field } = params;
+  let { value } = params;
+
+  // Value and EMD are stored as plain rupees, the same as an uploaded sheet.
+  if ((field === "value" || field === "emd") && value.trim() !== "") {
+    const amount = field === "emd" ? parseEmd(value) : parseRupees(value);
+    if (amount === null) {
+      return { ok: false, error: `"${value.trim()}" is not an amount. Use a number, e.g. 1234567, 12.5 L or 1.5 Cr.` };
+    }
+    value = String(amount);
+  }
 
   if (
     field === "emdPaymentMode" &&

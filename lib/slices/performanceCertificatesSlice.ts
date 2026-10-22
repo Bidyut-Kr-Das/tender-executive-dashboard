@@ -65,7 +65,7 @@ export const updatePerformanceCertificateField = createAsyncThunk(
   },
 );
 
-export const performanceCertificatesSlice = createSlice({
+const performanceCertificatesSlice = createSlice({
   name: "performanceCertificates",
   initialState,
   reducers: {},
