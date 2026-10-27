@@ -27,6 +27,13 @@ export function toISTDateKey(val: Date | string | number | null | undefined): st
   }).format(d);
 }
 
+/** Inverse of `toISTDateKey`: the instant IST midnight of a `YYYY-MM-DD` key, null when empty or malformed. */
+export function istDateKeyToDate(key: string | null | undefined): Date | null {
+  if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+  const d = new Date(`${key}T00:00:00+05:30`);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 /**
  * Short format used in TenderTable: DD-MMM-YY (e.g. 25-Aug-25) in IST
  */

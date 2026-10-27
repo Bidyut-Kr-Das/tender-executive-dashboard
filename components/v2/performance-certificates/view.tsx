@@ -8,7 +8,7 @@ import {
   splitPerformanceCertificatePages,
   type PerformanceCertificateField,
 } from "@/actions/performanceCertificates";
-import { formatDateISTShort } from "@/lib/format-ist";
+import { formatDateISTShort, toISTDateKey } from "@/lib/format-ist";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchItems } from "@/lib/slices/itemsSlice";
 import {
@@ -25,6 +25,7 @@ import { DataTable } from "@/components/v2/data-table/data-table";
 import { selectFilter, type DataTableColumn } from "@/components/v2/data-table/types";
 import { useClientTable } from "@/components/v2/data-table/use-client-table";
 import { Button, IconButton } from "@/components/v2/ui/button";
+import { DatePicker } from "@/components/v2/ui/calendar";
 import { toastError } from "@/components/v2/ui/errors";
 import { CheckMark, Choice, Dash, Input } from "@/components/v2/ui/field";
 import { Combobox, Popover, type SelectOption } from "@/components/v2/ui/overlay";
@@ -193,6 +194,32 @@ function ToggleCell({
       allowClear
       onChange={save}
       className={cn("flex-nowrap", pending && "pointer-events-none opacity-60")}
+    />
+  );
+}
+
+/** Pressing the selected day again clears it. */
+function DateCell({
+  row,
+  field,
+  label,
+}: {
+  row: Row;
+  field: "issueDate" | "signingDate";
+  label: string;
+}) {
+  const { pending, save } = useFieldSave(row, field, label);
+  const current = toISTDateKey(row[field]) ?? "";
+  return (
+    <DatePicker
+      label={label}
+      value={current}
+      placeholder="Not set"
+      disabled={pending}
+      className="h-7 px-2 text-xs"
+      onChange={(next) => {
+        if (next !== current) save(next || null);
+      }}
     />
   );
 }
@@ -386,24 +413,20 @@ const columns: DataTableColumn<Row>[] = [
   {
     id: "issueDate",
     header: "Issue Date",
-    width: 130,
+    width: 150,
     search: false,
     filter: { type: "dateRange" },
     text: (row) => formatDateISTShort(row.issueDate),
-    cell: (row) => (
-      <span className="tabular-nums">{formatDateISTShort(row.issueDate)}</span>
-    ),
+    cell: (row) => <DateCell row={row} field="issueDate" label="Issue Date" />,
   },
   {
     id: "signingDate",
     header: "Signing Date",
-    width: 130,
+    width: 150,
     search: false,
     filter: { type: "dateRange" },
     text: (row) => formatDateISTShort(row.signingDate),
-    cell: (row) => (
-      <span className="tabular-nums">{formatDateISTShort(row.signingDate)}</span>
-    ),
+    cell: (row) => <DateCell row={row} field="signingDate" label="Signing Date" />,
   },
 ];
 

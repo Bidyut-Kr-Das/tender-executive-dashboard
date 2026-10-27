@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { withLog } from "@/lib/activity-logger";
 import { requireUserAction } from "@/lib/dal";
+import { istDateKeyToDate } from "@/lib/format-ist";
 import { createPresignedUpload, uploadBuffer } from "@/lib/s3";
 import { publishPerformanceCertTask, type PerformanceCertFile } from "@/lib/queue/publisher";
 
@@ -59,7 +60,12 @@ export type PerformanceCertificateField =
   | "useNotUse"
   | "itemSchedule"
   | "utilityNames"
-  | "duplicateOfId";
+  | "duplicateOfId"
+  | "issueDate"
+  | "signingDate";
+
+/** Date fields arrive as `YYYY-MM-DD` and are stored as IST midnight. */
+const DATE_FIELDS = new Set<PerformanceCertificateField>(["issueDate", "signingDate"]);
 
 export const updatePerformanceCertificateField = withLog(
   async (
@@ -68,9 +74,14 @@ export const updatePerformanceCertificateField = withLog(
     value: string | null,
   ) => {
     await requireUserAction();
+    let stored: string | Date | null = value;
+    if (DATE_FIELDS.has(field) && value !== null) {
+      stored = istDateKeyToDate(value);
+      if (!stored) throw new Error(`Invalid date: ${value}`);
+    }
     return prisma.performanceCertificate.update({
       where: { id },
-      data: { [field]: value },
+      data: { [field]: stored },
     });
   },
   (result, id, field, value) => ({

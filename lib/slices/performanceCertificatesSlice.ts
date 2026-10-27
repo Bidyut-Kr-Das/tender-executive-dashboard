@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PerformanceCertificateModel } from "@/generated/prisma/models/PerformanceCertificate";
+import { istDateKeyToDate } from "@/lib/format-ist";
 import {
   getPerformanceCertificates,
   getSupplyPartyNames,
@@ -102,8 +103,11 @@ const performanceCertificatesSlice = createSlice({
       })
       .addCase(updatePerformanceCertificateField.fulfilled, (state, action) => {
         const { id, field, value } = action.payload;
+        // Rows hold dates as Date, as fetched; the thunk carries the picker's YYYY-MM-DD.
+        const stored =
+          field === "issueDate" || field === "signingDate" ? istDateKeyToDate(value) : value;
         state.rows = state.rows.map((r) =>
-          r.id === id ? { ...r, [field]: value } : r,
+          r.id === id ? { ...r, [field]: stored } : r,
         );
         delete state.saving[`${id}-${field}`];
       })
