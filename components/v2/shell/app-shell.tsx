@@ -28,6 +28,7 @@ import {
 } from "@/components/v2/providers";
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { toastError } from "@/components/v2/ui/errors";
+import { Assistant } from "@/components/v2/assistant/assistant";
 import { Field, Input } from "@/components/v2/ui/field";
 import {
   Dialog,
@@ -310,6 +311,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="pl-(--sidebar-w) in-data-[sidebar=collapsed]:pl-(--sidebar-rail-w) h-full min-w-0">{children}</main>
+      <Assistant />
     </div>
   );
 }

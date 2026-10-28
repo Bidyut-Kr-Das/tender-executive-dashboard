@@ -166,6 +166,7 @@ Defined with `@utility` in `v2.css`. Their names are deliberately not Tailwind p
 | `--z-header-pinned` | 30 | Pinned header cells |
 | `--z-rail` | 30 | Sidebar |
 | `--z-progress` | 40 | Table progress bar |
+| `--z-assistant` | 45 | Pip (assistant orb and chat card); dialogs and sheets cover it |
 | `--z-modal` | 50 | Dialog, sheet and their scrim |
 | `--z-popup` | 60 | Popover, menu, select |
 | `--z-tip` | 70 | Tooltip |
@@ -275,6 +276,7 @@ Props:
 | `Dialog` | `open`, `onOpenChange`, `title`, `description?`, `children?`, `footer?`, `width?` (default `32rem`) |
 | `Sheet` | `open`, `onOpenChange`, `title`, `children`, `width?` (default `40vw`) |
 
+- The assistant (`components/v2/assistant/assistant.tsx`) is mounted once in `AppShell`, not per page. It is the wobnimo `pip` mascot fixed bottom-right; clicking it or Ctrl+J opens a non-modal chat card above it. The mascot's state follows the chat (thinking, speaking, error, celebrating), the composer (listening) and inactivity (sleeping). The chat streams from `app/api/assistant/route.ts`.
 - Dialog buttons always go in `footer`: ghost "Cancel" first, primary action last. When the body is a `<form>`, give the form an `id` from `useId()` and put `type="submit" form={id}` on the primary button.
 - Dialogs that edit one row open with a summary of that row (organisation and brief) so the user can see what they are changing.
 
