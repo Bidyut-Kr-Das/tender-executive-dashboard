@@ -104,7 +104,7 @@ ${GLOSSARY}`,
         AND: words.map((w) => ({ itemName: { contains: w, mode: "insensitive" } })),
       };
       const [total, items] = await Promise.all([
-        prisma.items.count({ where }),
+        prisma.items.count({ where }), 
         prisma.items.findMany({
           where,
           select: { itemcode: true, itemName: true, itemSchedule: true },
