@@ -15,6 +15,7 @@ import { Button, IconButton } from "@/components/v2/ui/button";
 import { Checkbox, Input } from "@/components/v2/ui/field";
 import { Popover } from "@/components/v2/ui/overlay";
 import { toastError } from "@/components/v2/ui/errors";
+import { say } from "@/lib/pip-says";
 
 /*
  * Filters kept per page: global ones every user is offered, set by developers,
@@ -45,14 +46,14 @@ export function SavedFiltersMenu({
     if (!open || list) return;
     listSavedFilters(page).then(setList, (err) => {
       setList([]);
-      toastError("Could not load saved filters", err);
+      toastError(say.couldNot("load your saved filters"), err);
     });
   }, [open, list, page, setList]);
 
   const apply = (f: SavedFilterRow) => {
     const errors = onApply(f.formula);
     if (errors.length) {
-      toast.error(`"${f.name}" no longer fits this page`, { description: errors.join("\n") });
+      toast.error(say.filterNoLongerFits(f.name), { description: errors.join("\n") });
       return;
     }
     setOpen(false);
@@ -63,7 +64,7 @@ export function SavedFiltersMenu({
       await deleteSavedFilter(f.id);
       setList((list ?? []).filter((x) => x.id !== f.id));
     } catch (err) {
-      toastError("Could not delete the filter", err);
+      toastError(say.couldNot("delete the filter"), err);
     }
   };
 
@@ -143,9 +144,9 @@ export function SaveFilterButton({
       setOpen(false);
       setName("");
       setGlobal(false);
-      toast.success(`Saved "${row.name}"`);
+      toast.success(say.saved(`"${row.name}"`));
     } catch (err) {
-      toastError("Could not save the filter", err);
+      toastError(say.couldNot("save the filter"), err);
     } finally {
       setSaving(false);
     }

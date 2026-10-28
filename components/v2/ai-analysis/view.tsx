@@ -28,6 +28,7 @@ import { Button, IconButton } from "@/components/v2/ui/button";
 import { describeError } from "@/components/v2/ui/errors";
 import { Badge, Dash } from "@/components/v2/ui/field";
 import { EmptyState, Page, PageHeader, PageSkeleton, StatTile } from "@/components/v2/ui/page";
+import { say } from "@/lib/pip-says";
 
 const POLL_MS = 5_000;
 const PAGE_SIZE = 50;
@@ -484,12 +485,12 @@ export function AiAnalysisView() {
         reloadAll();
       }),
       {
-        loading: `Requeueing ${from === "FAILED" ? "failed" : "slow"} tenders in ${STAGES[stage].label}...`,
+        loading: say.requeueing(from === "FAILED" ? "failed" : "slow", STAGES[stage].label),
         success: ({ queued, notQueued }) =>
           notQueued > 0
-            ? `${fmt(queued)} requeued, ${fmt(notQueued)} could not be sent. See the Error column`
-            : `${fmt(queued)} requeued`,
-        error: async (err) => `Requeue failed: ${await describeError(err)}`,
+            ? say.requeuedSome(queued, notQueued)
+            : say.requeued(queued),
+        error: async (err) => `${say.couldNot("requeue them")} ${await describeError(err)}`,
       },
     );
   };

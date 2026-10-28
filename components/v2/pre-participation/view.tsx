@@ -27,6 +27,7 @@ import { docketKey, type Row } from "./fields";
 import { activePath, type FlowFilter } from "./flow";
 import { FlowBand } from "./flow-band";
 import { usePreParticipation, type ParticipationScope } from "./use-pre-participation";
+import { say } from "@/lib/pip-says";
 
 const getRowId = (row: Row) => row.id;
 
@@ -175,9 +176,9 @@ export function ParticipationView({ scope }: { scope: ParticipationScope }) {
     toast.promise(
       exportPreParticipation(query, visible, title).finally(() => setExporting(false)),
       {
-        loading: "Preparing Excel export...",
-        success: (count) => `Exported ${count.toLocaleString("en-IN")} tenders`,
-        error: async (err) => `Export failed: ${await describeError(err)}`,
+        loading: say.exporting(),
+        success: (n) => say.exported(n, "tender"),
+        error: async (err) => `${say.couldNot("export them")} ${await describeError(err)}`,
       },
     );
   };

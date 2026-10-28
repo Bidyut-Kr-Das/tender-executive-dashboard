@@ -16,6 +16,7 @@ import { ClientTablePage } from "@/components/v2/data-table/client-table-page";
 import { selectFilter, type DataTableColumn } from "@/components/v2/data-table/types";
 import { toastError } from "@/components/v2/ui/errors";
 import { Combobox } from "@/components/v2/ui/overlay";
+import { say } from "@/lib/pip-says";
 
 const selectItemCodes = createSelector(
   (s: RootState) => s.items.rows,
@@ -31,8 +32,8 @@ function ErpCodeCell({ row }: { row: Row }) {
     setPending(true);
     dispatch(updateRailwaysErpCode({ id: row.id, erpCode }))
       .unwrap()
-      .then(() => toast.success(erpCode ? `ERP code set to ${erpCode}` : "ERP code cleared"))
-      .catch((err) => toastError("ERP code not saved", err))
+      .then(() => toast.success(erpCode ? say.set("the ERP code", erpCode) : say.cleared("the ERP code")))
+      .catch((err) => toastError(say.notSaved("the ERP code"), err))
       .finally(() => setPending(false));
   };
 

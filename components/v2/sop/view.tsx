@@ -10,6 +10,7 @@ import type { ColumnValues } from "@/components/v2/data-table/use-client-table";
 import { DatePicker } from "@/components/v2/ui/calendar";
 import { describeError, toastError } from "@/components/v2/ui/errors";
 import { Badge, Checkbox, Dash, type Tone } from "@/components/v2/ui/field";
+import { say } from "@/lib/pip-says";
 
 interface SopRow {
   id: number;
@@ -184,7 +185,7 @@ export function SopView() {
         if (stale || !data.success) return;
         setLogs(new Map((data.data as DailyLog[]).map((l) => [l.sopResponsibilityId, l])));
       })
-      .catch((err) => toastError("Daily logs not loaded", err));
+      .catch((err) => toastError(say.couldNot("load the daily logs"), err));
     return () => {
       stale = true;
     };
@@ -198,11 +199,11 @@ export function SopView() {
   const toggle = useCallback(
     async (row: Row) => {
       if (!signedIn) {
-        toast.error("Please sign in to update daily log");
+        toast.error(say.signInFirst("update the daily log"));
         return;
       }
       if (!row.dailyLogEnabled) {
-        toast.error("DailyLog disabled for this column (AI/parse)");
+        toast.error(say.notLoggable());
         return;
       }
       const previous = row.log;
@@ -233,10 +234,10 @@ export function SopView() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Toggle failed");
         put(data.data);
-        toast.success(next ? "Marked done" : "Unchecked");
+        toast.success(next ? say.markedDone() : say.unchecked());
       } catch (err) {
         put(previous);
-        toastError("Daily log not saved", err);
+        toastError(say.notSaved("the daily log"), err);
       } finally {
         setToggling(null);
       }

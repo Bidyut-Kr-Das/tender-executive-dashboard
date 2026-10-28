@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button, IconButton } from "./button";
 import { describeError, toastError } from "./errors";
 import { Dialog } from "./overlay";
+import { say } from "@/lib/pip-says";
 
 /** Edit and delete for one row; delete asks first. */
 export function RowActions({
@@ -26,10 +27,10 @@ export function RowActions({
     setDeleting(true);
     onDelete()
       .then(() => {
-        toast.success(`Removed ${what}`);
+        toast.success(say.removed(what));
         setConfirming(false);
       })
-      .catch((err) => toastError("Not removed", err))
+      .catch((err) => toastError(say.couldNot("remove it"), err))
       .finally(() => setDeleting(false));
   };
 

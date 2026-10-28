@@ -12,6 +12,7 @@ import { fetchPerformanceCertificates } from "@/lib/slices/performanceCertificat
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { toastError } from "@/components/v2/ui/errors";
 import { Dialog } from "@/components/v2/ui/overlay";
+import { say, count } from "@/lib/pip-says";
 
 async function uploadOne(file: File) {
   const contentType = file.type || "application/octet-stream";
@@ -57,12 +58,10 @@ export function UploadCertificateDialog({
     setUploading(true);
     try {
       await Promise.all(files.map(uploadOne));
-      toast.success(
-        `Uploaded ${files.length} certificate${files.length !== 1 ? "s" : ""}`,
-      );
+      toast.success(say.uploaded(count(files.length, "certificate")));
       onOpenChange(false);
     } catch (err) {
-      toastError("Certificate upload failed", err);
+      toastError(say.couldNot("upload the certificates"), err);
     } finally {
       setUploading(false);
       dispatch(fetchPerformanceCertificates());

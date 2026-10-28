@@ -35,7 +35,7 @@ export async function describeError(err: unknown): Promise<string> {
   return message;
 }
 
-/** Error toast for a failed action: "`what`: reason", or the reason alone. */
+/** Error toast for a failed action: `what` (a `say.*` line) with the reason under it, or the reason alone. */
 export function toastError(what: string | null, err: unknown) {
-  describeError(err).then((reason) => toast.error(what ? `${what}: ${reason}` : reason));
+  describeError(err).then((reason) => (what ? toast.error(what, { description: reason }) : toast.error(reason)));
 }

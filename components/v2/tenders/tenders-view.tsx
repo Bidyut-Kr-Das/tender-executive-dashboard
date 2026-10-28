@@ -33,6 +33,7 @@ import {
   toDayInput,
 } from "./toolbar";
 import { TenderCellContext, useTenders } from "./use-tenders";
+import { say } from "@/lib/pip-says";
 
 export const ANALYTICS: { key: NonNullable<AnalyticsFilter>; label: string; detail: string }[] = [
   { key: "aiYes", label: "AI relevance yes", detail: "All" },
@@ -176,9 +177,9 @@ export function TendersView() {
         () => setExporting(false),
       ),
       {
-        loading: "Preparing Excel export...",
-        success: (count) => `Exported ${count.toLocaleString("en-IN")} tenders`,
-        error: async (err) => `Export failed: ${await describeError(err)}`,
+        loading: say.exporting(),
+        success: (n) => say.exported(n, "tender"),
+        error: async (err) => `${say.couldNot("export them")} ${await describeError(err)}`,
       },
     );
   };

@@ -44,6 +44,7 @@ import { DateRange } from "@/components/v2/ui/calendar";
 import { describeError } from "@/components/v2/ui/errors";
 import { Checkbox, Field } from "@/components/v2/ui/field";
 import { Dialog, Menu, MenuItem, MenuSeparator, Popover, Select } from "@/components/v2/ui/overlay";
+import { say } from "@/lib/pip-says";
 
 /* --------------------------------- Uploads --------------------------------- */
 
@@ -81,8 +82,8 @@ function UploadDialog({ mode, onClose }: { mode: UploadMode; onClose: () => void
       const book = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(book, sheet, "Rejected Tenders");
       XLSX.writeFile(book, `rejected-tenders-${new Date().toISOString().slice(0, 10)}.xlsx`);
-      toast.error(`${rejectedRows.length} tender(s) rejected`, {
-        description: "Downloaded rejected-tenders excel",
+      toast.error(say.rejected(rejectedRows.length), {
+        description: say.rejectedDownloaded(),
       });
     });
   }, [parsing, rejectedRows]);
@@ -243,7 +244,7 @@ export function AiAnalysisButton({ query, total }: { query: TenderQuery; total: 
     abort.current = false;
     setOpen(false);
     setProgress({ done: 0, total: 0 });
-    const toastId = toast.loading("Collecting filtered tenders...");
+    const toastId = toast.loading(say.collectingTenders());
 
     try {
       // Every row the filters match, not only the visible page.
@@ -261,10 +262,7 @@ export function AiAnalysisButton({ query, total }: { query: TenderQuery; total: 
       });
 
       if (targets.length === 0) {
-        toast.info(
-          "Nothing to queue: every filtered tender already has an AI result or has no tender brief",
-          { id: toastId },
-        );
+        toast.info(say.nothingToQueue(), { id: toastId });
         return;
       }
 
@@ -287,17 +285,17 @@ export function AiAnalysisButton({ query, total }: { query: TenderQuery; total: 
         } catch {
           failed++;
         }
-        toast.loading(`Queueing tenders for AI analysis (${queued + failed}/${targets.length})`, {
+        toast.loading(say.queueing(queued + failed, targets.length), {
           id: toastId,
         });
         setProgress({ done: queued + failed, total: targets.length });
       }
 
-      if (abort.current) toast.info(`Stopped. ${queued} queued`, { id: toastId });
-      else if (failed === 0) toast.success(`${queued} tender(s) queued for AI analysis`, { id: toastId });
-      else toast.warning(`${queued} queued, ${failed} failed`, { id: toastId });
+      if (abort.current) toast.info(say.queueStopped(queued), { id: toastId });
+      else if (failed === 0) toast.success(say.queued(queued), { id: toastId });
+      else toast.warning(say.queuedSome(queued, failed), { id: toastId });
     } catch (err) {
-      toast.error(`AI analysis not started: ${await describeError(err)}`, { id: toastId });
+      toast.error(say.couldNot("start the AI analysis"), { id: toastId, description: await describeError(err) });
     } finally {
       setProgress(null);
     }

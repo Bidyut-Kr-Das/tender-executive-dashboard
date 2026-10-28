@@ -23,6 +23,7 @@ import {
 } from "@/components/v2/tenders/cells";
 import { useTenderCellContext } from "@/components/v2/tenders/use-tenders";
 import { FIELDS, dateKey, fieldValue, type FieldDef, type Row } from "./fields";
+import { say } from "@/lib/pip-says";
 
 const withAuth = (path: string) => `${path}?auth=${encodeURIComponent(FILE_AUTH)}`;
 
@@ -51,19 +52,19 @@ function useFieldSave(field: FieldDef, row: Row) {
   const save = (value: string): Promise<boolean> => {
     const problem = field.locked?.(row) ?? field.validate?.(value);
     if (problem) {
-      toast.error(`${field.label}: ${problem}`);
+      toast.error(say.notSaved(field.label), { description: problem });
       return Promise.resolve(false);
     }
     setPending(true);
     return field
       .save({ dispatch, associations }, row, value)
       .then(() => {
-        toast.success(`${field.label} updated`);
+        toast.success(say.updated(field.label));
         onFieldSaved?.();
         return true;
       })
       .catch((err: unknown) => {
-        toastError(`${field.label} not saved`, err);
+        toastError(say.notSaved(field.label), err);
         return false;
       })
       .finally(() => setPending(false));
@@ -183,7 +184,7 @@ function YesNoEditor({ field, row }: EditorProps) {
 
   const choose = (token: string) => {
     const next = value === token ? tokens.none : token;
-    if (locked) return void toast.error(`${field.label}: ${locked}`);
+    if (locked) return void toast.error(say.cantChange(field.label), { description: locked });
     setOptimistic(next);
     save(next).finally(() => setOptimistic(null));
   };
@@ -576,9 +577,9 @@ function ErpItem({ item }: { item: CostingItem }) {
         const next = { bomType: data.data?.bomType ?? "", bomCode: data.data?.bomCode ?? "" };
         savedBoms.set(item.id, next);
         setBom(next);
-        toast.success(`${label} updated`);
+        toast.success(say.updated(label));
       })
-      .catch((err: unknown) => toastError(`${label} not saved`, err))
+      .catch((err: unknown) => toastError(say.notSaved(label), err))
       .finally(() => setPending(false));
   };
 
@@ -688,10 +689,10 @@ export function OfficeCell({ row }: { row: Row }) {
           }),
         ).unwrap();
       }
-      if (writes.length > 0) toast.success("Office details updated");
+      if (writes.length > 0) toast.success(say.updated("the office details"));
       setOpen(false);
     } catch (err) {
-      toastError("Office details not saved", err);
+      toastError(say.notSaved("the office details"), err);
     } finally {
       setSaving(false);
     }

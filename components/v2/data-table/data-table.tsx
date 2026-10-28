@@ -49,6 +49,7 @@ import {
   type DataTableProps,
   type FilterChip,
 } from "./types";
+import { say } from "@/lib/pip-says";
 
 const DEFAULT_WIDTH = 180;
 const MIN_WIDTH = 50;
@@ -581,8 +582,8 @@ function FormulaBar<Row>({
 
   const copy = () =>
     navigator.clipboard.writeText(text).then(
-      () => toast.success("Filter formula copied"),
-      () => toast.error("Could not copy the filter formula"),
+      () => toast.success(say.copied("the filter formula")),
+      () => toast.error(say.couldNot("copy the filter formula")),
     );
 
   return (

@@ -12,6 +12,7 @@ import { Field, Input } from "@/components/v2/ui/field";
 import { Combobox } from "@/components/v2/ui/overlay";
 import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
 import { request, useRows } from "./shared";
+import { say } from "@/lib/pip-says";
 
 interface Mapping {
   id: number;
@@ -126,7 +127,7 @@ export function ColumnMappingsView() {
       ? await request<{ mapping: Mapping }>(`${ENDPOINT}/${row.id}`, "PATCH", body)
       : await request<{ mapping: Mapping }>(ENDPOINT, "POST", body);
     t.upsert(mapping);
-    toast.success(row ? "Mapping updated" : "Mapping created");
+    toast.success(row ? say.updated("the mapping") : say.created("the mapping"));
   };
 
   return (

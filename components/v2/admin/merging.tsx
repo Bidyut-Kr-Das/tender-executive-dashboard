@@ -11,6 +11,7 @@ import { Button } from "@/components/v2/ui/button";
 import { Checkbox, Dash, Field, Input } from "@/components/v2/ui/field";
 import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
 import { request, useRows } from "./shared";
+import { say } from "@/lib/pip-says";
 
 interface Group {
   id: number;
@@ -150,7 +151,7 @@ export function ColumnMergingView() {
       ? await request<{ group: StoredGroup }>(`${ENDPOINT}/${row.id}`, "PATCH", body)
       : await request<{ group: StoredGroup }>(ENDPOINT, "POST", body);
     t.upsert(parse(group));
-    toast.success(row ? "Merged column updated" : "Merged column created");
+    toast.success(row ? say.updated("the merged column") : say.created("the merged column"));
   };
 
   return (

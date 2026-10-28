@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "sonner";
+import { say } from "@/lib/pip-says";
 
 interface RejectedRow {
   fileName: string;
@@ -69,7 +70,7 @@ export const uploadFiles = createAsyncThunk(
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const label = `Processing file ${i + 1}/${files.length}: ${file.name}`;
+      const label = say.reading(file.name, i + 1, files.length);
       const loadingToast = toast.loading(label);
 
       try {
@@ -87,7 +88,7 @@ export const uploadFiles = createAsyncThunk(
 
         if (!res.ok) {
           toast.dismiss(loadingToast);
-          toast.error(`${file.name} failed`, {
+          toast.error(say.couldNotRead(file.name), {
             description: data.error || "Upload error",
           });
           continue;
@@ -100,12 +101,12 @@ export const uploadFiles = createAsyncThunk(
         }
 
         toast.dismiss(loadingToast);
-        toast.success(`${file.name} done`, {
+        toast.success(say.read(file.name), {
           description: `${fileResult.totalGem} GEM · ${fileResult.totalNonGem} Non-GEM · ${fileResult.excludedCount} excluded${fileResult.totalErrors.length ? ` · ${fileResult.totalErrors.length} error(s)` : ""}`,
         });
       } catch {
         toast.dismiss(loadingToast);
-        toast.error(`${file.name} failed`, {
+        toast.error(say.couldNotRead(file.name), {
           description: "Network error. Please try again.",
         });
       }
@@ -123,7 +124,7 @@ export const uploadResultFiles = createAsyncThunk(
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const label = `Processing result ${i + 1}/${files.length}: ${file.name}`;
+      const label = say.reading(file.name, i + 1, files.length);
       const loadingToast = toast.loading(label);
 
       try {
@@ -139,7 +140,7 @@ export const uploadResultFiles = createAsyncThunk(
 
         if (!res.ok) {
           toast.dismiss(loadingToast);
-          toast.error(`${file.name} failed`, {
+          toast.error(say.couldNotRead(file.name), {
             description: data.error || "Upload error",
           });
           continue;
@@ -152,12 +153,12 @@ export const uploadResultFiles = createAsyncThunk(
         }
 
         toast.dismiss(loadingToast);
-        toast.success(`${file.name} done`, {
+        toast.success(say.read(file.name), {
           description: `${fileResult.totalCount} updated${fileResult.totalErrors.length ? ` · ${fileResult.totalErrors.length} error(s)` : ""}`,
         });
       } catch {
         toast.dismiss(loadingToast);
-        toast.error(`${file.name} failed`, {
+        toast.error(say.couldNotRead(file.name), {
           description: "Network error. Please try again.",
         });
       }
@@ -183,7 +184,7 @@ const uploadSlice = createSlice({
 
       const invalidCount = incoming.length - validFiles.length;
       if (invalidCount > 0) {
-        toast.error(`${invalidCount} file(s) skipped — only .xlsx/.xls allowed`);
+        toast.error(say.skippedFiles(invalidCount));
       }
 
       const existing = new Set(state.pendingFiles.map((f) => f.name + f.size));

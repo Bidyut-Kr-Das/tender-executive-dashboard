@@ -24,6 +24,7 @@ import { toastError } from "@/components/v2/ui/errors";
 import { Field, Input, Textarea } from "@/components/v2/ui/field";
 import { Sheet } from "@/components/v2/ui/sheet";
 import { parseRupees } from "@/lib/rupees";
+import { say } from "@/lib/pip-says";
 
 export type { Row };
 type Column = DataTableColumn<Row>;
@@ -208,13 +209,13 @@ function SendEmailForm({ row, onDone }: { row: Row; onDone: () => void }) {
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Failed");
-      toast.success("Email sent");
+      toast.success(say.sent("the email"));
       onDone();
       // The send stamps "last email sent" and the stored draft on the server;
       // the slice has no action to take them from the response.
       dispatch(fetchEmdMerged({ force: true }));
     } catch (err) {
-      toastError("Email not sent", err);
+      toastError(say.couldNot("send the email"), err);
     } finally {
       setSending(false);
     }

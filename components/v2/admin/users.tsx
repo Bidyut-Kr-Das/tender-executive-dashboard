@@ -16,6 +16,7 @@ import { Badge, Field, Input } from "@/components/v2/ui/field";
 import { FormDialog } from "@/components/v2/ui/form-dialog";
 import { Dialog, Select } from "@/components/v2/ui/overlay";
 import { useRows } from "./shared";
+import { say } from "@/lib/pip-says";
 
 type User = Awaited<ReturnType<typeof listUsers>>[number];
 
@@ -57,7 +58,7 @@ function ConfirmButton({
     setPending(true);
     onConfirm()
       .then(() => setOpen(false))
-      .catch((err) => toastError(`${label} failed`, err))
+      .catch((err) => toastError(say.couldNot(label.toLowerCase()), err))
       .finally(() => setPending(false));
   };
   return (
@@ -144,7 +145,7 @@ export function UsersView() {
               description="Their password goes back to the default. They should change it after signing in."
               confirmLabel="Reset password"
               onConfirm={() =>
-                resetUserPassword(row.email).then(() => toast.success(`Password reset for ${nameOf(row)}`))
+                resetUserPassword(row.email).then(() => toast.success(say.passwordReset(nameOf(row))))
               }
             />
             {row.active ? (
@@ -159,7 +160,7 @@ export function UsersView() {
                 onConfirm={() =>
                   setUserActive({ id: row.id, active: false }).then((user) => {
                     upsert(user);
-                    toast.success(`${nameOf(row)} deactivated`);
+                    toast.success(say.deactivated(nameOf(row)));
                   })
                 }
               />
@@ -173,7 +174,7 @@ export function UsersView() {
                 onConfirm={() =>
                   setUserActive({ id: row.id, active: true }).then((user) => {
                     upsert(user);
-                    toast.success(`${nameOf(row)} activated`);
+                    toast.success(say.activated(nameOf(row)));
                   })
                 }
               />
@@ -190,7 +191,7 @@ export function UsersView() {
     if (!draft.role) throw new Error("Role is required");
     const user = await createUser({ name: draft.name, email: draft.email, role: draft.role });
     upsert(user);
-    toast.success(`${nameOf(user)} added`);
+    toast.success(say.added(nameOf(user)));
   };
 
   return (

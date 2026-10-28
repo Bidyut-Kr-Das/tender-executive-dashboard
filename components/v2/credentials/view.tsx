@@ -29,6 +29,7 @@ import { Field, Input, Textarea } from "@/components/v2/ui/field";
 import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
 import { Menu, MenuItem, Select } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, PageSkeleton, Pill } from "@/components/v2/ui/page";
+import { say } from "@/lib/pip-says";
 
 type Column = DataTableColumn<Row>;
 type EditableField = Exclude<keyof Row, "id" | "createdAt" | "updatedAt" | "userId">;
@@ -203,9 +204,9 @@ export function CredentialsView() {
         "Credentials",
       ),
       {
-        loading: "Preparing export...",
-        success: (count) => `Exported ${count.toLocaleString("en-IN")} credentials`,
-        error: async (err) => `Export failed: ${await describeError(err)}`,
+        loading: say.exporting(),
+        success: (n) => say.exported(n, "credential"),
+        error: async (err) => `${say.couldNot("export them")} ${await describeError(err)}`,
       },
     );
   };
@@ -215,7 +216,7 @@ export function CredentialsView() {
     for (const field of ADD_FIELDS) payload[field] = draft[field].trim() || null;
     if (!Object.values(payload).some((v) => v !== null)) throw new Error("Fill at least one field");
     await dispatch(createCredential(payload)).unwrap();
-    toast.success("Credential created");
+    toast.success(say.created("the credential"));
   };
 
   if (loading && data.length === 0) return <PageSkeleton label="credentials" />;
