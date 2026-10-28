@@ -20,6 +20,7 @@ type MascotState = "idle" | "listening" | "thinking" | "speaking" | "error" | "c
 
 const SLEEP_AFTER_MS = 2 * 60 * 1000;
 const CELEBRATE_MS = 1500;
+const SAY_MS = 4000;
 const STARTERS = ["What can you help with?", "Explain EMD and PBG"];
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 // Horizontal centre of the content area, beside the sidebar in either width.
@@ -47,6 +48,16 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
   const [celebrating, setCelebrating] = useState(false);
   const [asleep, setAsleep] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  // Until chat opens to everyone, Pip answers a press with a speech bubble.
+  const [saying, setSaying] = useState(false);
+  const sayTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  function say() {
+    clearTimeout(sayTimer.current);
+    setSaying(true);
+    sayTimer.current = setTimeout(() => setSaying(false), SAY_MS);
+  }
+  useEffect(() => () => clearTimeout(sayTimer.current), []);
 
   const orbRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -73,7 +84,7 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
     if (open || busy) return;
     const t = setTimeout(() => setAsleep(true), SLEEP_AFTER_MS);
     return () => clearTimeout(t);
-  }, [open, busy, messages.length]);
+  }, [open, busy, messages.length, saying]);
 
   useEffect(() => {
     if (!error) return setErrorText(null);
@@ -85,12 +96,12 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
     const onKey = (e: globalThis.KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
         e.preventDefault();
-        setOpen((o) => !o);
+        press();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  });
 
   // Focus follows the card: into the composer on open, back to Pip on close.
   const wasOpen = useRef(false);
@@ -106,7 +117,14 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
     if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
   }, [messages, status]);
 
-  const mascotState: MascotState = error
+  function press() {
+    if (isDeveloper) setOpen((o) => !o);
+    else say();
+  }
+
+  const mascotState: MascotState = saying
+    ? "speaking"
+    : error
     ? "error"
     : status === "submitted"
       ? "thinking"
@@ -145,10 +163,58 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
 
   const lastIsUser = messages.at(-1)?.role === "user";
 
+  const orb = (
+    <button
+      ref={orbRef}
+      type="button"
+      aria-label={isDeveloper ? (open ? "Close assistant" : "Open assistant") : "Pip"}
+      aria-expanded={isDeveloper ? open : undefined}
+      onClick={press}
+      className="press relative block size-28 rounded-full"
+    >
+      {/* The canvas keeps a wide margin for hops and effects, so it spills past
+          the button; the button stays a tight ring around Pip's body. Inline
+          sizing because Mascot's own inline 160px would beat a class. */}
+      <Mascot
+        character="pip"
+        state={mascotState}
+        onReady={() => setReady(true)}
+        className="pointer-events-none transition-opacity duration-(--dur-dialog)"
+        style={{
+          position: "absolute",
+          left: "-25%",
+          top: "-25%",
+          width: "150%",
+          height: "150%",
+          opacity: ready ? 1 : 0,
+        }}
+      />
+    </button>
+  );
+
   return (
-    <>
+    // One dock: the bubble and card hang off the top of the button, so moving
+    // the dock moves all three.
+    <div className={`fixed -bottom-2 z-(--z-assistant) ${CENTER}`}>
       <AnimatePresence>
-        {open && (
+        {saying && (
+          <motion.div
+            key="bubble"
+            role="status"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 4, transition: { duration: 0.14, ease: EASE_OUT } }}
+            style={{ transformOrigin: "bottom center", boxShadow: "var(--shadow-pop)" }}
+            className={`absolute bottom-full left-1/2 mb-3 w-max max-w-60 rounded-2xl bg-raised px-3.5 py-2 -translate-x-1/2 text-center`}
+          >
+            I&apos;m still learning my way around here. Check back soon!
+            <span
+              aria-hidden
+              className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 bg-raised shadow-[1px_1px_0_var(--line)]"
+            />
+          </motion.div>
+        )}
+        {open && isDeveloper && (
           <motion.section
             key="card"
             role="dialog"
@@ -160,7 +226,7 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
             animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.14, ease: EASE_OUT } }}
             style={{ transformOrigin: "bottom center", boxShadow: "var(--shadow-pop)" }}
-            className={`fixed bottom-21 z-(--z-assistant) flex ${isDeveloper ? "h-[min(37.5rem,calc(100dvh-7rem))]" : ""} w-100 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-raised ${CENTER}`}
+            className={`absolute bottom-full left-1/2 mb-3 flex h-[min(37.5rem,75dvh)] -translate-x-1/2 w-100 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-raised`}
           >
             <header className="flex h-12 shrink-0 items-center gap-1 border-b px-2 pl-4">
               <div className="min-w-0 flex-1">
@@ -169,30 +235,21 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
                   {statusLine}
                 </p>
               </div>
-              {isDeveloper && (
-                <IconButton
-                  label="New chat"
-                  disabled={busy || messages.length === 0}
-                  onClick={() => {
-                    setMessages([]);
-                    inputRef.current?.focus();
-                  }}
-                >
-                  <SquarePen className="size-4" />
-                </IconButton>
-              )}
+              <IconButton
+                label="New chat"
+                disabled={busy || messages.length === 0}
+                onClick={() => {
+                  setMessages([]);
+                  inputRef.current?.focus();
+                }}
+              >
+                <SquarePen className="size-4" />
+              </IconButton>
               <IconButton label="Close (Esc)" onClick={() => setOpen(false)}>
                 <X className="size-4" />
               </IconButton>
             </header>
 
-            {!isDeveloper ? (
-              <div className="flex flex-col gap-0.5 px-4 py-6 text-center">
-                <p className="type-title">This feature is work in progress</p>
-                <p className="text-ink-2">Pip will be able to help you here soon.</p>
-              </div>
-            ) : (
-            <>
             <div
               ref={scrollRef}
               onScroll={(e) => {
@@ -284,31 +341,17 @@ function AssistantDock({ firstName, isDeveloper }: { firstName: string | null; i
                 )}
               </div>
             </form>
-            </>
-            )}
           </motion.section>
         )}
       </AnimatePresence>
 
-      <Tip label={open ? "Close Pip (Ctrl+J)" : "Ask Pip (Ctrl+J)"} side="top">
-        {/* Feet tucked below the viewport edge, so Pip peeks up from the bottom. */}
-        <button
-          ref={orbRef}
-          type="button"
-          aria-label={open ? "Close assistant" : "Open assistant"}
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className={`press fixed bottom-5 z-(--z-assistant) size-24 rounded-full ${CENTER}`}
-        >
-          <Mascot
-            character="pip"
-            state={mascotState}
-            onReady={() => setReady(true)}
-            className="size-full transition-opacity duration-(--dur-dialog)"
-            style={{ opacity: ready ? 1 : 0 }}
-          />
-        </button>
-      </Tip>
-    </>
+      {isDeveloper ? (
+        <Tip label={open ? "Close Pip (Ctrl+J)" : "Ask Pip (Ctrl+J)"} side="top">
+          {orb}
+        </Tip>
+      ) : (
+        orb
+      )}
+    </div>
   );
 }
