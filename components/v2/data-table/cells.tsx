@@ -24,19 +24,23 @@ export function Clamp({
   title,
 }: {
   children: ReactNode;
-  lines?: keyof typeof LINES;
+  /** `fill`: as tall as the row the other cells make, at least three lines. Needs a flex column parent. */
+  lines?: keyof typeof LINES | "fill";
   className?: string;
   title?: string;
 }) {
+  const scroller =
+    "thumb-scrollbar overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word";
+  if (lines === "fill") {
+    // Out of flow, so the content never makes the row taller than three lines.
+    return (
+      <div title={title} className="relative min-h-[3lh] flex-1">
+        <div className={cn("absolute inset-0", scroller, className)}>{children}</div>
+      </div>
+    );
+  }
   return (
-    <div
-      title={title}
-      className={cn(
-        "thumb-scrollbar overflow-hidden hover:overflow-y-auto pointer-coarse:overflow-y-auto whitespace-pre-line wrap-break-word",
-        LINES[lines],
-        className,
-      )}
-    >
+    <div title={title} className={cn(scroller, LINES[lines], className)}>
       {children}
     </div>
   );

@@ -235,6 +235,21 @@ export const loadParticipationCounts = createAsyncThunk(
     fetchParticipationCounts(args.query),
 );
 
+/** Saves fields of one costing item; resolves to the item as stored. */
+export const updateCostingItem = createAsyncThunk(
+  "tenderPage/updateCostingItem",
+  async (args: { tenderMergedId: number; costingId: number; patch: Record<string, string> }) => {
+    const res = await fetch(`/api/costing-sheet-details/${args.costingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(args.patch),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update");
+    return data.data as Record<string, unknown>;
+  },
+);
+
 /** A filter change sends the user back to page 1. */
 function onFilterChange(scope: ScopePageState) {
   scope.page = 1;
@@ -382,6 +397,19 @@ const tenderPageSlice = createSlice({
       })
       .addCase(loadParticipationCounts.fulfilled, (state, action) => {
         state.byScope[action.meta.arg.scope].participationCounts = action.payload;
+      })
+      // The item lives in the row's costingDetails JSON; the server's copy
+      // carries the recomputed differences too.
+      .addCase(updateCostingItem.fulfilled, (state, action) => {
+        const { tenderMergedId, costingId } = action.meta.arg;
+        for (const scope of SCOPES) {
+          const row = state.byScope[scope].rows.find((r) => Number(r.id) === tenderMergedId);
+          if (!row?.costingDetails) continue;
+          const items = JSON.parse(row.costingDetails) as Record<string, unknown>[];
+          row.costingDetails = JSON.stringify(
+            items.map((item) => (item.id === costingId ? { ...item, ...action.payload } : item)),
+          );
+        }
       })
       // A cell edit goes through a tenders/* thunk that has already written to
       // the database. Rather than refetching the page, patch the row in place

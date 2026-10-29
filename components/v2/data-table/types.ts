@@ -81,11 +81,13 @@ export const leafColumns = <Row>(columns: DataTableColumn<Row>[]): DataTableColu
 export const filterIds = <Row>(column: DataTableColumn<Row>): string[] =>
   leafColumns([column]).flatMap((c) => [c.id, ...(c.extraFilters ?? []).map((e) => e.id)]);
 
-export interface ColumnStack {
+export interface ColumnStack<Row = unknown> {
   header: string;
   /** Column ids in the order they stack; the first one present names the column. */
   members: string[];
   width?: number;
+  /** Draws the whole cell for a row instead of the members; null keeps the members. */
+  cell?: (row: Row) => ReactNode;
 }
 
 /**
@@ -94,10 +96,10 @@ export interface ColumnStack {
  */
 export function stackColumns<Row>(
   columns: DataTableColumn<Row>[],
-  stacks: ColumnStack[],
+  stacks: ColumnStack<Row>[],
 ): DataTableColumn<Row>[] {
   const out: DataTableColumn<Row>[] = [];
-  const done = new Set<ColumnStack>();
+  const done = new Set<ColumnStack<Row>>();
   for (const column of columns) {
     const stack = stacks.find((s) => s.members.includes(column.id));
     const members = stack
@@ -114,6 +116,7 @@ export function stackColumns<Row>(
       header: stack.header,
       width: stack.width ?? Math.max(220, ...members.map((m) => m.width ?? 0)),
       frozen: members.some((m) => m.frozen) || undefined,
+      cell: stack.cell,
       members,
     });
   }

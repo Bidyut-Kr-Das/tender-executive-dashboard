@@ -502,6 +502,12 @@ export function Showcase() {
           <CellBox label="Clamp">
             <Clamp>{LONG_TEXT}</Clamp>
           </CellBox>
+          <CellBox label='Clamp lines="fill"'>
+            {/* Stands in for a row the other cells made taller. */}
+            <div className="flex h-24 flex-col">
+              <Clamp lines="fill">{LONG_TEXT}</Clamp>
+            </div>
+          </CellBox>
           <CellBox label="StackedCell">
             <StackedCell primary="Power Grid Corporation" secondary="Northern Region II" />
           </CellBox>

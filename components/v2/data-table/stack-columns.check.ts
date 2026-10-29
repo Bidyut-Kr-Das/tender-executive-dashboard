@@ -51,4 +51,8 @@ assert.deepEqual(filterIds(l1), ["name", "kind", "price"]);
 // A frozen member pins the whole stack.
 assert.equal(stackColumns(columns, [{ header: "X", members: ["b", "a"] }])[0].frozen, true);
 
+// A stack's own cell rides on the folded column.
+const whole = (row: Row) => row.a || null;
+assert.equal(stackColumns(columns, [{ header: "X", members: ["a", "b"], cell: whole }])[0].cell, whole);
+
 console.log("stack-columns: ok");

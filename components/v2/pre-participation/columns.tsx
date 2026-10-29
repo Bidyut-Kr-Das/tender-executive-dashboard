@@ -28,8 +28,11 @@ import {
   FieldEditor,
   FileLinkCell,
   FilesCell,
+  ItemRankCell,
+  ItemWiseRankCell,
   OfficeCell,
   ReverseAuctionCell,
+  itemWise,
   TypeTestCell,
   YesNoBadge,
   parseFiles,
@@ -70,6 +73,7 @@ const NOT_PARTICIPATED_ONLY = new Set([
   "expectedRaDate",
   "quotationNo",
   "competitors",
+  "itemWiseRankEnabled",
   "ourRank",
   "ourValue",
   "nameOfRank1",
@@ -104,7 +108,7 @@ const POST_DROPPED = new Set([...NOT_PARTICIPATED_DROPPED, "reason"]);
 
 // Related fields shown as one column. A stack only forms from the members the
 // page has, so the list can name fields another scope drops.
-const STACKS: ColumnStack[] = [
+const STACKS: ColumnStack<Row>[] = [
   { header: "Tender References", members: ["referenceNo", "quotationNo", "contractNo"] },
   { header: "Tender Dates", members: ["deadline", "publishedDate", "assignedDate"] },
   { header: "Price Basis", members: ["price", "applicableIndex", "rawMaterials"] },
@@ -153,9 +157,22 @@ const STACKS: ColumnStack[] = [
   },
   { header: "Office & Contact", members: ["officeName", "website", "location"] },
   { header: "Internal", members: ["assignedTo", "catalogueDone"] },
-  { header: "Our Bid", members: ["ourRank", "ourValue"] },
-  { header: "L1 Details", members: ["nameOfRank1", "valueOfRank1", "differenceBetweenRank1"] },
-  { header: "L2 Details", members: ["nameOfRank2", "valueOfRank2", "differenceBetweenRank2"] },
+  // An item-wise tender shows each item's figures in place of the tender's.
+  {
+    header: "Our Bid",
+    members: ["itemWiseRankEnabled", "ourRank", "ourValue"],
+    cell: (row) => (itemWise(row) ? <ItemWiseRankCell row={row} /> : null),
+  },
+  {
+    header: "L1 Details",
+    members: ["nameOfRank1", "valueOfRank1", "differenceBetweenRank1"],
+    cell: (row) => (itemWise(row) ? <ItemRankCell row={row} part="L1" /> : null),
+  },
+  {
+    header: "L2 Details",
+    members: ["nameOfRank2", "valueOfRank2", "differenceBetweenRank2"],
+    cell: (row) => (itemWise(row) ? <ItemRankCell row={row} part="L2" /> : null),
+  },
 ];
 
 /** A select filter with no fixed choices lists the values found in the data. */
@@ -377,6 +394,11 @@ export function buildPreParticipationColumns(
     editable("quotationNo", "Quotation No"),
     editable("contractNo", "Contract Number"),
     longText("competitors", "Competitors"),
+    editable("itemWiseRankEnabled", "Item-wise Rank", 140, {
+      search: false,
+      filter: selectFilter(...YES_NO),
+      cell: (row) => <ItemWiseRankCell row={row} />,
+    }),
     editable("ourRank", "Our Rank", 130),
     editable("ourValue", "Our Value"),
     editable("nameOfRank1", "L1 Party Name", 200),

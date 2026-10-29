@@ -165,6 +165,7 @@ export const updateTenderMergedField = createAsyncThunk(
       params.field === "bidValidityExpired" ||
       params.field === "participated" ||
       params.field === "reverseAuctionApplicable" ||
+      params.field === "itemWiseRankEnabled" ||
       params.field === "diffL1ManuallyEdited" ||
       params.field === "diffL2ManuallyEdited"
     ) {

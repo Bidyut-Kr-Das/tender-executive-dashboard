@@ -670,6 +670,16 @@ model CostingSheetDetails {
   bomType             String?
   bomCode             String?
 
+  // Item-wise ranking; read instead of tender_merged's when itemWiseRankEnabled is set.
+  ourRank                String?
+  ourValue               String?
+  nameOfRank1            String?
+  valueOfRank1           String?
+  differenceBetweenRank1 String?
+  nameOfRank2            String?
+  valueOfRank2           String?
+  differenceBetweenRank2 String?
+
   tenderMergedId Int?
   TenderMerged   TenderMerged? @relation(fields: [tenderMergedId], references: [id], onDelete: Cascade)
 
@@ -867,6 +877,9 @@ model TenderMerged {
 
   ourRank  String?
   ourValue String?
+
+  // Ranks are kept per costing item instead of on the tender.
+  itemWiseRankEnabled Boolean @default(false)
 
   proposedErpItemName String?
   proposedErpQuantity String?
