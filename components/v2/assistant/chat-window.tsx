@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { SquarePen, X } from "lucide-react";
@@ -26,7 +25,6 @@ export function ChatWindow({
   firstName: string | null;
   onClose: () => void;
 }) {
-  const pathname = usePathname();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
   const { messages, status, error } = chat;
@@ -40,7 +38,7 @@ export function ChatWindow({
   function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || busy) return;
-    chat.sendMessage({ text: trimmed }, { body: { path: pathname } });
+    chat.sendMessage({ text: trimmed });
     onInput("");
   }
 
