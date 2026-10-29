@@ -55,12 +55,12 @@ export function ChatWindow({
         if (e.key === "Escape") onClose();
       }}
       style={{ boxShadow: PIP_SHADOW }}
-      className="flex h-[min(37.5rem,75dvh)] w-100 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-lavender-surface"
+      className="flex h-[min(37.5rem,75dvh)] w-100 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-apricot-surface"
     >
-      <header className="flex h-12 shrink-0 items-center gap-1 border-b border-lavender-line px-2 pl-4">
+      <header className="flex h-12 shrink-0 items-center gap-1 border-b border-apricot-line px-2 pl-4">
         <div className="min-w-0 flex-1">
           <h2 className="type-title leading-tight">Pip</h2>
-          <p aria-live="polite" className={error ? "text-xs text-bad" : "text-xs text-lavender-ink"}>
+          <p aria-live="polite" className={error ? "text-xs text-bad" : "text-xs text-apricot-ink"}>
             {statusLine}
           </p>
         </div>

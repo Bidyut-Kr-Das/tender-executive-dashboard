@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 export function ChatMessage({ message }: { message: UIMessage }) {
   const text = message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
   return message.role === "user" ? (
-    <li className="max-w-[85%] self-end whitespace-pre-wrap rounded-xl bg-lavender-soft px-3 py-2">{text}</li>
+    <li className="max-w-[85%] self-end whitespace-pre-wrap rounded-xl bg-apricot-soft px-3 py-2">{text}</li>
   ) : (
     <li className="md min-w-0 *:last:mb-0">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
