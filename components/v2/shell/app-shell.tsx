@@ -28,6 +28,7 @@ import {
 } from "@/components/v2/providers";
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { toastError } from "@/components/v2/ui/errors";
+import { Assistant } from "@/components/v2/assistant/assistant";
 import { Field, Input } from "@/components/v2/ui/field";
 import {
   Dialog,
@@ -39,6 +40,7 @@ import {
 } from "@/components/v2/ui/overlay";
 import { Skeleton } from "@/components/v2/ui/page";
 import { NAV_GROUPS, type NavItem } from "./nav-items";
+import { say } from "@/lib/pip-says";
 
 function NavLink({
   item,
@@ -106,12 +108,12 @@ function ChangePasswordDialog({
     setSaving(true);
     try {
       await changePassword({ oldPassword, newPassword });
-      toast.success("Password changed");
+      toast.success(say.passwordChanged());
       setOldPassword("");
       setNewPassword("");
       onOpenChange(false);
     } catch (err) {
-      toastError("Password not changed", err);
+      toastError(say.couldNot("change your password"), err);
     } finally {
       setSaving(false);
     }
@@ -310,6 +312,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="pl-(--sidebar-w) in-data-[sidebar=collapsed]:pl-(--sidebar-rail-w) h-full min-w-0">{children}</main>
+      <Assistant />
     </div>
   );
 }

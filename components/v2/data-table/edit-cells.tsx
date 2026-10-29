@@ -8,6 +8,7 @@ import { toastError } from "@/components/v2/ui/errors";
 import { Dash, Input, Textarea } from "@/components/v2/ui/field";
 import { Select, type SelectOption } from "@/components/v2/ui/overlay";
 import { CellAction, Clamp } from "./cells";
+import { say } from "@/lib/pip-says";
 
 /**
  * Editing cells for any page. They know nothing about the row: the column
@@ -30,11 +31,11 @@ function useSave(label: string, onSave: EditProps["onSave"]) {
     setPending(true);
     return onSave(next)
       .then(() => {
-        toast.success(`${label} updated`);
+        toast.success(say.updated(label));
         return true;
       })
       .catch((err: unknown) => {
-        toastError(`${label} not saved`, err);
+        toastError(say.notSaved(label), err);
         return false;
       })
       .finally(() => setPending(false));
@@ -77,7 +78,7 @@ export function TextEditCell({
     if (next === value) return setDraft(value);
     const problem = validate?.(next);
     if (problem) {
-      toast.error(`${label}: ${problem}`);
+      toast.error(say.notSaved(label), { description: problem });
       return setDraft(value);
     }
     save(next).then((ok) => {

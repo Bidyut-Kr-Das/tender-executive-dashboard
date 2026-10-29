@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { SessionProvider, useSession } from "next-auth/react";
 import { Toaster } from "sonner";
 import StoreProvider from "@/lib/store-provider";
@@ -74,8 +75,15 @@ export function useIsDeveloper() {
   return useSession().data?.user?.role === "developer" && developerMode;
 }
 
+/**
+ * Signed in, Pip says every toast (components/v2/assistant), so the Toaster
+ * only shows on the sign-in pages and while signed out, where Pip is absent.
+ */
 function ThemedToaster() {
   const isDark = useIsDark();
+  const { status } = useSession();
+  const pathname = usePathname();
+  if (status === "authenticated" && !pathname.startsWith("/auth")) return null;
   return <Toaster richColors theme={isDark ? "dark" : "light"} />;
 }
 

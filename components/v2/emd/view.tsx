@@ -14,6 +14,7 @@ import { describeError } from "@/components/v2/ui/errors";
 import { Menu, MenuItem } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, PageSkeleton, StatTile } from "@/components/v2/ui/page";
 import { columns, parseAmount, values, type Row } from "./columns";
+import { say } from "@/lib/pip-says";
 
 const BUCKETS = ["REFUNDED", "PENDING", "WRITTEN OFF"] as const;
 type Bucket = (typeof BUCKETS)[number];
@@ -78,9 +79,9 @@ export function EmdView() {
   const exportAs = (extension: "xlsx" | "csv") => {
     const name = `EMD_Merged_${new Date().toISOString().slice(0, 10)}.${extension}`;
     toast.promise(exportRows(filtered, exportColumns, name, "EMD Merged"), {
-      loading: "Preparing export...",
-      success: (count) => `Exported ${count.toLocaleString("en-IN")} records`,
-      error: async (err) => `Export failed: ${await describeError(err)}`,
+      loading: say.exporting(),
+      success: (n) => say.exported(n, "record"),
+      error: async (err) => `${say.couldNot("export them")} ${await describeError(err)}`,
     });
   };
 

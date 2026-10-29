@@ -39,6 +39,7 @@ import { Badge, Choice, Dash, Field, Input, Textarea, type Tone } from "@/compon
 import { Dialog, Select } from "@/components/v2/ui/overlay";
 import { Sheet } from "@/components/v2/ui/sheet";
 import { useTenderCellContext } from "./use-tenders";
+import { say } from "@/lib/pip-says";
 
 export type Row = FlatRow;
 
@@ -104,13 +105,13 @@ export function DecisionCell({
     )
       .unwrap()
       .then((result) => {
-        toast.success(cleared ? `${label} cleared` : `${label} set to ${choice}`);
+        toast.success(cleared ? say.cleared(label) : say.set(label, choice));
         if (result?.webhookTriggered && result.webhookResponse?.message) {
           const notify = result.webhookResponse.success ? toast.success : toast.error;
           notify(`${result.referenceNo ?? ""}: ${result.webhookResponse.message}`);
         }
       })
-      .catch((err: unknown) => toastError(`${label} not saved`, err))
+      .catch((err: unknown) => toastError(say.notSaved(label), err))
       .finally(() => setPending(null));
   };
 
@@ -184,11 +185,11 @@ export function AiRelevanceCell({ row }: { row: Row }) {
     )
       .unwrap()
       .then(() => {
-        toast.success("Feedback sent for analysis");
+        toast.success(say.feedbackSent());
         setOpen(false);
         setReason("");
       })
-      .catch((err: unknown) => toastError("Feedback not sent", err))
+      .catch((err: unknown) => toastError(say.couldNot("send the feedback"), err))
       .finally(() => setSaving(false));
   };
 
@@ -315,11 +316,11 @@ export function AssigneeCell({ row, rowIndex }: { row: Row; rowIndex: number }) 
         )
           .unwrap()
           .then(() => {
-            toast.success("Tender assigned");
+            toast.success(say.tenderAssigned());
             // The slice cannot patch this row from an id list, so refetch.
             reload();
           })
-          .catch((err: unknown) => toastError("Not assigned", err))
+          .catch((err: unknown) => toastError(say.couldNot("assign the tender"), err))
           .finally(() => setSaving(false));
       }}
     />
@@ -358,8 +359,8 @@ export function ReasonNotApmCell({ row }: { row: Row }) {
           }),
         )
           .unwrap()
-          .then(() => toast.success(next ? "Reason updated" : "Reason cleared"))
-          .catch((err: unknown) => toastError("Reason not saved", err))
+          .then(() => toast.success(next ? say.updated("the reason") : say.cleared("the reason")))
+          .catch((err: unknown) => toastError(say.notSaved("the reason"), err))
           .finally(() => setSaving(false));
       }}
     />
@@ -400,8 +401,8 @@ export function PriceCell({ row }: { row: Row }) {
           }),
         )
           .unwrap()
-          .then(() => toast.success("Price updated"))
-          .catch((err: unknown) => toastError("Price not saved", err))
+          .then(() => toast.success(say.updated("the price")))
+          .catch((err: unknown) => toastError(say.notSaved("the price"), err))
           .finally(() => setSaving(false));
       }}
     />
@@ -433,8 +434,8 @@ export function RemarksCell({ row }: { row: Row }) {
       updateTenderRemarks({ tenderMergedId: Number(row.id), remarks: draft, oldRemarks: value }),
     )
       .unwrap()
-      .then(() => toast.success("Remarks updated"))
-      .catch((err: unknown) => toastError("Remarks not saved", err))
+      .then(() => toast.success(say.updated("the remarks")))
+      .catch((err: unknown) => toastError(say.notSaved("the remarks"), err))
       .finally(() => setSaving(false));
   };
 
@@ -515,7 +516,7 @@ export function WebsiteCell({ row }: { row: Row }) {
     )
       .unwrap()
       .then((result) => {
-        toast.success("Website saved");
+        toast.success(say.saved("the website"));
         setOpen(false);
         // The same organisation's other tenders take the same website.
         dispatch(
@@ -529,14 +530,12 @@ export function WebsiteCell({ row }: { row: Row }) {
           .unwrap()
           .then(({ updatedIds }) => {
             if (updatedIds.length > 0) {
-              toast.success(
-                `Updated ${updatedIds.length} tender${updatedIds.length > 1 ? "s" : ""} with same organization`,
-              );
+              toast.success(say.sameOrganisationUpdated(updatedIds.length));
             }
           })
-          .catch((err: unknown) => toastError("Bulk update failed", err));
+          .catch((err: unknown) => toastError(say.couldNot("update the other tenders"), err));
       })
-      .catch((err: unknown) => toastError("Website not saved", err))
+      .catch((err: unknown) => toastError(say.notSaved("the website"), err))
       .finally(() => setSaving(false));
   };
 
@@ -719,11 +718,11 @@ function UploadDocumentDialog({ row, onClose }: { row: Row; onClose: () => void 
     dispatch(uploadTenderDocument({ tenderMergedId: Number(row.id), file, fileType }))
       .unwrap()
       .then(() => {
-        toast.success("Tender file uploaded");
+        toast.success(say.uploaded("the tender file"));
         onClose();
         reload();
       })
-      .catch((err: unknown) => toastError("Upload failed", err))
+      .catch((err: unknown) => toastError(say.couldNot("upload the file"), err))
       .finally(() => setSaving(false));
   };
 

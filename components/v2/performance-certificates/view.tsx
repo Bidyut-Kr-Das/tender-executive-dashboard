@@ -31,6 +31,7 @@ import { CheckMark, Choice, Dash, Input } from "@/components/v2/ui/field";
 import { Combobox, Popover, type SelectOption } from "@/components/v2/ui/overlay";
 import { Page, PageHeader, PageSkeleton } from "@/components/v2/ui/page";
 import { UploadCertificateDialog } from "@/components/v2/performance-certificates/upload-dialog";
+import { say } from "@/lib/pip-says";
 
 /** What the cells share: the certificate shown beside the table and the pick lists. */
 const PageContext = createContext<{
@@ -93,9 +94,9 @@ function SplitPagesButton({ row }: { row: Row }) {
         setPending(true);
         splitPerformanceCertificatePages(row.id)
           .then(({ pages }) =>
-            toast.success(`Split into ${pages} page row${pages === 1 ? "" : "s"}`),
+            toast.success(say.split(pages)),
           )
-          .catch((err: unknown) => toastError("Split failed", err))
+          .catch((err: unknown) => toastError(say.couldNot("split it"), err))
           .finally(() => {
             setPending(false);
             dispatch(fetchPerformanceCertificates());
@@ -124,7 +125,7 @@ function UtilityNameCell({ row }: { row: Row }) {
 }
 
 const saved = (label: string, value: string | null) =>
-  toast.success(value ? `${label} updated` : `${label} cleared`);
+  toast.success(value ? say.updated(label) : say.cleared(label));
 
 function PartyCell({ row }: { row: Row }) {
   const dispatch = useAppDispatch();
@@ -143,7 +144,7 @@ function PartyCell({ row }: { row: Row }) {
         dispatch(updatePerformanceCertificatePartyName({ id: row.id, partyName }))
           .unwrap()
           .then(() => saved("Party name", partyName))
-          .catch((err: unknown) => toastError("Party name not saved", err))
+          .catch((err: unknown) => toastError(say.notSaved("the party name"), err))
           .finally(() => setPending(false));
       }}
     />
@@ -157,7 +158,7 @@ function useFieldSave(row: Row, field: PerformanceCertificateField, label: strin
     dispatch(updatePerformanceCertificateField({ id: row.id, field, value }))
       .unwrap()
       .then(() => saved(label, value))
-      .catch((err: unknown) => toastError(`${label} not saved`, err));
+      .catch((err: unknown) => toastError(say.notSaved(label), err));
   return { pending, save };
 }
 
@@ -553,10 +554,10 @@ export function PerformanceCertificatesView() {
     setAnalyzing(true);
     try {
       const { jobs, files } = await publishPerformanceCertificateJobs();
-      toast.success(`Published ${jobs} job(s) (${files} files)`);
+      toast.success(say.analysisStarted(jobs, files));
       dispatch(fetchPerformanceCertificates());
     } catch (err) {
-      toastError("Analysis failed", err);
+      toastError(say.couldNot("start the analysis"), err);
     } finally {
       setAnalyzing(false);
     }

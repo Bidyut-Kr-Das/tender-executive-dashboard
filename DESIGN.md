@@ -60,6 +60,21 @@ Tokens are CSS variables on `:root`, redefined under `.dark`, and exposed to Tai
 | `bad` / `bad-soft` | `#c4001a` | `#ff6961` | No, failed, destructive |
 | `warn` / `warn-soft` | `#9a4a00` | `#ffb340` | Attention, rate-limited, variable price |
 
+### Companion palettes
+
+Four tinted families for things that speak to the user rather than belong to a page. Pip's bubbles and chat use `lavender`. Notifications Pip says use `mint` (success), `butter` (warning), `coral` (error) and `lavender` (info, loading). Each family has the same four tokens.
+
+| Family | Light surface / line / soft / ink | Dark surface / line / soft / ink |
+|---|---|---|
+| `lavender` | `#f6f3ff` `#ddd5ff` `#ebe5ff` `#5b45b8` | `#1f1b2e` `#3a3157` `#2c2645` `#c4b5ff` |
+| `butter` | `#fffaeb` `#f2dc8f` `#fff1c2` `#7a5900` | `#26220f` `#4a4120` `#332d14` `#f5d67a` |
+| `mint` | `#f0faf7` `#c6ebe1` `#ddf4ed` `#0f6b59` | `#142621` `#24463d` `#1b332c` `#7fd9c2` |
+| `coral` | `#fff5f1` `#ffd5c7` `#ffe7de` `#a8401f` | `#2a1b16` `#4d2f25` `#38231c` `#ffab8f` |
+
+- `-surface` is the panel background, `-line` its outline (`border-*-line`, or `0 0 0 1px var(--*-line)` ahead of `--shadow-pop`), `-soft` a stronger fill inside it (the user's own message), `-ink` tinted text (a status line).
+- Never page chrome, tables or controls. Buttons inside a companion panel keep the normal accent.
+- `butter`, `mint` and `coral` mean status only in Pip's notifications, and there always with an icon and words. On pages, status stays `good`, `bad` and `warn`.
+
 Rules:
 
 - One accent. Blue marks what is interactive-and-selected or the single primary action in a view. It is not used for decoration.
@@ -166,6 +181,7 @@ Defined with `@utility` in `v2.css`. Their names are deliberately not Tailwind p
 | `--z-header-pinned` | 30 | Pinned header cells |
 | `--z-rail` | 30 | Sidebar |
 | `--z-progress` | 40 | Table progress bar |
+| `--z-assistant` | 45 | Pip (assistant orb and chat card); dialogs and sheets cover it |
 | `--z-modal` | 50 | Dialog, sheet and their scrim |
 | `--z-popup` | 60 | Popover, menu, select |
 | `--z-tip` | 70 | Tooltip |
@@ -275,6 +291,7 @@ Props:
 | `Dialog` | `open`, `onOpenChange`, `title`, `description?`, `children?`, `footer?`, `width?` (default `32rem`) |
 | `Sheet` | `open`, `onOpenChange`, `title`, `children`, `width?` (default `40vw`) |
 
+- The assistant (`components/v2/assistant/assistant.tsx`) is mounted once in `AppShell`, not per page. It is the wobnimo `pip` mascot fixed bottom-right; clicking it or Ctrl+J opens a non-modal chat card above it. The mascot's state follows the chat (thinking, speaking, error, celebrating), the composer (listening) and inactivity (sleeping). The chat streams from `app/api/assistant/route.ts`. One component per file in `components/v2/assistant/`: `pip-orb`, `thought-bubble` (cloud, for what Pip thinks), `speech-bubble` (tail, for what Pip says), `chat-window`, `chat-thread`, `chat-message`, `chat-composer`, `chat-welcome`, `use-pip-mood`; shared motion in `pop.ts`. New pieces get their own file.
 - Dialog buttons always go in `footer`: ghost "Cancel" first, primary action last. When the body is a `<form>`, give the form an `id` from `useId()` and put `type="submit" form={id}` on the primary button.
 - Dialogs that edit one row open with a summary of that row (organisation and brief) so the user can see what they are changing.
 
@@ -335,7 +352,9 @@ Written out by hand where they occur, because each has fewer than three uses or 
 ## Feedback
 
 - **Status:** progress bar while a page loads; "n matching" beside the title updates live.
-- **Completion:** a success toast naming what changed ("APM set to YES", "Website saved").
+- **Toasts are said by Pip.** Call sonner's `toast.*` as usual; when signed in, Pip renders them as speech bubbles (`notice-stack.tsx`, `notice-bubble.tsx`) and reacts with its face, and the sonner `Toaster` only shows on the sign-in pages. Up to three at once, newest nearest Pip; 4s, errors 6s, held while hovered, loading until it settles, a click sends one away. Bubbles are words only: no icon, no close button; the colour and Pip's face carry the tone. Try them at `/v2/design`.
+- **Pip's voice.** Toast text never goes inline: it comes from `say` in `lib/pip-says.ts`, first person and one plain sentence ("I've set APM to YES.", "I couldn't save the price."). A failure is a `say.couldNot(...)` or `say.notSaved(...)` title passed to `toastError`, which puts the reason underneath. Add a new line to `say` rather than writing a one-off string.
+- **Completion:** a success toast naming what changed ("I've set APM to YES.", "I've saved the website.").
 - **Warning:** before a bulk action, a dialog states how many rows it affects.
 - **Error:** a toast with the server's message; the control returns to its previous value. Always go through `toastError` / `describeError` (`ui/errors.ts`), never `err.message`: they turn "signed out", "page out of date after a deploy" and "no connection" into what the user should do next.
 

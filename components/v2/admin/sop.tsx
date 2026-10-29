@@ -12,6 +12,7 @@ import { Badge, Checkbox, Dash, Field, Input, Textarea, type Tone } from "@/comp
 import { Select } from "@/components/v2/ui/overlay";
 import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
 import { request, useRows } from "./shared";
+import { say, count } from "@/lib/pip-says";
 
 interface SopRow {
   id: number;
@@ -345,7 +346,7 @@ export function SopResponsibilitiesView() {
       ? await request<{ data: SopRow }>(`${ENDPOINT}/${row.id}`, "PATCH", body)
       : await request<{ data: SopRow }>(ENDPOINT, "POST", body);
     upsert(data);
-    toast.success(row ? "Updated" : "Created");
+    toast.success(row ? say.updated("the SOP row") : say.created("the SOP row"));
   };
 
   const openBulk = () => {
@@ -514,7 +515,7 @@ export function SopResponsibilitiesView() {
             });
             throw new Error(`${created} created, ${failed.length} rows failed`);
           }
-          toast.success(`${created} SOP rows created`);
+          toast.success(say.created(count(created, "SOP row")));
         }}
       >
         {({ drafts }, set) => <BulkGrid drafts={drafts} onChange={(next) => set({ drafts: next })} />}

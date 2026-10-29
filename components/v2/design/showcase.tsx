@@ -2,6 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { say } from "@/lib/pip-says";
 import { Download, Inbox, Pencil, Plus, Settings, Trash2, TriangleAlert } from "lucide-react";
 import { CellAction, Chips, Clamp, StackedCell } from "@/components/v2/data-table/cells";
 import { DataTable } from "@/components/v2/data-table/data-table";
@@ -55,6 +57,9 @@ const COLOURS = [
   "bad-soft",
   "warn",
   "warn-soft",
+  ...["lavender", "butter", "mint", "coral"].flatMap((f) =>
+    ["surface", "line", "soft", "ink"].map((p) => `${f}-${p}`),
+  ),
 ];
 
 const TYPE = [
@@ -352,6 +357,40 @@ export function Showcase() {
         <Row label="Dash">
           <Dash />
           <span className="text-ink-3">for every empty value</span>
+        </Row>
+      </Section>
+
+      <Section title="Notifications">
+        <Row label="Said by Pip">
+          <Button size="sm" onClick={() => toast.success(say.set("APM", "YES"))}>Success</Button>
+          <Button size="sm" onClick={() => toast.warning(say.queuedSome(3, 1))}>Warning</Button>
+          <Button
+            size="sm"
+            onClick={() =>
+              toast.error(say.notSaved("the price"), { description: "Could not reach the server. Check your connection and try again." })
+            }
+          >
+            Error
+          </Button>
+          <Button size="sm" onClick={() => toast.info(say.queueStopped(12))}>Info</Button>
+          <Button
+            size="sm"
+            onClick={() =>
+              toast.promise(new Promise((r) => setTimeout(r, 2500)), {
+                loading: say.exporting(),
+                success: say.exported(240, "tender"),
+                error: say.couldNot("export them"),
+              })
+            }
+          >
+            Loading then success
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => toast(say.removed("the filter"), { action: { label: "Undo", onClick: () => toast.success(say.restored("the filter")) } })}
+          >
+            With action
+          </Button>
         </Row>
       </Section>
 

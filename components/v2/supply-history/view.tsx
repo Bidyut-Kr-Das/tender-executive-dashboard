@@ -31,6 +31,7 @@ import {
   type EditableField,
   type Row,
 } from "./columns";
+import { say } from "@/lib/pip-says";
 
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1tXiJC9AZNiAAoL8mM_KxKuzrFqzuk-n3n16abJbaam0";
@@ -89,7 +90,7 @@ async function downloadDocuments(rows: Row[]): Promise<number | null> {
 
 const driveOnlyNotice = (count: number) =>
   count > 0 &&
-  toast.info(`${count} record(s) with only Google Drive documents were excluded from the zip`);
+  toast.info(say.driveOnlyLeftOut(count));
 
 const NO_TOTALS = { amount: 0, quantity: 0, withBill: 0 };
 const NO_OPTIONS = { options: null, loading: false } as const;
@@ -251,7 +252,7 @@ export function SupplyHistoryView() {
     try {
       await syncSupplySheet();
     } catch (err) {
-      toastError("Sheet not synced", err);
+      toastError(say.couldNot("sync the sheet"), err);
     }
     await reload();
   }, [reload, setLoading]);
@@ -348,10 +349,10 @@ export function SupplyHistoryView() {
             ),
           );
         }
-        toast.success("Certificate generated successfully");
+        toast.success(say.generated("the certificate"));
       } catch (err) {
         setCert(ref, { status: "error", error: await describeError(err) });
-        toastError("Certificate not generated", err);
+        toastError(say.couldNot("generate the certificate"), err);
       } finally {
         inFlight.current.delete(ref);
       }
@@ -373,9 +374,7 @@ export function SupplyHistoryView() {
         const json = await res.json().catch(() => ({}));
         if (!res.ok || !json.success) throw new Error(json.error || "Failed to send email");
         setCert(ref, { status: "emailSent" });
-        toast.success(
-          `Certificate emailed to ${json.to}${json.cc?.length ? ` (cc: ${json.cc.join(", ")})` : ""}`,
-        );
+        toast.success(say.certificateEmailed(json.to, json.cc));
         const sentAt: string = json.certificateSentDate ?? new Date().toISOString();
         setRows((prev) =>
           prev.map((r) => (r.partyRefNo === ref ? { ...r, certificateSentDate: sentAt } : r)),
@@ -388,7 +387,7 @@ export function SupplyHistoryView() {
         }, 3000);
       } catch (err) {
         setCert(ref, { status: "error", error: await describeError(err) });
-        toastError("Email not sent", err);
+        toastError(say.couldNot("send the email"), err);
       } finally {
         inFlight.current.delete(ref);
       }
@@ -410,15 +409,15 @@ export function SupplyHistoryView() {
   };
 
   const scanDocuments = () =>
-    run("Scan failed", async () => {
+    run(say.couldNot("scan the documents"), async () => {
       const json = await (await fetch("/api/supply-indexer", { method: "POST" })).json();
       if (!json.success) throw new Error(json.error);
       await reload();
-      toast.success("Documents scanned successfully");
+      toast.success(say.documentsScanned());
     });
 
   const syncQuotation = () =>
-    run("Quotation sync failed", async () => {
+    run(say.couldNot("sync quotations"), async () => {
       const res = await fetch("/api/supply-history/sync-quotation", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: FILE_AUTH },
@@ -426,9 +425,7 @@ export function SupplyHistoryView() {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Sync failed");
       const s = json.stats;
-      toast.success(
-        `Quotation sync done: ${s?.updated ?? 0} records updated (${s?.totalContracts ?? 0} contracts, ${s?.errors?.length ?? 0} errors)`,
-      );
+      toast.success(say.quotationsSynced(s?.updated ?? 0, s?.totalContracts ?? 0, s?.errors?.length ?? 0));
       await reload();
     });
 
@@ -436,18 +433,18 @@ export function SupplyHistoryView() {
   const filtered = () => fetchSupplyRows(filters, sort);
 
   const downloadAllDocuments = () =>
-    run("Documents not downloaded", async () => {
+    run(say.couldNot("download the documents"), async () => {
       const driveOnly = await downloadDocuments(await filtered());
-      if (driveOnly === null) toast.info("No document records found in current view");
+      if (driveOnly === null) toast.info(say.noDocumentsHere());
       else driveOnlyNotice(driveOnly);
     });
 
   const exportAndDownload = () =>
-    run("Export failed", async () => {
+    run(say.couldNot("export them"), async () => {
       // The sheet carries every record; the zip follows the current filters.
       await exportExcel(await fetchSupplyRows({}, null));
       const driveOnly = await downloadDocuments(await filtered());
-      if (driveOnly === null) toast.info("Excel exported. No documents to zip.");
+      if (driveOnly === null) toast.info(say.excelNoDocuments());
       else driveOnlyNotice(driveOnly);
     });
 
@@ -484,7 +481,7 @@ export function SupplyHistoryView() {
                 </Button>
               }
             >
-              <MenuItem onClick={() => run("Export failed", async () => exportExcel(await filtered()))}>
+              <MenuItem onClick={() => run(say.couldNot("export them"), async () => exportExcel(await filtered()))}>
                 Export Excel
               </MenuItem>
               <MenuItem onClick={downloadAllDocuments}>Download all docs</MenuItem>

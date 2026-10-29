@@ -28,6 +28,24 @@
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
 
+  /* Companion palettes: Pip (lavender) and notifications. Never page chrome. */
+  --color-lavender-surface: var(--lavender-surface);
+  --color-lavender-line: var(--lavender-line);
+  --color-lavender-soft: var(--lavender-soft);
+  --color-lavender-ink: var(--lavender-ink);
+  --color-butter-surface: var(--butter-surface);
+  --color-butter-line: var(--butter-line);
+  --color-butter-soft: var(--butter-soft);
+  --color-butter-ink: var(--butter-ink);
+  --color-mint-surface: var(--mint-surface);
+  --color-mint-line: var(--mint-line);
+  --color-mint-soft: var(--mint-soft);
+  --color-mint-ink: var(--mint-ink);
+  --color-coral-surface: var(--coral-surface);
+  --color-coral-line: var(--coral-line);
+  --color-coral-soft: var(--coral-soft);
+  --color-coral-ink: var(--coral-ink);
+
   /* Bare sizes between Tailwind's steps. T-shirt names, so tailwind-merge
      still reads them as font sizes. text-md is the body size. */
   --text-3xs: 0.625rem;
@@ -74,6 +92,24 @@
   --warn: #9a4a00;
   --warn-soft: rgb(178 80 0 / 0.12);
 
+  /* Companion palettes: tinted surface, its outline, a stronger fill, and text. */
+  --lavender-surface: #f6f3ff;
+  --lavender-line: #ddd5ff;
+  --lavender-soft: #ebe5ff;
+  --lavender-ink: #5b45b8;
+  --butter-surface: #fffaeb;
+  --butter-line: #f2dc8f;
+  --butter-soft: #fff1c2;
+  --butter-ink: #7a5900;
+  --mint-surface: #f0faf7;
+  --mint-line: #c6ebe1;
+  --mint-soft: #ddf4ed;
+  --mint-ink: #0f6b59;
+  --coral-surface: #fff5f1;
+  --coral-line: #ffd5c7;
+  --coral-soft: #ffe7de;
+  --coral-ink: #a8401f;
+
   /* Translucent chrome: sticky table header, popups. */
   --glass: rgb(255 255 255 / 0.72);
   --glass-blur: blur(20px) saturate(180%);
@@ -94,6 +130,7 @@
   --z-header-pinned: 30;
   --z-rail: 30;
   --z-progress: 40;
+  --z-assistant: 45;
   --z-modal: 50;
   --z-popup: 60;
   --z-tip: 70;
@@ -122,6 +159,22 @@
   --bad-soft: rgb(255 69 58 / 0.16);
   --warn: #ffb340;
   --warn-soft: rgb(255 159 10 / 0.16);
+  --lavender-surface: #1f1b2e;
+  --lavender-line: #3a3157;
+  --lavender-soft: #2c2645;
+  --lavender-ink: #c4b5ff;
+  --butter-surface: #26220f;
+  --butter-line: #4a4120;
+  --butter-soft: #332d14;
+  --butter-ink: #f5d67a;
+  --mint-surface: #142621;
+  --mint-line: #24463d;
+  --mint-soft: #1b332c;
+  --mint-ink: #7fd9c2;
+  --coral-surface: #2a1b16;
+  --coral-line: #4d2f25;
+  --coral-soft: #38231c;
+  --coral-ink: #ffab8f;
   --glass: rgb(30 30 34 / 0.72);
   --shadow-pop: 0 0 0 1px var(--line-strong), 0 10px 32px rgb(0 0 0 / 0.5);
   --shadow-sheet: 0 0 0 1px var(--line-strong), 0 24px 64px rgb(0 0 0 / 0.6);

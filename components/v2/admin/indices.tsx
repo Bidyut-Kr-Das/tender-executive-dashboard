@@ -11,6 +11,7 @@ import { Badge, Checkbox, Field, Input } from "@/components/v2/ui/field";
 import { Combobox } from "@/components/v2/ui/overlay";
 import { FormDialog, RowActions } from "@/components/v2/ui/form-dialog";
 import { request, useRows } from "./shared";
+import { say } from "@/lib/pip-says";
 
 interface ColumnIndex {
   id: number;
@@ -45,9 +46,9 @@ function RestoreButton({ row, onRestored }: { row: ColumnIndex; onRestored: (ind
     request<{ index: ColumnIndex }>(`${ENDPOINT}/${row.id}`, "PATCH", { status: "active" })
       .then(({ index }) => {
         onRestored(index);
-        toast.success(`Restored index entry for "${row.columnName}"`);
+        toast.success(say.restored(`the index entry for "${row.columnName}"`));
       })
-      .catch((err) => toastError("Not restored", err))
+      .catch((err) => toastError(say.couldNot("restore it"), err))
       .finally(() => setPending(false));
   };
   return (
@@ -148,7 +149,7 @@ export function ColumnIndicesView() {
       ? await request<{ index: ColumnIndex }>(`${ENDPOINT}/${row.id}`, "PATCH", body)
       : await request<{ index: ColumnIndex }>(ENDPOINT, "POST", body);
     t.upsert(index);
-    toast.success(row ? "Column index updated" : "Column index created");
+    toast.success(row ? say.updated("the column index") : say.created("the column index"));
   };
 
   return (
