@@ -399,7 +399,8 @@ export function Dialog({
     <BaseDialog.Root open={open} onOpenChange={onOpenChange}>
       <BaseDialog.Portal>
         <BaseDialog.Backdrop className="scrim fixed inset-0 z-(--z-modal)" />
-        <BaseDialog.Viewport className="fixed inset-0 z-(--z-modal) grid place-items-center p-4">
+        {/* A definite row, so the popup's max-h-full caps it and the body scrolls. */}
+        <BaseDialog.Viewport className="fixed inset-0 z-(--z-modal) grid grid-rows-1 place-items-center p-4">
           <BaseDialog.Popup
             style={{ width: `min(${width}, 100%)` }}
             className="dlg flex max-h-full flex-col rounded-2xl outline-none"

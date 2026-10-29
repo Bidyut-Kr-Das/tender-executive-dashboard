@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { formatDateTimeIST } from "@/lib/format-ist";
 import { cn } from "@/lib/utils";
 import { updateTenderMergedField } from "@/lib/slices/tendersSlice";
+import { updateCostingItem } from "@/lib/slices/tenderPageSlice";
 import { Button, IconButton } from "@/components/v2/ui/button";
 import { DatePicker } from "@/components/v2/ui/calendar";
 import { CellAction, Clamp } from "@/components/v2/data-table/cells";
@@ -518,7 +519,17 @@ export function ReverseAuctionCell({ row }: { row: Row }) {
 
 /* ------------------------------- ERP items --------------------------------- */
 
-interface CostingItem {
+export type RankField =
+  | "ourRank"
+  | "ourValue"
+  | "nameOfRank1"
+  | "valueOfRank1"
+  | "differenceBetweenRank1"
+  | "nameOfRank2"
+  | "valueOfRank2"
+  | "differenceBetweenRank2";
+
+interface CostingItem extends Partial<Record<RankField, string | null>> {
   id: number;
   proposedErpItemName: string | null;
   proposedErpQuantity?: string | null;
@@ -651,11 +662,185 @@ export function ErpItemsCell({ row }: { row: Row }) {
   const items = parseCostingItems(row);
   if (items.length === 0) return <Dash />;
   return (
-    <Clamp lines={4} className="flex flex-col gap-1.5">
-      {items.map((item) => (
-        <ErpItem key={item.id} item={item} />
-      ))}
+    <div className="flex h-full flex-col">
+      <Clamp lines="fill" className="flex flex-col gap-1.5">
+        {items.map((item) => (
+          <ErpItem key={item.id} item={item} />
+        ))}
+      </Clamp>
+    </div>
+  );
+}
+
+/* ------------------------------ Item-wise rank ----------------------------- */
+
+export const itemWise = (row: Row) => row.itemWiseRankEnabled === "true";
+
+// The differences are computed by the server, so the dialog does not edit them.
+const ITEM_RANK_INPUTS: [RankField, string][] = [
+  ["ourRank", "Our rank"],
+  ["ourValue", "Our value"],
+  ["nameOfRank1", "L1 party name"],
+  ["valueOfRank1", "L1 price"],
+  ["nameOfRank2", "L2 party name"],
+  ["valueOfRank2", "L2 price"],
+];
+
+type ItemDraft = Partial<Record<RankField, string>>;
+
+const draftOf = (item: CostingItem): ItemDraft =>
+  Object.fromEntries(ITEM_RANK_INPUTS.map(([id]) => [id, item[id] ?? ""]));
+
+export type RankPart = "our" | "L1" | "L2";
+
+/** One item's figures for a part, set parts only, joined on one line. */
+function itemRankLine(item: CostingItem, part: RankPart): string {
+  const parts =
+    part === "our"
+      ? [item.ourRank?.trim() ? `Our rank ${item.ourRank.trim()}` : "", item.ourValue]
+      : part === "L1"
+        ? [item.nameOfRank1, item.valueOfRank1, item.differenceBetweenRank1]
+        : [item.nameOfRank2, item.valueOfRank2, item.differenceBetweenRank2];
+  return parts.map((p) => p?.trim()).filter(Boolean).join(" · ");
+}
+
+/** Every costing item with its figures for one part of the result. Needs a flex column parent. */
+function ItemRankSummary({ row, part }: { row: Row; part: RankPart }) {
+  const items = parseCostingItems(row);
+  if (items.length === 0) return <Dash />;
+  return (
+    <Clamp lines="fill" className="flex flex-col gap-1.5">
+      {items.map((item) => {
+        const line = itemRankLine(item, part);
+        return (
+          <div key={item.id} className="flex shrink-0 flex-col">
+            <span className="font-medium wrap-break-word">
+              {(item.proposedErpItemName ?? "").trim()}
+            </span>
+            {line ? (
+              <span className="text-xs text-ink-2 tabular-nums wrap-break-word">{line}</span>
+            ) : (
+              <Dash />
+            )}
+          </div>
+        );
+      })}
     </Clamp>
+  );
+}
+
+/** L1 or L2 of an item-wise tender: each item's party, price and difference. */
+export function ItemRankCell({ row, part }: { row: Row; part: "L1" | "L2" }) {
+  return (
+    <div className="flex h-full flex-col">
+      <ItemRankSummary row={row} part={part} />
+    </div>
+  );
+}
+
+/** The item-wise switch over our figures per item, with the editor for every item's ranks. */
+export function ItemWiseRankCell({ row }: { row: Row }) {
+  const dispatch = useAppDispatch();
+  const { isLocked } = useTenderCellContext();
+  const items = parseCostingItems(row);
+  const [open, setOpen] = useState(false);
+  const [drafts, setDrafts] = useState<Record<number, ItemDraft>>({});
+  const [saving, setSaving] = useState(false);
+  const formId = useId();
+  const locked = isLocked?.("ourRank", row) ?? false;
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const writes = items
+      .map((item) => {
+        const old = draftOf(item);
+        const patch = Object.fromEntries(
+          ITEM_RANK_INPUTS.map(([id]) => [id, (drafts[item.id]?.[id] ?? "").trim()]).filter(
+            ([id, value]) => value !== old[id as RankField],
+          ),
+        );
+        return { costingId: item.id, patch };
+      })
+      .filter((w) => Object.keys(w.patch).length > 0);
+    setSaving(true);
+    try {
+      for (const write of writes) {
+        await dispatch(updateCostingItem({ tenderMergedId: Number(row.id), ...write })).unwrap();
+      }
+      if (writes.length > 0) toast.success(say.updated("the item ranks"));
+      setOpen(false);
+    } catch (err) {
+      toastError(say.notSaved("the item ranks"), err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex h-full flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <FieldEditor field={FIELDS.itemWiseRankEnabled} row={row} />
+        {itemWise(row) && items.length > 0 && !locked && (
+          <IconButton
+            size="sm"
+            label="Edit item ranks"
+            onClick={() => {
+              setDrafts(Object.fromEntries(items.map((item) => [item.id, draftOf(item)])));
+              setOpen(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+          </IconButton>
+        )}
+      </div>
+      {itemWise(row) && <ItemRankSummary row={row} part="our" />}
+      {open && (
+        <Dialog
+          open
+          onOpenChange={setOpen}
+          title="Edit item ranks"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" form={formId} variant="primary" loading={saving}>
+                Save item ranks
+              </Button>
+            </>
+          }
+        >
+          <TenderSummary row={row} />
+          <form id={formId} onSubmit={save} className="flex flex-col gap-3">
+            {items.map((item, i) => {
+              const name = (item.proposedErpItemName ?? "").trim();
+              return (
+                <section key={item.id} className="flex flex-col gap-3 border-b pb-3 last:border-b-0">
+                  <h3 className="font-semibold">{name}</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ITEM_RANK_INPUTS.map(([id, label], j) => (
+                      <Field key={id} label={label}>
+                        <Input
+                          autoFocus={i === 0 && j === 0}
+                          aria-label={`${label} for ${name}`}
+                          value={drafts[item.id]?.[id] ?? ""}
+                          onChange={(e) =>
+                            setDrafts({
+                              ...drafts,
+                              [item.id]: { ...drafts[item.id], [id]: e.target.value },
+                            })
+                          }
+                        />
+                      </Field>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </form>
+        </Dialog>
+      )}
+    </div>
   );
 }
 

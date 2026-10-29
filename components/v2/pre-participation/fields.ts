@@ -353,6 +353,15 @@ const FIELD_LIST: FieldDef[] = [
   text("raQualificationRule", "RA qualification rule", "Reverse auction"),
 
   choice("currentStatus", "Current status", "Result", ...CURRENT_STATUS_OPTIONS),
+  {
+    id: "itemWiseRankEnabled",
+    label: "Item-wise rank",
+    kind: "yesNo",
+    // Not null in the database: clearing a yes stores no.
+    tokens: { yes: "true", no: "false", none: "false" },
+    section: "Result",
+    save: merged("itemWiseRankEnabled"),
+  },
   text("ourRank", "Our rank", "Result"),
   text("ourValue", "Our value", "Result"),
   text("nameOfRank1", "L1 party name", "Result"),

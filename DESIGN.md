@@ -302,7 +302,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 - **Header:** one row, 40px tall. Label (with optional small provenance text under it), sort arrow, filter button. Clicking the label sorts descending, then ascending. The filter button is tinted when that column has an active filter.
 - **Filter popover:** a "Contains" search box, then the column's typed control: multi-select list (options fetched when the popover opens), date range with optional presets, yes/no, or a custom control supplied by the column. "Clear" removes that column's filters.
 - **Filter bar:** every active filter is a chip above the table, including filters that live outside the columns, passed in as `extraChips`. A filter the user cannot remove is shown as a chip without a remove button. Nothing narrows the list invisibly.
-- **Cells:** text is capped at three lines by `Clamp`. Longer text scrolls inside the cell; a bare scroll thumb (`thumb-scrollbar`: no arrow buttons, no track) shows while the cell is hovered, in a gutter that is always reserved so text does not rewrap. A cell is a live scroller only while hovered, always on touch screens; a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover.
+- **Cells:** text is capped at three lines by `Clamp`. Longer text scrolls inside the cell; a bare scroll thumb (`thumb-scrollbar`: no arrow buttons, no track) shows while the cell is hovered, in a gutter that is always reserved so text does not rewrap. A cell is a live scroller only while hovered, always on touch screens; a scroller in every cell makes table scroll choppy. No ellipsis, no click-to-expand popover. A per-item list (one block per costing item: ERP items, item-wise ranks) uses `Clamp lines="fill"` inside a `flex h-full flex-col` parent: it takes the full height the other cells give the row (at least three lines) and scrolls past that, without making the row taller. Cells carry `h-px` so that height can be filled.
 - **Pinned columns:** sticky to the left, capped at half the table's width (`MAX_FROZEN_SHARE`); beyond that the rightmost pinned columns scroll with the rest.
 - **Rows** are virtualised, so a 500-row page scrolls smoothly.
 - **Row groups:** pass `groupBy` and consecutive rows with the same key form one group. A column marked `spanGroup` draws one cell for the whole group, from its first row (the docket number on the participation pages). Groups are the unit of virtualisation, so a spanning cell is never cut from its rows. The table still knows nothing about what the key means.
@@ -314,6 +314,7 @@ The table is controlled: rows, total, page, sort, filters and column visibility 
 
 A page describes its table as `DataTableColumn<Row>[]` (see `data-table/types.ts`). Per column: `id`, `header`, `width`, `frozen`, `hidden`, `sortable`, `search`, `filter`, `extraFilters`, `badges`, `spanGroup`, and either `text` (plain text for the default capped, scrollable cell) or `cell` (a renderer).
 
+- A stack (`ColumnStack`) may pass `cell`: when it returns something for a row, that replaces the member list in that row's cell; `null` keeps the members. Used when a row's data has a different shape (item-wise ranks).
 - A cell that edits data is its own small component: it dispatches the existing thunk, tracks its own pending state, shows a toast on success or failure, and owns any dialog it opens. The page holds no per-row dialog state.
 - Editing in place is preferred for one-field changes (decision toggles, selects, remarks). A dialog is used when the change needs context or more than one input.
 - A change shows immediately as pending and reverts with an error toast if the server refuses it.
@@ -327,7 +328,7 @@ These know nothing about any page's rows. A page's own `cells.tsx` builds on the
 
 | Component | Props | Use it for |
 |---|---|---|
-| `Clamp` | `children`, `lines?: 2 \| 3 \| 4` (default 3), `className?`, `title?` | Any cell content that can run long. Never write the `max-h-[3lh] overflow-hidden ...` string by hand |
+| `Clamp` | `children`, `lines?: 2 \| 3 \| 4 \| "fill"` (default 3; `fill` takes the row's height, needs a flex column parent), `className?`, `title?` | Any cell content that can run long. Never write the `max-h-[3lh] overflow-hidden ...` string by hand |
 | `StackedCell` | `primary`, `secondary?` | Two related values in one column (organisation over department) |
 | `Chips` | `items: string[]` | A list of short values, one tag per line |
 | `CellAction` | `children`, `action?`, `pending?` | Content with an always-visible `IconButton size="sm"` at its trailing edge; `pending` dims it while saving |
@@ -344,6 +345,7 @@ Written out by hand where they occur, because each has fewer than three uses or 
 | Form stack (dialog body) | `flex flex-col gap-3` of `Field`s |
 | Two fields side by side | `grid grid-cols-2 gap-2` |
 | List row (files, documents) | `<li className="flex items-center gap-2 border-b py-1.5 last:border-b-0">`: `size-4 text-ink-3` icon, `min-w-0 flex-1 truncate` name, trailing actions |
+| Per-item list in a cell | `<div className="flex h-full flex-col">` > `<Clamp lines="fill" className="flex flex-col gap-1.5">` of `flex shrink-0 flex-col` blocks: `font-medium` item name, `text-xs text-ink-2 tabular-nums` figures |
 | Inline tag inside a cell | `rounded-[0.3125rem] bg-sunken px-1.5 py-px text-xs` |
 | Row summary at the top of a dialog | `mb-3 rounded-lg bg-sunken px-3 py-2` |
 | Selected fill | `bg-accent-soft text-accent-ink` |

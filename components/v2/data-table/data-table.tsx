@@ -232,13 +232,15 @@ function RowInner<Row>({
             rowSpan={column.spanGroup ? span : undefined}
             style={left != null ? { left } : undefined}
             className={cn(
-              "border-b bg-surface px-3 py-2 align-top group-hover/row:bg-(--row-hover-bg)",
+              // h-px gives the cell a definite height, so a `Clamp lines="fill"` (h-full) can fill the row.
+              "h-px border-b bg-surface px-3 py-2 align-top group-hover/row:bg-(--row-hover-bg)",
               left != null && "sticky z-(--z-pinned)",
               isLastFrozen &&
                 "group-data-[sx=true]/dt:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.18)]",
             )}
           >
             {column.members ? (
+              (column.cell?.(row, { rowIndex }) ?? (
               <dl className="flex flex-col gap-2">
                 {column.members.map((member) => (
                   <div key={member.id} className="min-w-0">
@@ -247,6 +249,7 @@ function RowInner<Row>({
                   </div>
                 ))}
               </dl>
+              ))
             ) : (
               cellContent(column, row, rowIndex)
             )}
